@@ -1,0 +1,74 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "着色器编译+调试",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/main",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [
+                // {
+                //     "name": "DYLD_LIBRARY_PATH",
+                //     "value": "${fileDirname}/lib"
+                // },
+                // {
+                //     "name": "VK_LAYER_PATH",
+                //     "value": "${fileDirname}/share/vulkan/explicit_layer.d"
+                // },
+                // {
+                //     "name": "VK_ICD_FILENAMES",
+                //     "value": "${fileDirname}/share/vulkan/icd.d/MoltenVK_icd.json"
+                // },
+                // {
+                //     "name": "MVK_CONFIG_LOG_LEVEL",
+                //     "value": "3"
+                // },
+                // {
+                //     "name": "VK_LOADER_DEBUG",
+                //     "value": "all"
+                // }
+            ],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "着色器编译",
+        },
+
+        {
+            "name": "全编译+调试",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${fileDirname}/main",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${fileDirname}",
+            "environment": [
+                // {
+                //     "name": "DYLD_LIBRARY_PATH",
+                //     "value": "${fileDirname}/lib"
+                // },
+                // {
+                //     "name": "VK_LAYER_PATH",
+                //     "value": "${fileDirname}/share/vulkan/explicit_layer.d"
+                // },
+                // {
+                //     "name": "VK_ICD_FILENAMES",
+                //     "value": "${fileDirname}/share/vulkan/icd.d/MoltenVK_icd.json"
+                // },
+                // {
+                //     "name": "MVK_CONFIG_LOG_LEVEL",
+                //     "value": "3"
+                // },
+                // {
+                //     "name": "VK_LOADER_DEBUG",
+                //     "value": "all"
+                // }
+            ],
+            "externalConsole": false,
+            "MIMode": "lldb",
+            "preLaunchTask": "调试前置任务"
+        }
+    ]
+}
