@@ -33,7 +33,7 @@ namespace Vkbase
             .setImageExtent(_extent)
             .setImageArrayLayers(1)
             .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment)
-            .setPreTransform(surfaceCapabilities.currentTransform)
+            .setPreTransform(supportDetails.capabilities.currentTransform)
             .setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
             .setPresentMode(vk::PresentModeKHR::eFifo)
             .setClipped(VK_TRUE);
