@@ -54,6 +54,15 @@ namespace Vkbase
         return _resources;
     }
 
+    ResourceBase *ResourceManager::resource(std::string name)
+    {
+        auto iter = _resources.find(name);
+        if (iter != _resources.end())
+            return iter->second;
+        else
+            return nullptr;
+    }
+
     void ResourceManager::remove(std::string name)
     {
         delete _resources.extract(name).mapped();

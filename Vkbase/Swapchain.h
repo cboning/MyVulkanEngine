@@ -5,6 +5,7 @@
 
 namespace Vkbase
 {
+    class Device; // Forward declaration of Device class
     class Swapchain : public ResourceBase
     {
     private:
@@ -13,12 +14,15 @@ namespace Vkbase
         vk::Extent2D _extent;
         std::vector<vk::Image> _images;
         std::vector<vk::ImageView> _imageViews;
+        Device &_device;
+        vk::SurfaceKHR _surface;
+
 
         void init();
         void cleanup();
 
     public:
-        Swapchain(const std::string& resourceName, vk::Device device, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
+        Swapchain(const std::string& resourceName, const std::string deviceName, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
         ~Swapchain() override;
 
         vk::SwapchainKHR swapchain() const { return _swapchain; }

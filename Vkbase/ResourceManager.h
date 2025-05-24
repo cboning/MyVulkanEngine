@@ -23,6 +23,7 @@ namespace Vkbase
         ~ResourceManager();
         void addResource(std::string name, ResourceBase *pResource);
         ResourceSet &resources();
+        ResourceBase *resource(std::string name);
         void remove(std::string name);
         vk::Instance &instance();
     };

@@ -53,6 +53,7 @@ namespace Vkbase
 
         SurfaceSupportDetails querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
         vk::Device device();
+        vk::PhysicalDevice physicalDevice();
         vk::Queue graphicsQueue();
         vk::Queue presentQueue();
         
