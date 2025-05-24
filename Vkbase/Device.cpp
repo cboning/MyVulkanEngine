@@ -57,6 +57,8 @@ namespace Vkbase
                 _physicalDevice = device;
                 break;
             }
+        if (!_physicalDevice)
+            throw std::runtime_error("Failed to find a suitable GPU");
     }
 
     bool Device::isphysicalDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR surface)
@@ -127,6 +129,10 @@ namespace Vkbase
     vk::Device Device::device()
     {
         return _device;
+    }
+    vk::PhysicalDevice Device::physicalDevice()
+    {
+        return _physicalDevice;
     }
     vk::Queue Device::graphicsQueue()
     {
