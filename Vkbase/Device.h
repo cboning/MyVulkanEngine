@@ -11,8 +11,7 @@ namespace Vkbase
 {
     class Device : public ResourceBase
     {
-    
-    private:
+    public:
         struct QueueFamilyIndices
         {
             int graphicsFamilyIndex = -1;
@@ -24,6 +23,24 @@ namespace Vkbase
                 return graphicsFamilyIndex >= 0 && presentFamilyIndex >= 0 && computeFamilyIndex >= 0;
             }
         };
+        struct SurfaceSupportDetails
+        {
+            vk::SurfaceCapabilitiesKHR capabilities;
+            std::vector<vk::SurfaceFormatKHR> formats;
+            std::vector<vk::PresentModeKHR> presentModes;
+        };
+        
+        Device(const std::string &resourceName, vk::SurfaceKHR surface);
+        ~Device() override;
+
+        SurfaceSupportDetails querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
+        vk::Device device();
+        vk::PhysicalDevice physicalDevice();
+        vk::Queue graphicsQueue();
+        vk::Queue presentQueue();
+        QueueFamilyIndices queueFamilyIndices();
+    
+    private:
 
         vk::Device _device;
         vk::PhysicalDevice _physicalDevice;
@@ -41,22 +58,6 @@ namespace Vkbase
 
         QueueFamilyIndices findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface);
         // static 
-    public:
-        struct SurfaceSupportDetails
-        {
-            vk::SurfaceCapabilitiesKHR capabilities;
-            std::vector<vk::SurfaceFormatKHR> formats;
-            std::vector<vk::PresentModeKHR> presentModes;
-        };
-        
-        Device(const std::string &resourceName, vk::SurfaceKHR surface);
-        ~Device() override;
-
-        SurfaceSupportDetails querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
-        vk::Device device();
-        vk::PhysicalDevice physicalDevice();
-        vk::Queue graphicsQueue();
-        vk::Queue presentQueue();
         
     };
 }
