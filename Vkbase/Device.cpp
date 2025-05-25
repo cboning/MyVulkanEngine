@@ -142,4 +142,9 @@ namespace Vkbase
     {
         return _presentQueue;
     }
+
+    Device::QueueFamilyIndices Device::queueFamilyIndices()
+    {
+        return _queueindice
+    }
 }
