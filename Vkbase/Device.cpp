@@ -2,7 +2,7 @@
 
 namespace Vkbase
 {
-    Device::Device(const std::string &resourceName, vk::SurfaceKHR surface)
+    Device::Device(const std::string &resourceName, vk::SurfaceKHR &surface)
         : ResourceBase(ResourceType::Device, resourceName)
     {
         pickPhysicalDevice(surface);
