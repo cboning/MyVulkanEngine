@@ -47,7 +47,7 @@ namespace Vkbase
         _presentQueue = _device.getQueue(_queueFamilyIndices.presentFamilyIndex, 0);
     }
 
-    void Device::pickPhysicalDevice(vk::SurfaceKHR surface)
+    void Device::pickPhysicalDevice(vk::SurfaceKHR &surface)
     {
         std::vector<vk::PhysicalDevice> _physicalDevices = resourceManager().instance().enumeratePhysicalDevices();
         for (const auto &device : _physicalDevices)
