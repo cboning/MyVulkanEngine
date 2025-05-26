@@ -33,8 +33,8 @@ namespace Vkbase
         Device(const std::string &resourceName, vk::SurfaceKHR surface);
         ~Device() override;
 
-        static get
-        SurfaceSupportDetails querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
+        static getSuitableDevice(vk::SurfaceKHR &surface);
+        SurfaceSupportDetails querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR &surface);
         vk::Device device();
         vk::PhysicalDevice physicalDevice();
         vk::Queue graphicsQueue();
