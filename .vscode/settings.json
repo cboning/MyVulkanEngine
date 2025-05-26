@@ -63,7 +63,8 @@
         "forward_list": "cpp",
         "__config": "cpp",
         "list": "cpp",
-        "filesystem": "cpp"
+        "filesystem": "cpp",
+        "type_traits": "cpp"
     },
     "cmake.ignoreCMakeListsMissing": true
 }

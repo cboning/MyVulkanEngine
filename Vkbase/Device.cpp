@@ -3,11 +3,10 @@
 namespace Vkbase
 {
     Device::Device(const std::string &resourceName, vk::SurfaceKHR surface)
-        : ResourceBase(resourceName, ResourceType::Device)
+        : ResourceBase(ResourceType::Device, resourceName)
     {
         pickPhysicalDevice(surface);
         createLogicalDevice();
-        resourceManager().addResource(_name, this);
     }
 
     Device::~Device()
@@ -103,7 +102,7 @@ namespace Vkbase
     {
         if (checkDeviceExtensionSupport(device))
         {
-            Device::SurfaceSupportDetails supportDetails = querySwapChainSupport(device, surface);
+            SurfaceSupportDetails supportDetails = querySwapChainSupport(device, surface);
             return !supportDetails.formats.empty() && !supportDetails.presentModes.empty();
         }
         return false;
@@ -117,7 +116,7 @@ namespace Vkbase
         return extensions.empty();
     }
 
-    Device::SurfaceSupportDetails Device::querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+    SurfaceSupportDetails Device::querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface)
     {
         SurfaceSupportDetails details;
         details.capabilities = device.getSurfaceCapabilitiesKHR(surface);
@@ -145,6 +144,6 @@ namespace Vkbase
 
     Device::QueueFamilyIndices Device::queueFamilyIndices()
     {
-        return _queueindice
+        return _queueFamilyIndices;
     }
 }
