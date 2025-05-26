@@ -7,6 +7,7 @@ namespace Vkbase
     ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
         : _name(resourceName), _resourceType(resourceType)
     {
+        _pResource.insert(this);
         _resourceManager.addResource(resourceType, resourceName, this);
         std::cout << "[Info] "<< toString(resourceType) <<" Resource " << resourceName << " created." << std::endl;
     }
@@ -18,6 +19,8 @@ namespace Vkbase
         
         for (ResourceBase *pSuperresource : _pSuperresources)
             pSuperresource->disusedSubresource(this);
+
+        _pResources.erase(this);
     }
 
     ResourceManager &ResourceBase::resourceManager()

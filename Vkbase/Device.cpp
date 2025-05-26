@@ -146,4 +146,10 @@ namespace Vkbase
     {
         return _queueFamilyIndices;
     }
+    
+    Device *Device::getSuitableDevice(vk::SurfaceKHR &surface)
+    {
+        return ;
+    }
+    
 }
