@@ -30,7 +30,7 @@ namespace Vkbase
             }
         };
 
-        Device(const std::string &resourceName, vk::SurfaceKHR surface);
+        Device(const std::string &resourceName, vk::SurfaceKHR &surface);
         ~Device() override;
 
         static getSuitableDevice(vk::SurfaceKHR &surface);
