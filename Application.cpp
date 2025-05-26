@@ -35,5 +35,5 @@ void Application::mainLoop()
 }
 void Application::cleanup()
 {
-    Vkbase::ResourceBase::resourceManager().remove("mainWindow");
+    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Window, "mainWindow");
 }

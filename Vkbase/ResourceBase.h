@@ -1,34 +1,32 @@
 #pragma once
 #include <string>
+#include <unordered_set>
 #include "ResourceManager.h"
 
 namespace Vkbase
 {
-    enum class ResourceType
-    {
-        Window,
-        Swapchain,
-        Device,
-        Image,
-        Buffer,
-        Pipeline,
-        Framebuffer,
-        CommandPool,
-
-    };
-
     class ResourceBase
     {
     private:
         inline static ResourceManager _resourceManager{};
 
+
     protected:
         ResourceType _resourceType;
         std::string _name;
+        std::unordered_set<ResourceBase *> _pSubresources;
+        std::unordered_set<ResourceBase *> _pSuperresources;
+        void useSubresource(ResourceBase *pResource);
+        void useSuperresource(ResourceBase *pResource);
+        
+        void disusedSubresource(ResourceBase *pResource);
+        void disuseSuperresource(ResourceBase *pResource);
+
+        
 
     public:
-        ResourceBase(const std::string &resourceName, ResourceType resourceType);
-        virtual ~ResourceBase() = default;
+        ResourceBase(ResourceType resourceType, const std::string &resourceName);
+        virtual ~ResourceBase();
         static ResourceManager &resourceManager();
     };
 }

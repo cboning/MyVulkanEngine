@@ -1,15 +1,16 @@
 #include "Swapchain.h"
 #include "Device.h"
 #include "cmath"
+#include <array>
 
 
 namespace Vkbase
 {
     Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
-        : ResourceBase(resourceName, ResourceType::Swapchain), _device(*dynamic_cast<Device *>(resourceManager().resource(deviceName))), _surface(surface)
+        : ResourceBase(ResourceType::Swapchain, resourceName), _device(*dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName))), _surface(surface)
     {
         _extent.setWidth(width).setHeight(height);
-        Device::SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
+        SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
         _imageCount = _device.querySwapChainSupport(_device.physicalDevice(), _surface).capabilities.minImageCount + 1;
 
         // Determine some properties from surface details
@@ -26,7 +27,7 @@ namespace Vkbase
 
     void Swapchain::init()
     {
-        Device::SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
+        SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
         uint32_t desiredImageCount = 5;
         if (supportDetails.capabilities.maxImageCount)
             desiredImageCount = std::min(desiredImageCount, supportDetails.capabilities.maxImageCount);
@@ -46,6 +47,25 @@ namespace Vkbase
             .setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
             .setPresentMode(vk::PresentModeKHR::eFifo)
             .setClipped(vk::True);
+
+        Device::QueueFamilyIndices deviceQueueFamilyIndice = _device.queueFamilyIndices();
+        uint32_t queueFamilyIndice[3];
+        uint32_t queueFamilyIndiceCount = 0;
+        
+        queueFamilyIndice[queueFamilyIndiceCount++] = deviceQueueFamilyIndice.graphicsFamilyIndex;
+        if (deviceQueueFamilyIndice.computeFamilyIndex != deviceQueueFamilyIndice.graphicsFamilyIndex)
+            queueFamilyIndice[queueFamilyIndiceCount++] = deviceQueueFamilyIndice.computeFamilyIndex;
+        if (deviceQueueFamilyIndice.presentFamilyIndex != deviceQueueFamilyIndice.graphicsFamilyIndex && deviceQueueFamilyIndice.presentFamilyIndex != deviceQueueFamilyIndice.computeFamilyIndex)
+            queueFamilyIndice[queueFamilyIndiceCount++] = deviceQueueFamilyIndice.presentFamilyIndex;
+
+        if (queueFamilyIndiceCount == 1)
+            createInfo.setQueueFamilyIndices(queueFamilyIndice[0])
+                .setQueueFamilyIndexCount(1)
+                .setImageSharingMode(vk::SharingMode::eExclusive);
+        else
+            createInfo.setPQueueFamilyIndices(queueFamilyIndice)
+                .setQueueFamilyIndexCount(queueFamilyIndiceCount)
+                .setImageSharingMode(vk::SharingMode::eConcurrent);
         
         _swapchain = _device.device().createSwapchainKHR(createInfo);
 
@@ -55,17 +75,25 @@ namespace Vkbase
         // Create image views for each image
         for (const auto& image : _images) {
             vk::ImageViewCreateInfo viewInfo;
+            vk::ComponentMapping components;
+            vk::ImageSubresourceRange subresourceRange;
+            subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor)
+                .setBaseArrayLayer(0)
+                .setLayerCount(1)
+                .setBaseMipLevel(0)
+                .setLevelCount(1);
+
             viewInfo.setImage(image)
                 .setViewType(vk::ImageViewType::e2D)
-                .setFormat(_imageFormat)
-                .setComponents({ vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity, vk::ComponentSwizzle::eIdentity })
-                .setSubresourceRange({ vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1 });
+                .setFormat(_format.format)
+                .setComponents(components)
+                .setSubresourceRange(subresourceRange);
 
-            _imageViews.push_back(_device.createImageView(viewInfo));
+            _imageViews.push_back(_device.device().createImageView(viewInfo));
         }
     }
 
-    void Swapchain::determineExtent(Device::SurfaceSupportDetails &details)
+    void Swapchain::determineExtent(SurfaceSupportDetails &details)
     {
         vk::SurfaceCapabilitiesKHR &capabilities = details.capabilities;
         if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max())
@@ -78,7 +106,7 @@ namespace Vkbase
         _extent.height = std::max(std::min(capabilities.maxImageExtent.height, _extent.height), capabilities.minImageExtent.height);
     }
 
-    void Swapchain::determineFormat(Device::SurfaceSupportDetails &details)
+    void Swapchain::determineFormat(SurfaceSupportDetails &details)
     {
         std::vector<vk::SurfaceFormatKHR> &formats = details.formats;
         if (formats.size() == 1 && formats[0].format == vk::Format::eUndefined)
@@ -96,7 +124,7 @@ namespace Vkbase
     }
 
 
-    void Swapchain::determinePresentMode(Device::SurfaceSupportDetails &details)
+    void Swapchain::determinePresentMode(SurfaceSupportDetails &details)
     {
         vk::PresentModeKHR desirableMode = vk::PresentModeKHR::eFifo;
         for (const vk::PresentModeKHR &presentMode : details.presentModes)
@@ -119,48 +147,23 @@ namespace Vkbase
         }
         _device.device().destroySwapchainKHR(_swapchain);
     }
-    vk::SwapchainKHR Swapchain::swapchain() const
+
+    vk::SwapchainKHR &Swapchain::swapchain()
     {
         return _swapchain;
     }
-    vk::Format Swapchain::imageFormat() const
+
+    vk::Format Swapchain::format()
     {
-        return _imageFormat;
+        return _format.format;
     }
-    vk::Extent2D Swapchain::extent() const
+    
+    vk::Extent2D Swapchain::extent()
     {
         return _extent;
     }
-    const std::vector<vk::Image>& Swapchain::images() const
-    {
-        return _images;
-    }
-    const std::vector<vk::ImageView>& Swapchain::imageViews() const
+    const std::vector<vk::ImageView>& Swapchain::imageViews()
     {
         return _imageViews;
-    }
-    void Swapchain::setDevice(vk::Device device)
-    {
-        _device = device;
-    }
-    void Swapchain::setSurface(vk::SurfaceKHR surface)
-    {
-        _surface = surface;
-    }
-    void Swapchain::setWidth(uint32_t width)
-    {
-        _width = width;
-    }
-    void Swapchain::setHeight(uint32_t height)
-    {
-        _height = height;
-    }
-    void Swapchain::setImageFormat(vk::Format imageFormat)
-    {
-        _imageFormat = imageFormat;
-    }
-    void Swapchain::setExtent(vk::Extent2D extent)
-    {
-        _extent = extent;
     }
 }

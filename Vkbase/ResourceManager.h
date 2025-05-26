@@ -7,24 +7,59 @@
 
 namespace Vkbase
 {
+
+    enum class ResourceType
+    {
+        Window,
+        Swapchain,
+        Device,
+        Image,
+        Buffer,
+        Pipeline,
+        Framebuffer,
+        CommandPool
+    };
+
     class ResourceBase;
 
-    typedef std::unordered_map<std::string, ResourceBase *> ResourceSet;
+    typedef std::unordered_map<ResourceType, std::unordered_map<std::string, ResourceBase *>> ResourceSet;
 
+    inline std::string toString(ResourceType type)
+    {
+        switch (type)
+        {
+            case ResourceType::Window:
+                return "Window";
+            case ResourceType::Swapchain:
+                return "Swapchain";
+            case ResourceType::Device:
+                return "Device";
+            case ResourceType::Image:
+                return "Image";
+            case ResourceType::Buffer:
+                return "Buffer";
+            case ResourceType::Pipeline:
+                return "Pipeline";
+            case ResourceType::Framebuffer:
+                return "Framebuffer";
+            case ResourceType::CommandPool:
+                return "CommandPool";
+        }
+    }
     class ResourceManager
     {
     private:
         vk::Instance _instance;
-        ResourceSet _resources;
+        ResourceSet _pResources;
 
         void createInstance(std::vector<const char *> layers = {"VK_LAYER_KHRONOS_validation"}, std::vector<const char *> extensions = {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, "VK_EXT_metal_surface", "VK_KHR_surface"}, std::string appName = "Vulkan");
     public:
         ResourceManager();
         ~ResourceManager();
-        void addResource(std::string name, ResourceBase *pResource);
+        void addResource(ResourceType type, std::string name, ResourceBase *pResource);
         ResourceSet &resources();
-        ResourceBase *resource(std::string name);
-        void remove(std::string name);
+        ResourceBase *resource(ResourceType type, std::string name);
+        void remove(ResourceType type, std::string name);
         vk::Instance &instance();
     };
 }

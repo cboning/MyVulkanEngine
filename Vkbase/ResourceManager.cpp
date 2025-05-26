@@ -38,34 +38,36 @@ namespace Vkbase
     }
 
 
-    void ResourceManager::addResource(std::string name, ResourceBase *pResource)
+    void ResourceManager::addResource(ResourceType type, std::string name, ResourceBase *pResource)
     {
-        Vkbase::ResourceSet::iterator iter = _resources.find(name);
-        if (iter != _resources.end())
+        std::unordered_map<std::string, ResourceBase *> &resources = _pResources[type];
+        std::unordered_map<std::string, ResourceBase *>::iterator iter = resources.find(name);
+        if (iter != resources.end())
         {
-            std::cout << "[Warning] Resource with name " << name << " already exists. Cannot add resource. So the old resource deleted." << std::endl;
+            std::cout << "[Warning] Resource with name " << toString(type) << "_" << name << " already exists. Cannot add resource. So the old resource deleted." << std::endl;
             delete iter->second; // Clean up the old resource to avoid memory leak
         }
-        _resources.insert({name, pResource});
+        resources.insert({name, pResource});
     }
 
     ResourceSet &ResourceManager::resources()
     {
-        return _resources;
+        return _pResources;
     }
 
-    ResourceBase *ResourceManager::resource(std::string name)
+    ResourceBase *ResourceManager::resource(ResourceType type, std::string name)
     {
-        auto iter = _resources.find(name);
-        if (iter != _resources.end())
+        std::unordered_map<std::string, ResourceBase *> &resources = _pResources[type];
+        std::unordered_map<std::string, ResourceBase *>::iterator iter = _pResources[type].find(name);
+        if (iter != resources.end())
             return iter->second;
         else
             return nullptr;
     }
 
-    void ResourceManager::remove(std::string name)
+    void ResourceManager::remove(ResourceType type, std::string name)
     {
-        delete _resources.extract(name).mapped();
+        delete _pResources[type].extract(name).mapped();
     }
 
     vk::Instance &ResourceManager::instance()

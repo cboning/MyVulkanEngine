@@ -4,7 +4,7 @@
 namespace Vkbase
 {
     Window::Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height)
-        : ResourceBase(resourceName, Vkbase::ResourceType::Window), _width(800), _height(600), _title("Vulkan Window")
+        : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(800), _height(600), _title("Vulkan Window")
     {
         _windowNames.insert(resourceName);
         init();
@@ -31,7 +31,7 @@ namespace Vkbase
         if (!_pWindow)
         {
             std::cerr << "[Error] Failed to create GLFW window" << std::endl;
-            resourceManager().remove(_name);
+            resourceManager().remove(_resourceType, _name);
             return;
         }
         // Set the user pointer to this window instance
@@ -45,7 +45,7 @@ namespace Vkbase
         if (!_surface)
         {
             std::cerr << "[Error] Failed to create Vulkan surface" << std::endl;
-            resourceManager().remove(_name);
+            resourceManager().remove(_resourceType, _name);
             return;
         }
     }
@@ -58,7 +58,7 @@ namespace Vkbase
 
     void Window::close()
     {
-        resourceManager().remove(_name);
+        resourceManager().remove(_resourceType, _name);
     }
 
     uint32_t Window::count()

@@ -9,6 +9,12 @@
 
 namespace Vkbase
 {
+    struct SurfaceSupportDetails
+    {
+        vk::SurfaceCapabilitiesKHR capabilities;
+        std::vector<vk::SurfaceFormatKHR> formats;
+        std::vector<vk::PresentModeKHR> presentModes;
+    };
     class Device : public ResourceBase
     {
     public:
@@ -23,16 +29,11 @@ namespace Vkbase
                 return graphicsFamilyIndex >= 0 && presentFamilyIndex >= 0 && computeFamilyIndex >= 0;
             }
         };
-        struct SurfaceSupportDetails
-        {
-            vk::SurfaceCapabilitiesKHR capabilities;
-            std::vector<vk::SurfaceFormatKHR> formats;
-            std::vector<vk::PresentModeKHR> presentModes;
-        };
-        
+
         Device(const std::string &resourceName, vk::SurfaceKHR surface);
         ~Device() override;
 
+        static get
         SurfaceSupportDetails querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface);
         vk::Device device();
         vk::PhysicalDevice physicalDevice();
@@ -41,7 +42,6 @@ namespace Vkbase
         QueueFamilyIndices queueFamilyIndices();
     
     private:
-
         vk::Device _device;
         vk::PhysicalDevice _physicalDevice;
         vk::Queue _graphicsQueue;
@@ -49,6 +49,8 @@ namespace Vkbase
         std::vector<const char *> _extensions;
         std::vector<const char *> _layers;
         QueueFamilyIndices _queueFamilyIndices;
+        std::unordered_set<Device *> _pDevice;
+
 
         void createLogicalDevice();
         void pickPhysicalDevice(vk::SurfaceKHR surface);
