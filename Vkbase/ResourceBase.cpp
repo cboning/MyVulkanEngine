@@ -7,20 +7,14 @@ namespace Vkbase
     ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
         : _name(resourceName), _resourceType(resourceType)
     {
-        _pResource.insert(this);
-        _resourceManager.addResource(resourceType, resourceName, this);
-        std::cout << "[Info] "<< toString(resourceType) <<" Resource " << resourceName << " created." << std::endl;
+        if (_name.empty())
+            _name = std::to_string(_nameId++);
+        _resourceManager.addResource(resourceType, _name, this);
+        std::cout << "[Info] " << toString(resourceType) << " Resource " << _name << " created." << std::endl;
     }
 
     ResourceBase::~ResourceBase()
     {
-        for (ResourceBase *pSubresource : _pSubresources)
-            pSubresource->disuseSuperresource(this);
-        
-        for (ResourceBase *pSuperresource : _pSuperresources)
-            pSuperresource->disusedSubresource(this);
-
-        _pResources.erase(this);
     }
 
     ResourceManager &ResourceBase::resourceManager()
@@ -42,11 +36,30 @@ namespace Vkbase
     {
         _pSubresources.erase(pResource);
     }
-    
+
     void ResourceBase::disuseSuperresource(ResourceBase *pResource)
     {
         _pSuperresources.erase(pResource);
         if (_pSuperresources.empty())
             _resourceManager.remove(_resourceType, _name);
+    }
+
+    const std::string &ResourceBase::name()
+    {
+        return _name;
+    }
+
+    const ResourceType &ResourceBase::type()
+    {
+        return _resourceType;
+    }
+    
+    void ResourceBase::disconnect()
+    {
+        for (ResourceBase *pSubresource : _pSubresources)
+            pSubresource->disuseSuperresource(this);
+        
+        for (ResourceBase *pSuperresource : _pSuperresources)
+            pSuperresource->disusedSubresource(this);
     }
 }

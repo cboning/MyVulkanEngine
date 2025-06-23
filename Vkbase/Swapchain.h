@@ -17,10 +17,9 @@ namespace Vkbase
         std::vector<vk::Image> _images;
         std::vector<vk::ImageView> _imageViews;
         Device &_device;
-        vk::SurfaceKHR _surface;
+        const vk::SurfaceKHR &_surface;
 
         uint32_t _imageCount;
-
 
         void init();
         void determineFormat(SurfaceSupportDetails &details);
@@ -29,7 +28,7 @@ namespace Vkbase
         void cleanup();
 
     public:
-        Swapchain(const std::string& resourceName, const std::string &deviceName, vk::SurfaceKHR surface, uint32_t width, uint32_t height);
+        Swapchain(const std::string& resourceName, const std::string &deviceName, const vk::SurfaceKHR &surface, uint32_t width, uint32_t height);
         ~Swapchain() override;
 
         vk::SwapchainKHR &swapchain();

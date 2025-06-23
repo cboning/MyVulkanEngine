@@ -1,3 +1,4 @@
+#define DEBUG
 #include "ResourceManager.h"
 #include "ResourceBase.h"
 #include "Window.h"
@@ -7,7 +8,14 @@ namespace Vkbase
 {
     ResourceManager::ResourceManager()
     {
-        createInstance();
+        if (!glfwInit())
+        {
+            std::cerr << "[Error]Failed to initialize GLFW" << std::endl;
+            return;
+        }
+        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+
+        createInstance({"VK_LAYER_KHRONOS_validation"}, {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, "VK_MVK_macos_surface"});
     }
 
     ResourceManager::~ResourceManager()
@@ -25,8 +33,7 @@ namespace Vkbase
 
         uint32_t extensionCount = 0;
         const char **ppExtensions = glfwGetRequiredInstanceExtensions(&extensionCount);
-        std::vector<const char *> pGLFWRequiredExtensions(ppExtensions, ppExtensions + extensionCount);
-        extensions.insert(extensions.end(), pGLFWRequiredExtensions.begin(), pGLFWRequiredExtensions.end());
+        extensions.insert(extensions.end(), ppExtensions, ppExtensions + extensionCount);
                         
         vk::InstanceCreateInfo createInfo;
         createInfo.setPApplicationInfo(&applicationInfo)
@@ -35,6 +42,7 @@ namespace Vkbase
                     .setFlags(vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR);
         
         _instance = vk::createInstance(createInfo);
+        std::vector<vk::PhysicalDevice> physicalDevices = _instance.enumeratePhysicalDevices();
     }
 
 
@@ -44,7 +52,9 @@ namespace Vkbase
         std::unordered_map<std::string, ResourceBase *>::iterator iter = resources.find(name);
         if (iter != resources.end())
         {
+#ifdef DEBUG
             std::cout << "[Warning] Resource with name " << toString(type) << "_" << name << " already exists. Cannot add resource. So the old resource deleted." << std::endl;
+#endif
             delete iter->second; // Clean up the old resource to avoid memory leak
         }
         resources.insert({name, pResource});
@@ -67,7 +77,32 @@ namespace Vkbase
 
     void ResourceManager::remove(ResourceType type, std::string name)
     {
-        delete _pResources[type].extract(name).mapped();
+        if (!_pResources.count(type))
+        {
+#ifdef DEBUG
+            std::cout << "Failed to remove a resource, because it is not exist." << std::endl;
+#endif
+            return ;
+        }
+
+        std::unordered_map<std::__1::string, Vkbase::ResourceBase *>::iterator iter = _pResources[type].find(name);
+        if (iter == _pResources[type].end())
+        {
+#ifdef DEBUG
+            std::cout << "Failed to remove a resource, because it is not exist." << std::endl;
+#endif
+            return ;
+        }
+        iter->second->disconnect();
+        delete iter->second;
+        _pResources[type].erase(iter);
+
+        if (_pResources[type].empty())
+            _pResources.erase(type);
+        
+#ifdef DEBUG
+        std::cout << "Success to remove the resource. Type: " << toString(type) << ", Name: " << name << std::endl;
+#endif
     }
 
     vk::Instance &ResourceManager::instance()

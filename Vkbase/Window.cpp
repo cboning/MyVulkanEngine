@@ -1,4 +1,6 @@
 #include "Window.h"
+#include "Device.h"
+#include "Swapchain.h"
 #include <iostream>
 
 namespace Vkbase
@@ -6,22 +8,24 @@ namespace Vkbase
     Window::Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height)
         : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(800), _height(600), _title("Vulkan Window")
     {
-        _windowNames.insert(resourceName);
         init();
         _count++;
+        if (_surface)
+        {
+            _pDevice = connectTo(Device::getSuitableDevice(_surface));
+
+            _pSwapchain = connectTo(new Swapchain(resourceName, _pDevice->name(), _surface, _width, _height));
+        }
     }
 
     Window::~Window()
     {
         if (_pWindow)
-        {
             glfwDestroyWindow(_pWindow);
-        }
+
         if (_surface)
-        {
             resourceManager().instance().destroySurfaceKHR(_surface);
-        }
-        _windowNames.erase(_name);
+
         _count--;
     }
 

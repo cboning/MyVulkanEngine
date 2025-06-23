@@ -8,6 +8,8 @@
 
 namespace Vkbase
 {
+    class Device;
+    class Swapchain;
     class Window : public ResourceBase
     {
     private:
@@ -15,8 +17,10 @@ namespace Vkbase
         std::string _title;
         vk::SurfaceKHR _surface;
         uint32_t _width, _height;
+        Device *_pDevice = nullptr;
+        Swapchain *_pSwapchain = nullptr;
+
         inline static uint32_t _count = 0;
-        inline static std::unordered_set<std::string> _windowNames = {};
 
         void init();
         void close();

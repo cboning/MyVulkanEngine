@@ -7,9 +7,7 @@
 class Application
 {
 private:
-    Vkbase::ResourceManager _resourceManager;
-
-    void init();
+    Vkbase::ResourceManager &_resourceManager;
     void cleanup();
     void mainLoop();
 
