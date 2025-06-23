@@ -1,12 +1,15 @@
-#include "./Device.h"
+#include "Device.h"
+#include "CommandPool.h"
 
 namespace Vkbase
 {
-    Device::Device(const std::string &resourceName, vk::SurfaceKHR &surface)
+    Device::Device(const std::string &resourceName, const vk::SurfaceKHR &surface)
         : ResourceBase(ResourceType::Device, resourceName)
     {
-        pickPhysicalDevice(surface);
+        _physicalDevice = pickPhysicalDevice(surface);
+        _queueFamilyIndices = findQueueFamilies(_physicalDevice, surface);
         createLogicalDevice();
+        _commandPool = connectTo(new CommandPool(_name, _name, CommandPoolQueueType::Graphics));
     }
 
     Device::~Device()
@@ -45,31 +48,27 @@ namespace Vkbase
 
         _graphicsQueue = _device.getQueue(_queueFamilyIndices.graphicsFamilyIndex, 0);
         _presentQueue = _device.getQueue(_queueFamilyIndices.presentFamilyIndex, 0);
+        _computeQueue = _device.getQueue(_queueFamilyIndices.computeFamilyIndex, 0);
     }
 
-    void Device::pickPhysicalDevice(vk::SurfaceKHR &surface)
+    vk::PhysicalDevice Device::pickPhysicalDevice(const vk::SurfaceKHR &surface)
     {
-        std::vector<vk::PhysicalDevice> _physicalDevices = resourceManager().instance().enumeratePhysicalDevices();
-        for (const auto &device : _physicalDevices)
-            if (isphysicalDeviceSuitable(device, surface))
-            {
-                _physicalDevice = device;
-                break;
-            }
-        if (!_physicalDevice)
-            throw std::runtime_error("Failed to find a suitable GPU");
+        std::vector<vk::PhysicalDevice> physicalDevices = resourceManager().instance().enumeratePhysicalDevices();
+        for (const auto &device : physicalDevices)
+            if (isPhysicalDeviceSuitable(device, surface))
+                return device;
+        throw std::runtime_error("Failed to find a suitable GPU");
     }
 
-    bool Device::isphysicalDeviceSuitable(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+    bool Device::isPhysicalDeviceSuitable(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface)
     {
-        _queueFamilyIndices = findQueueFamilies(device, surface);
-
+        Device::QueueFamilyIndices queueFamilyIndices = findQueueFamilies(device, surface);
         // Check if the device supports the required features
         vk::PhysicalDeviceFeatures supportedFeatures = device.getFeatures();
-        return _queueFamilyIndices.isComplete() && supportedFeatures.samplerAnisotropy && supportedFeatures.geometryShader && checkSwapChainSupport(device, surface);
+        return queueFamilyIndices.isComplete() && supportedFeatures.samplerAnisotropy && checkSwapChainSupport(device, surface);
     }
 
-    Device::QueueFamilyIndices Device::findQueueFamilies(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+    Device::QueueFamilyIndices Device::findQueueFamilies(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface)
     {
         QueueFamilyIndices indices;
         std::vector<vk::QueueFamilyProperties> queueFamilies = device.getQueueFamilyProperties();
@@ -98,7 +97,7 @@ namespace Vkbase
         return indices;
     }
 
-    bool Device::checkSwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+    bool Device::checkSwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface)
     {
         if (checkDeviceExtensionSupport(device))
         {
@@ -108,15 +107,19 @@ namespace Vkbase
         return false;
     }
 
-    bool Device::checkDeviceExtensionSupport(vk::PhysicalDevice device)
+    bool Device::checkDeviceExtensionSupport(const vk::PhysicalDevice &device)
     {
-        std::unordered_set extensions(_extensions.begin(), _extensions.end());
-        for (const auto &extension : device.enumerateDeviceExtensionProperties())
-            extensions.erase(extension.extensionName);
+        std::unordered_set<std::string> extensions(_extensions.begin(), _extensions.end());
+        auto extensionst = device.enumerateDeviceExtensionProperties();
+        for (const auto &extension : extensionst)
+        {
+            std::string extName(extension.extensionName.data());
+            extensions.erase(extName);
+        }
         return extensions.empty();
     }
 
-    SurfaceSupportDetails Device::querySwapChainSupport(vk::PhysicalDevice device, vk::SurfaceKHR surface)
+    SurfaceSupportDetails Device::querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface)
     {
         SurfaceSupportDetails details;
         details.capabilities = device.getSurfaceCapabilitiesKHR(surface);
@@ -125,31 +128,47 @@ namespace Vkbase
         return details;
     }
 
-    vk::Device Device::device()
+    vk::Device &Device::device()
     {
         return _device;
     }
-    vk::PhysicalDevice Device::physicalDevice()
+    const vk::PhysicalDevice &Device::physicalDevice()
     {
         return _physicalDevice;
     }
-    vk::Queue Device::graphicsQueue()
+    const vk::Queue &Device::graphicsQueue()
     {
         return _graphicsQueue;
     }
-    vk::Queue Device::presentQueue()
+    const vk::Queue &Device::presentQueue()
     {
         return _presentQueue;
+    }
+
+    const vk::Queue &Device::computeQueue()
+    {
+        return _computeQueue;
     }
 
     Device::QueueFamilyIndices Device::queueFamilyIndices()
     {
         return _queueFamilyIndices;
     }
-    
-    Device *Device::getSuitableDevice(vk::SurfaceKHR &surface)
+
+    const CommandPool &Device::commandPool()
     {
-        return ;
+        return *_commandPool;
+    }
+    
+    Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
+    {
+        for (const auto pDevice : resourceManager().resources()[ResourceType::Device])
+        {
+            Device &targetDevice = *dynamic_cast<Device *>(pDevice.second);
+            if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) && targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
+                return &targetDevice;
+        }
+        return new Device("", surface);
     }
     
 }

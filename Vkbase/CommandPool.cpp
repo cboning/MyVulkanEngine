@@ -1,0 +1,86 @@
+#include "CommandPool.h"
+#include "Device.h"
+
+namespace Vkbase
+{
+    CommandPool::CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType)
+        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName)))
+    {
+        determineQueue(queueType);
+        createCommandPool();
+    }
+
+    CommandPool::~CommandPool()
+    {
+        _device.device().destroyCommandPool(_commandPool);
+    }
+
+    
+    void CommandPool::determineQueue(CommandPoolQueueType queueType) const
+    {
+        switch (queueType)
+        {
+            case CommandPoolQueueType::Graphics:
+                _queueIndex = _device.queueFamilyIndices().graphicsFamilyIndex;
+                _queue = _device.graphicsQueue();
+                _queue.submit
+                break;
+            case CommandPoolQueueType::Compute:
+                _queueIndex = _device.queueFamilyIndices().computeFamilyIndex;
+                _queue = _device.computeQueue();
+                break;
+            case CommandPoolQueueType::Present:
+                _queueIndex = _device.queueFamilyIndices().presentFamilyIndex;
+                _queue = _device.presentQueue();
+                break;
+        }
+    }
+
+    void CommandPool::createCommandPool()
+    {
+        vk::CommandPoolCreateInfo createInfo;
+        createInfo.setQueueFamilyIndex(_queueIndex)
+            .setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
+        _commandPool = _device.device().createCommandPool(createInfo);
+    }
+
+    std::vector<vk::CommandBuffer> CommandPool::allocateFlightCommandBuffers(uint32_t maxFlightFrameCount)
+    {
+        vk::CommandBufferAllocateInfo allocateInfo;
+        allocateInfo.setCommandPool(_commandPool)
+            .setCommandBufferCount(maxFlightFrameCount)
+            .setLevel(vk::CommandBufferLevel::ePrimary);
+        
+        return _device.device().allocateCommandBuffers(allocateInfo);
+    }
+
+    vk::CommandBuffer CommandPool::allocateOnceCommandBuffer()
+    {
+        vk::CommandBufferAllocateInfo allocateInfo;
+        allocateInfo.setCommandPool(_commandPool)
+            .setCommandBufferCount(1)
+            .setLevel(vk::CommandBufferLevel::ePrimary);
+        vk::CommandBuffer commandBuffer = _device.device().allocateCommandBuffers(allocateInfo)[0];
+        vk::CommandBufferBeginInfo beginInfo;
+        beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+
+        commandBuffer.begin(beginInfo);
+        return commandBuffer;
+    }
+
+    void CommandPool::endOnceCommandBuffer(vk::CommandBuffer commandBuffer)
+    {
+        commandBuffer.end();
+
+        vk::SubmitInfo submitInfo;
+        submitInfo.setCommandBuffers(commandBuffer);
+        _queue.submit(submitInfo);
+        _queue.waitIdle();
+        freeCommandBuffers(commandBuffer);
+    }
+
+    void CommandPool::freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers)
+    {
+        _device.device().freeCommandBuffers(_commandPool, commandBuffers);
+    }
+};

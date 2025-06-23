@@ -17,7 +17,8 @@ namespace Vkbase
         Buffer,
         Pipeline,
         Framebuffer,
-        CommandPool
+        CommandPool,
+        RenderPass
     };
 
     class ResourceBase;
@@ -44,6 +45,8 @@ namespace Vkbase
                 return "Framebuffer";
             case ResourceType::CommandPool:
                 return "CommandPool";
+            case ResourceType::RenderPass:
+                return "RenderPass";
         }
     }
     class ResourceManager

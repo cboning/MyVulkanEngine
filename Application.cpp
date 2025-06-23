@@ -2,22 +2,10 @@
 #include "Vkbase/ResourceBase.h"
 #include "Vkbase/Window.h"
 
-
-
 Application::Application()
+    : _resourceManager(Vkbase::ResourceBase::resourceManager())
 {
-    init();
     new Vkbase::Window("mainWindow", "Vulkan Window", 800, 600);
-}
-
-void Application::init()
-{
-    if (!glfwInit())
-    {
-        std::cerr << "[Error]Failed to initialize GLFW" << std::endl;
-        return;
-    }
-    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 }
 
 void Application::run()
@@ -28,12 +16,12 @@ void Application::run()
 
 void Application::mainLoop()
 {
-    while (Vkbase::Window::count())
+    while (_resourceManager.resources().count(Vkbase::ResourceType::Window))
     {
         glfwPollEvents();
     }
 }
 void Application::cleanup()
 {
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Window, "mainWindow");
+    _resourceManager.remove(Vkbase::ResourceType::Window, "mainWindow");
 }

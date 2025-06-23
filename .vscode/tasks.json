@@ -11,7 +11,7 @@
                 "-g",
                 "${fileDirname}/*.cpp",
                 "${fileDirname}/Vkbase/*.cpp",
-                "-O2",
+                // "-O2",
                 "-I",
                 "${fileDirname}/include",
                 "-L./lib",

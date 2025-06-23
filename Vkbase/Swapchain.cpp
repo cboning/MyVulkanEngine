@@ -6,17 +6,17 @@
 
 namespace Vkbase
 {
-    Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, vk::SurfaceKHR surface, uint32_t width, uint32_t height)
+    Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, const vk::SurfaceKHR &surface, uint32_t width, uint32_t height)
         : ResourceBase(ResourceType::Swapchain, resourceName), _device(*dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName))), _surface(surface)
     {
         _extent.setWidth(width).setHeight(height);
         SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
-        _imageCount = _device.querySwapChainSupport(_device.physicalDevice(), _surface).capabilities.minImageCount + 1;
 
         // Determine some properties from surface details
         determineExtent(supportDetails);
         determineFormat(supportDetails);
         determinePresentMode(supportDetails);
+        connectTo(&_device);
         init();
     }
 
@@ -71,6 +71,8 @@ namespace Vkbase
 
         // Get the images from the swapchain
         _images = _device.device().getSwapchainImagesKHR(_swapchain);
+
+        _imageCount = _images.size();
 
         // Create image views for each image
         for (const auto& image : _images) {
