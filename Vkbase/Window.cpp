@@ -9,7 +9,6 @@ namespace Vkbase
         : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(800), _height(600), _title("Vulkan Window")
     {
         init();
-        _count++;
         if (_surface)
         {
             _pDevice = connectTo(Device::getSuitableDevice(_surface));
@@ -25,8 +24,6 @@ namespace Vkbase
 
         if (_surface)
             resourceManager().instance().destroySurfaceKHR(_surface);
-
-        _count--;
     }
 
     void Window::init()
@@ -63,11 +60,6 @@ namespace Vkbase
     void Window::close()
     {
         resourceManager().remove(_resourceType, _name);
-    }
-
-    uint32_t Window::count()
-    {
-        return _count;
     }
 
     vk::SurfaceKHR &Window::surface()

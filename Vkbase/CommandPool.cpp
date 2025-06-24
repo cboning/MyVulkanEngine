@@ -4,7 +4,7 @@
 namespace Vkbase
 {
     CommandPool::CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType)
-        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName)))
+        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<const Device *>(resourceManager().resource(ResourceType::Device, deviceName))), _queue(determineQueue(queueType)), _queueIndex(determineQueueIndex(queueType))
     {
         determineQueue(queueType);
         createCommandPool();
@@ -15,27 +15,34 @@ namespace Vkbase
         _device.device().destroyCommandPool(_commandPool);
     }
 
-    
-    void CommandPool::determineQueue(CommandPoolQueueType queueType) const
+    const vk::Queue &CommandPool::determineQueue(CommandPoolQueueType queueType) const
     {
         switch (queueType)
         {
             case CommandPoolQueueType::Graphics:
-                _queueIndex = _device.queueFamilyIndices().graphicsFamilyIndex;
-                _queue = _device.graphicsQueue();
-                _queue.submit
-                break;
+                return _device.graphicsQueue();
             case CommandPoolQueueType::Compute:
-                _queueIndex = _device.queueFamilyIndices().computeFamilyIndex;
-                _queue = _device.computeQueue();
-                break;
+                return _device.computeQueue();
             case CommandPoolQueueType::Present:
-                _queueIndex = _device.queueFamilyIndices().presentFamilyIndex;
-                _queue = _device.presentQueue();
-                break;
+                return _device.presentQueue();
         }
+        throw std::runtime_error("[ERROR] Unknown queue type.");
     }
 
+    const uint32_t CommandPool::determineQueueIndex(CommandPoolQueueType queueType) const
+    {
+        switch (queueType)
+        {
+            case CommandPoolQueueType::Graphics:
+                return _device.queueFamilyIndices().graphicsFamilyIndex;
+            case CommandPoolQueueType::Compute:
+                return _device.queueFamilyIndices().computeFamilyIndex;
+            case CommandPoolQueueType::Present:
+                return _device.queueFamilyIndices().presentFamilyIndex;
+        }
+        throw std::runtime_error("[ERROR] Unknown queue type.");
+    }
+    
     void CommandPool::createCommandPool()
     {
         vk::CommandPoolCreateInfo createInfo;

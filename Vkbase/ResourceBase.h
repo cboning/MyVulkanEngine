@@ -12,8 +12,8 @@ namespace Vkbase
 
 
     protected:
-        ResourceType _resourceType;
-        std::string _name;
+        const ResourceType _resourceType;
+        const std::string _name;
         std::unordered_set<ResourceBase *> _pSubresources;
         std::unordered_set<ResourceBase *> _pSuperresources;
         inline static uint32_t _nameId = 0;
@@ -31,15 +31,14 @@ namespace Vkbase
             return derived;
         }
 
-
     public:
         ResourceBase(ResourceType resourceType, const std::string &resourceName);
         virtual ~ResourceBase();
         static ResourceManager &resourceManager();
         void useSuperresource(ResourceBase *pResource);
         void disuseSuperresource(ResourceBase *pResource);
-        const std::string &name();
-        const ResourceType &type();
+        const std::string &name() const;
+        const ResourceType &type() const;
         void disconnect();
     };
 }

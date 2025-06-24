@@ -5,10 +5,8 @@
 namespace Vkbase
 {
     ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
-        : _name(resourceName), _resourceType(resourceType)
-    {
-        if (_name.empty())
-            _name = std::to_string(_nameId++);
+        : _name(resourceName.empty() ? std::to_string(_nameId++) : resourceName), _resourceType(resourceType)
+    {\
         _resourceManager.addResource(resourceType, _name, this);
         std::cout << "[Info] " << toString(resourceType) << " Resource " << _name << " created." << std::endl;
     }
@@ -44,16 +42,16 @@ namespace Vkbase
             _resourceManager.remove(_resourceType, _name);
     }
 
-    const std::string &ResourceBase::name()
+    const std::string &ResourceBase::name() const
     {
         return _name;
     }
 
-    const ResourceType &ResourceBase::type()
+    const ResourceType &ResourceBase::type() const
     {
         return _resourceType;
     }
-    
+
     void ResourceBase::disconnect()
     {
         for (ResourceBase *pSubresource : _pSubresources)

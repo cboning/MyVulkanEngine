@@ -20,8 +20,6 @@ namespace Vkbase
         Device *_pDevice = nullptr;
         Swapchain *_pSwapchain = nullptr;
 
-        inline static uint32_t _count = 0;
-
         void init();
         void close();
         static void windowClosedCallback(GLFWwindow *pWindow);
@@ -29,7 +27,6 @@ namespace Vkbase
         Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height);
         ~Window() override;
         
-        static uint32_t count();
         vk::SurfaceKHR &surface();
     };
 }

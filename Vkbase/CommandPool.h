@@ -11,16 +11,18 @@ namespace Vkbase
         Present
     };
     class Device;
+    class CommandBuffer;
     class CommandPool : public ResourceBase
     {
     private:
         vk::CommandPool _commandPool;
-        Device &_device;
-        uint32_t _queueIndex;
-        vk::Queue &_queue;
+        const Device &_device;
+        const uint32_t _queueIndex;
+        const vk::Queue &_queue;
 
         void createCommandPool();
-        void determineQueue(CommandPoolQueueType queueType) const;
+        const vk::Queue &determineQueue(CommandPoolQueueType queueType) const;
+        const uint32_t determineQueueIndex(CommandPoolQueueType queueType) const;
         
     public:
         CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType);

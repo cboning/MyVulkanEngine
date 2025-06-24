@@ -26,12 +26,12 @@ namespace Vkbase
             int computeFamilyIndex = -1;
             int presentFamilyIndex = -1;
 
-            bool isComplete()
+            bool isComplete() const
             {
                 return graphicsFamilyIndex >= 0 && presentFamilyIndex >= 0 && computeFamilyIndex >= 0;
             }
 
-            bool operator==(const QueueFamilyIndices &right)
+            bool operator==(const QueueFamilyIndices &right) const
             {
                 return graphicsFamilyIndex == right.graphicsFamilyIndex && computeFamilyIndex == right.computeFamilyIndex && presentFamilyIndex == right.presentFamilyIndex;
             }
@@ -43,15 +43,15 @@ namespace Vkbase
         static Device *getSuitableDevice(const vk::SurfaceKHR &surface);
         static SurfaceSupportDetails querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
 
-        const vk::PhysicalDevice &physicalDevice();
-        vk::Device &device();
-        const vk::Queue &graphicsQueue();
-        const vk::Queue &presentQueue();
-        const vk::Queue &computeQueue();
+        const vk::PhysicalDevice &physicalDevice() const;
+        const vk::Device &device() const;
+        const vk::Queue &graphicsQueue() const;
+        const vk::Queue &presentQueue() const;
+        const vk::Queue &computeQueue() const;
 
-        QueueFamilyIndices queueFamilyIndices();
+        const QueueFamilyIndices &queueFamilyIndices() const;
 
-        const CommandPool &commandPool();
+        const CommandPool &commandPool() const;
     
     private:
         vk::Device _device;
@@ -65,15 +65,11 @@ namespace Vkbase
         QueueFamilyIndices _queueFamilyIndices;
         std::unordered_set<Device *> _pDevice;
 
-
         void createLogicalDevice();
         static vk::PhysicalDevice pickPhysicalDevice(const vk::SurfaceKHR &surface);
         static bool isPhysicalDeviceSuitable(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
         static bool checkSwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
         static bool checkDeviceExtensionSupport(const vk::PhysicalDevice &device);
-
         static QueueFamilyIndices findQueueFamilies(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
-        
-        
     };
 }

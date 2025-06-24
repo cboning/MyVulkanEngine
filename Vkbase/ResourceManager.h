@@ -60,9 +60,9 @@ namespace Vkbase
         ResourceManager();
         ~ResourceManager();
         void addResource(ResourceType type, std::string name, ResourceBase *pResource);
-        ResourceSet &resources();
-        ResourceBase *resource(ResourceType type, std::string name);
+        const ResourceSet &resources() const;
+        const ResourceBase *resource(ResourceType type, std::string name) const;
         void remove(ResourceType type, std::string name);
-        vk::Instance &instance();
+        const vk::Instance &instance() const;
     };
 }

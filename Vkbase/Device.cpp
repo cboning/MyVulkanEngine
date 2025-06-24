@@ -128,41 +128,41 @@ namespace Vkbase
         return details;
     }
 
-    vk::Device &Device::device()
+    const vk::Device &Device::device() const
     {
         return _device;
     }
-    const vk::PhysicalDevice &Device::physicalDevice()
+    const vk::PhysicalDevice &Device::physicalDevice() const
     {
         return _physicalDevice;
     }
-    const vk::Queue &Device::graphicsQueue()
+    const vk::Queue &Device::graphicsQueue() const
     {
         return _graphicsQueue;
     }
-    const vk::Queue &Device::presentQueue()
+    const vk::Queue &Device::presentQueue() const
     {
         return _presentQueue;
     }
 
-    const vk::Queue &Device::computeQueue()
+    const vk::Queue &Device::computeQueue() const
     {
         return _computeQueue;
     }
 
-    Device::QueueFamilyIndices Device::queueFamilyIndices()
+    const Device::QueueFamilyIndices &Device::queueFamilyIndices() const
     {
         return _queueFamilyIndices;
     }
 
-    const CommandPool &Device::commandPool()
+    const CommandPool &Device::commandPool() const
     {
         return *_commandPool;
     }
     
     Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
     {
-        for (const auto pDevice : resourceManager().resources()[ResourceType::Device])
+        for (const auto pDevice : resourceManager().resources().at(ResourceType::Device))
         {
             Device &targetDevice = *dynamic_cast<Device *>(pDevice.second);
             if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) && targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
@@ -170,5 +170,4 @@ namespace Vkbase
         }
         return new Device("", surface);
     }
-    
 }
