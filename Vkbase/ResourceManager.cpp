@@ -60,15 +60,15 @@ namespace Vkbase
         resources.insert({name, pResource});
     }
 
-    ResourceSet &ResourceManager::resources()
+    const ResourceSet &ResourceManager::resources() const
     {
         return _pResources;
     }
 
-    ResourceBase *ResourceManager::resource(ResourceType type, std::string name)
+    const ResourceBase *ResourceManager::resource(ResourceType type, std::string name) const
     {
-        std::unordered_map<std::string, ResourceBase *> &resources = _pResources[type];
-        std::unordered_map<std::string, ResourceBase *>::iterator iter = _pResources[type].find(name);
+        const std::unordered_map<std::string, ResourceBase *> &resources = _pResources.at(type);
+        const std::unordered_map<std::string, ResourceBase *>::const_iterator iter = resources.find(name);
         if (iter != resources.end())
             return iter->second;
         else
@@ -105,7 +105,7 @@ namespace Vkbase
 #endif
     }
 
-    vk::Instance &ResourceManager::instance()
+    const vk::Instance &ResourceManager::instance() const
     {
         return _instance;
     }
