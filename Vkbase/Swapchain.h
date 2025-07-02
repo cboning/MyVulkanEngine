@@ -22,20 +22,20 @@ namespace Vkbase
         const vk::SurfaceKHR &_surface;
 
         void init();
+        void cleanup();
         void determineFormat(SurfaceSupportDetails &details);
         void determineExtent(SurfaceSupportDetails &details);
         void determinePresentMode(SurfaceSupportDetails &details);
-        void cleanup();
 
     public:
         Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName, uint32_t width, uint32_t height);
         ~Swapchain() override;
 
-        const vk::SwapchainKHR &swapchain() const;
-        vk::Extent2D extent() const;
         vk::Format format() const;
+        vk::Extent2D extent() const;
+        const vk::SwapchainKHR &swapchain() const;
         const std::vector<vk::Image> &images() const;
-        const std::vector<vk::ImageView> &imageViews() const;
         const std::vector<std::string> &imageNames() const;
+        const std::vector<vk::ImageView> &imageViews() const;
     };
 }

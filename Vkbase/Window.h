@@ -24,7 +24,6 @@ namespace Vkbase
     public:
         Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height);
         ~Window() override;
-        
         const vk::SurfaceKHR &surface() const;
     };
 }
