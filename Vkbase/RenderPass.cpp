@@ -45,4 +45,39 @@ namespace Vkbase
     {
         return *(new Pipeline(resourceName, _device.name(), name(), createInfo));
     }
+
+    void RenderPass::begin(const vk::CommandBuffer &commandBuffer, const Framebuffer &framebuffer, std::vector<vk::ClearValue> &clearValues, vk::Extent2D &extent) const
+    {
+        vk::RenderPassBeginInfo beginInfo;
+        
+        vk::Viewport viewport;
+        viewport.setX(0.0f)
+            .setY(0.0f)
+            .setWidth(extent.width)
+            .setHeight(extent.height)
+            .setMinDepth(0.0f)
+            .setMaxDepth(1.0f);
+        
+        vk::Rect2D scissor;
+        scissor.setExtent(extent);
+        scissor.setOffset({0, 0});
+
+        vk::Rect2D renderArea;
+        renderArea.setExtent(extent)
+            .setOffset({0, 0});
+        beginInfo.setFramebuffer(framebuffer.framebuffer())
+            .setRenderPass(_renderPass)
+            .setClearValues(clearValues)
+            .setRenderArea(renderArea);
+
+        commandBuffer.setViewport(0, viewport);
+        commandBuffer.setScissor(0, scissor);
+
+        commandBuffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
+    }
+
+    void RenderPass::end(const vk::CommandBuffer &commandBuffer) const
+    {
+        commandBuffer.endRenderPass();
+    }
 }

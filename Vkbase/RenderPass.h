@@ -17,6 +17,8 @@ namespace Vkbase
         const std::vector<vk::Format> &attachmentFormats() const;
         const Framebuffer &createFramebuffer(const std::string &resourceName, const std::vector<const std::string> &attachmentNames, uint32_t width, uint32_t height) const;
         const Pipeline &createPipeline(const std::string &resourceName, const PipelineCreateInfo &createInfo) const;
+        void begin(const vk::CommandBuffer &commandBuffer, const Framebuffer &framebuffer, std::vector<vk::ClearValue> &clearValues, vk::Extent2D &extent) const;
+        void end(const vk::CommandBuffer &commandBuffer) const;
 
     private:
         vk::RenderPass _renderPass;

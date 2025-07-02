@@ -11,6 +11,7 @@ namespace Vkbase
     public:
         Framebuffer(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const std::vector<const std::string> &attachmentNames, uint32_t width, uint32_t height);
         ~Framebuffer() override;
+        const vk::Framebuffer &framebuffer() const;
 
     private:
         vk::Framebuffer _framebuffer;

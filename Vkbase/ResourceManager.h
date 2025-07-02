@@ -17,7 +17,8 @@ namespace Vkbase
         Pipeline,
         Framebuffer,
         CommandPool,
-        RenderPass
+        RenderPass,
+        RenderDelegator
     };
 
     class ResourceBase;
@@ -46,6 +47,8 @@ namespace Vkbase
                 return "CommandPool";
             case ResourceType::RenderPass:
                 return "RenderPass";
+            case ResourceType::RenderDelegator:
+                return "RenderDelegator";
         }
     }
     class ResourceManager

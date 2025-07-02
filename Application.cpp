@@ -4,6 +4,8 @@
 #include "Vkbase/RenderPass.h"
 #include "Vkbase/Swapchain.h"
 #include "Vkbase/Pipeline.h"
+#include "Vkbase/RenderDelegator.h"
+#include "Vkbase/Framebuffer.h"
 
 Application::Application()
     : _resourceManager(Vkbase::ResourceBase::resourceManager())
@@ -69,6 +71,8 @@ void Application::createRenderPass()
 
     Vkbase::PipelineCreateInfo pipelineCreateInfo(shaderInfo, vertexInfo, descriptorSetLayouts, renderInfo);
     renderPass.createPipeline("base", pipelineCreateInfo);
+    _pRenderDelegator = new Vkbase::RenderDelegator("mainRender", "0", renderPass.name(), swapchain.name(), "Graphics0");
+    _pRenderDelegator->setCommandRecordFunc(recordCommand);
 }
 
 void Application::run()
@@ -82,9 +86,25 @@ void Application::mainLoop()
     while (_resourceManager.resources().count(Vkbase::ResourceType::Window))
     {
         glfwPollEvents();
+        _pRenderDelegator->draw();
     }
 }
 void Application::cleanup()
 {
-    _resourceManager.remove(Vkbase::ResourceType::Pipeline, "base");
+    
+}
+
+void Application::recordCommand(Vkbase::ResourceManager &resourceManager, const vk::CommandBuffer &commandBuffer, uint32_t imageIndex)
+{
+    const Vkbase::RenderPass &renderPass = *dynamic_cast<const Vkbase::RenderPass *>(resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
+    const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
+    const Vkbase::Pipeline &pipeline = *dynamic_cast<const Vkbase::Pipeline *>(resourceManager.resource(Vkbase::ResourceType::Pipeline, "base"));
+
+    std::vector<vk::ClearValue> clearValue = {vk::ClearValue().setColor({0, 0, 0, 1})};
+
+    vk::Extent2D extent = swapchain.extent();
+    renderPass.begin(commandBuffer, *dynamic_cast<const Vkbase::Framebuffer *>(resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))), clearValue, extent);
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
+    commandBuffer.draw(3, 1, 0, 0);
+    renderPass.end(commandBuffer);
 }

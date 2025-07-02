@@ -39,4 +39,9 @@ namespace Vkbase
     {
         _device.device().destroy(_framebuffer);
     }
+
+    const vk::Framebuffer &Framebuffer::framebuffer() const
+    {
+        return _framebuffer;
+    }
 }

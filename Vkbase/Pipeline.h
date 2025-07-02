@@ -94,6 +94,7 @@ namespace Vkbase
 
         static const std::vector<ShaderInfo> getDefaultShader(const std::string &vertexShaderFilename, const std::string &fragmentShaderFilename, const std::string &vertexShaderName, const std::string &fragmentShaderName);
         static PipelineRenderInfo getDefaultRenderInfo();
+        const vk::Pipeline &pipeline() const;
         Pipeline(const std::string &resourceName,
                  const std::string &deviceName,
                  const std::string &renderPassName,
