@@ -1,8 +1,4 @@
 #pragma once
-
-#include <vulkan/vulkan.hpp>
-#include <string>
-#include <vector>
 #include <unordered_set>
 #include "ResourceBase.h"
 
@@ -16,6 +12,7 @@ namespace Vkbase
         std::vector<vk::PresentModeKHR> presentModes;
     };
     class CommandPool;
+    enum class CommandPoolQueueType;
 
     class Device : public ResourceBase
     {
@@ -48,10 +45,7 @@ namespace Vkbase
         const vk::Queue &graphicsQueue() const;
         const vk::Queue &presentQueue() const;
         const vk::Queue &computeQueue() const;
-
         const QueueFamilyIndices &queueFamilyIndices() const;
-
-        const CommandPool &commandPool() const;
     
     private:
         vk::Device _device;
@@ -59,7 +53,6 @@ namespace Vkbase
         vk::Queue _graphicsQueue;
         vk::Queue _presentQueue;
         vk::Queue _computeQueue;
-        CommandPool *_commandPool;
         inline static std::vector<const char *> _extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
         inline static std::vector<const char *> _layers;
         QueueFamilyIndices _queueFamilyIndices;

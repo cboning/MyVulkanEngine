@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
-#include <unordered_set>
+#include <vector>
+#include <vulkan/vulkan.hpp>
 #include "ResourceManager.h"
 
 namespace Vkbase
@@ -10,35 +11,35 @@ namespace Vkbase
     private:
         inline static ResourceManager _resourceManager{};
 
-
+        void useSuperresource(ResourceBase *pResource);
+        void disuseSuperresource(ResourceBase *pResource);
     protected:
         const ResourceType _resourceType;
         const std::string _name;
-        std::unordered_set<ResourceBase *> _pSubresources;
-        std::unordered_set<ResourceBase *> _pSuperresources;
+        std::vector<ResourceBase *> _pSubresources;
+        std::vector<ResourceBase *> _pSuperresources;
         inline static uint32_t _nameId = 0;
         void useSubresource(ResourceBase *pResource);
         void disusedSubresource(ResourceBase *pResource);
         template <typename T>
         T *connectTo(T *pResource)
         {
-            T *derived = dynamic_cast<T *>(pResource);
-            if (!derived) {
+            ResourceBase *pBase = (ResourceBase *)pResource;
+            if (!pBase) {
                 throw std::runtime_error("Invalid type: not the expected derived class");
             }
-            pResource->useSuperresource(this);
-            useSubresource(pResource);
-            return derived;
+            pBase->useSuperresource(this);
+            useSubresource(pBase);
+            return pResource;
         }
 
     public:
         ResourceBase(ResourceType resourceType, const std::string &resourceName);
         virtual ~ResourceBase();
         static ResourceManager &resourceManager();
-        void useSuperresource(ResourceBase *pResource);
-        void disuseSuperresource(ResourceBase *pResource);
         const std::string &name() const;
         const ResourceType &type() const;
-        void disconnect();
+        void destroy() const;
+        void preDestroy();
     };
 }

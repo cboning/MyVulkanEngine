@@ -10,27 +10,12 @@
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [
-                // {
-                //     "name": "DYLD_LIBRARY_PATH",
-                //     "value": "${fileDirname}/lib"
-                // },
-                // {
-                //     "name": "VK_LAYER_PATH",
-                //     "value": "${fileDirname}/share/vulkan/explicit_layer.d"
-                // },
-                // {
-                //     "name": "VK_ICD_FILENAMES",
-                //     "value": "${fileDirname}/share/vulkan/icd.d/MoltenVK_icd.json"
-                // },
-                // {
-                //     "name": "MVK_CONFIG_LOG_LEVEL",
-                //     "value": "3"
-                // },
-                // {
-                //     "name": "VK_LOADER_DEBUG",
-                //     "value": "all"
-                // }
             ],
+            "logging": {
+                "moduleLoad": false,
+                "engineLogging": false,
+                "exceptions": false
+            },
             "externalConsole": false,
             "MIMode": "lldb",
             "preLaunchTask": "着色器编译",
@@ -45,27 +30,12 @@
             "stopAtEntry": false,
             "cwd": "${fileDirname}",
             "environment": [
-                // {
-                //     "name": "DYLD_LIBRARY_PATH",
-                //     "value": "${fileDirname}/lib"
-                // },
-                // {
-                //     "name": "VK_LAYER_PATH",
-                //     "value": "${fileDirname}/share/vulkan/explicit_layer.d"
-                // },
-                // {
-                //     "name": "VK_ICD_FILENAMES",
-                //     "value": "${fileDirname}/share/vulkan/icd.d/MoltenVK_icd.json"
-                // },
-                // {
-                //     "name": "MVK_CONFIG_LOG_LEVEL",
-                //     "value": "3"
-                // },
-                // {
-                //     "name": "VK_LOADER_DEBUG",
-                //     "value": "all"
-                // }
             ],
+            "logging": {
+                "moduleLoad": false,
+                "engineLogging": false,
+                "exceptions": false
+            },
             "externalConsole": false,
             "MIMode": "lldb",
             "preLaunchTask": "调试前置任务"

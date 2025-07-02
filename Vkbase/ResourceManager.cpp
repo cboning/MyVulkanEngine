@@ -10,7 +10,7 @@ namespace Vkbase
     {
         if (!glfwInit())
         {
-            std::cerr << "[Error]Failed to initialize GLFW" << std::endl;
+            std::cerr << "[Error] Failed to initialize GLFW" << std::endl;
             return;
         }
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
@@ -42,9 +42,10 @@ namespace Vkbase
                     .setFlags(vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR);
         
         _instance = vk::createInstance(createInfo);
+        if (!_instance)
+            throw std::runtime_error("[ERROR] Failed to create vulkan instance.");
         std::vector<vk::PhysicalDevice> physicalDevices = _instance.enumeratePhysicalDevices();
     }
-
 
     void ResourceManager::addResource(ResourceType type, std::string name, ResourceBase *pResource)
     {
@@ -67,7 +68,10 @@ namespace Vkbase
 
     const ResourceBase *ResourceManager::resource(ResourceType type, std::string name) const
     {
-        const std::unordered_map<std::string, ResourceBase *> &resources = _pResources.at(type);
+        Vkbase::ResourceSet::const_iterator typeIter = _pResources.find(type);
+        if (typeIter == _pResources.end())
+            return nullptr;
+        const std::unordered_map<std::string, ResourceBase *> &resources = typeIter->second;
         const std::unordered_map<std::string, ResourceBase *>::const_iterator iter = resources.find(name);
         if (iter != resources.end())
             return iter->second;
@@ -80,7 +84,7 @@ namespace Vkbase
         if (!_pResources.count(type))
         {
 #ifdef DEBUG
-            std::cout << "Failed to remove a resource, because it is not exist." << std::endl;
+            std::cout << "[Warning] Failed to remove a resource, because it is not exist. Type: " << toString(type) << ", Name: " << name << std::endl;
 #endif
             return ;
         }
@@ -89,11 +93,11 @@ namespace Vkbase
         if (iter == _pResources[type].end())
         {
 #ifdef DEBUG
-            std::cout << "Failed to remove a resource, because it is not exist." << std::endl;
+            std::cout << "[Warning] Failed to remove a resource, because it is not exist. Type: " << toString(type) << ", Name: " << name << std::endl;
 #endif
             return ;
         }
-        iter->second->disconnect();
+        iter->second->preDestroy();
         delete iter->second;
         _pResources[type].erase(iter);
 
@@ -101,7 +105,7 @@ namespace Vkbase
             _pResources.erase(type);
         
 #ifdef DEBUG
-        std::cout << "Success to remove the resource. Type: " << toString(type) << ", Name: " << name << std::endl;
+        std::cout << "[Info] Success to remove the resource. Type: " << toString(type) << ", Name: " << name << std::endl;
 #endif
     }
 

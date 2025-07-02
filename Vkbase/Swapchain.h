@@ -1,12 +1,13 @@
 #pragma once
-#include <vulkan/vulkan.hpp>
-#include <string>
 #include "ResourceBase.h"
 
 namespace Vkbase
 {
     class Device; // Forward declaration of Device class
     class SurfaceSupportDetails; // Forward declaration of Device class
+    class Image;
+    class Window;
+
     class Swapchain : public ResourceBase
     {
     private:
@@ -16,10 +17,9 @@ namespace Vkbase
         vk::PresentModeKHR _presentMode;
         std::vector<vk::Image> _images;
         std::vector<vk::ImageView> _imageViews;
-        Device &_device;
+        std::vector<std::string> _imageNames;
+        const Device &_device;
         const vk::SurfaceKHR &_surface;
-
-        uint32_t _imageCount;
 
         void init();
         void determineFormat(SurfaceSupportDetails &details);
@@ -28,12 +28,14 @@ namespace Vkbase
         void cleanup();
 
     public:
-        Swapchain(const std::string& resourceName, const std::string &deviceName, const vk::SurfaceKHR &surface, uint32_t width, uint32_t height);
+        Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName, uint32_t width, uint32_t height);
         ~Swapchain() override;
 
-        vk::SwapchainKHR &swapchain();
-        vk::Extent2D extent();
-        vk::Format format();
-        const std::vector<vk::ImageView>& imageViews();
+        const vk::SwapchainKHR &swapchain() const;
+        vk::Extent2D extent() const;
+        vk::Format format() const;
+        const std::vector<vk::Image> &images() const;
+        const std::vector<vk::ImageView> &imageViews() const;
+        const std::vector<std::string> &imageNames() const;
     };
 }

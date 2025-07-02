@@ -1,13 +1,15 @@
 #include "Swapchain.h"
 #include "Device.h"
-#include "cmath"
+#include "Window.h"
+#include "Image.h"
+#include <cmath>
 #include <array>
 
 
 namespace Vkbase
 {
-    Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, const vk::SurfaceKHR &surface, uint32_t width, uint32_t height)
-        : ResourceBase(ResourceType::Swapchain, resourceName), _device(*dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName))), _surface(surface)
+    Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName, uint32_t width, uint32_t height)
+        : ResourceBase(ResourceType::Swapchain, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName)))), _surface(dynamic_cast<const Window *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Window, windowName)))->surface())
     {
         _extent.setWidth(width).setHeight(height);
         SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
@@ -16,7 +18,6 @@ namespace Vkbase
         determineExtent(supportDetails);
         determineFormat(supportDetails);
         determinePresentMode(supportDetails);
-        connectTo(&_device);
         init();
     }
 
@@ -69,10 +70,7 @@ namespace Vkbase
         
         _swapchain = _device.device().createSwapchainKHR(createInfo);
 
-        // Get the images from the swapchain
         _images = _device.device().getSwapchainImagesKHR(_swapchain);
-
-        _imageCount = _images.size();
 
         // Create image views for each image
         for (const auto& image : _images) {
@@ -93,6 +91,8 @@ namespace Vkbase
 
             _imageViews.push_back(_device.device().createImageView(viewInfo));
         }
+
+        _imageNames = Image::getImagesWithSwapchain(*this);
     }
 
     void Swapchain::determineExtent(SurfaceSupportDetails &details)
@@ -125,7 +125,6 @@ namespace Vkbase
         _format = formats[0];
     }
 
-
     void Swapchain::determinePresentMode(SurfaceSupportDetails &details)
     {
         vk::PresentModeKHR desirableMode = vk::PresentModeKHR::eFifo;
@@ -143,29 +142,41 @@ namespace Vkbase
     }
 
     void Swapchain::cleanup()
-    {
+    {        
         for (const auto& imageView : _imageViews) {
             _device.device().destroyImageView(imageView);
         }
         _device.device().destroySwapchainKHR(_swapchain);
     }
 
-    vk::SwapchainKHR &Swapchain::swapchain()
+    const vk::SwapchainKHR &Swapchain::swapchain() const
     {
         return _swapchain;
     }
 
-    vk::Format Swapchain::format()
+    vk::Format Swapchain::format() const
     {
         return _format.format;
     }
     
-    vk::Extent2D Swapchain::extent()
+    vk::Extent2D Swapchain::extent() const
     {
         return _extent;
     }
-    const std::vector<vk::ImageView>& Swapchain::imageViews()
+
+    const std::vector<vk::Image> &Swapchain::images() const
+    {
+        return _images;
+    }
+
+    const std::vector<vk::ImageView>& Swapchain::imageViews() const
     {
         return _imageViews;
     }
+
+    const std::vector<std::string> &Swapchain::imageNames() const
+    {
+        return _imageNames;
+    }
+
 }
