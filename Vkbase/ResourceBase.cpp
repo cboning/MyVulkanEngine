@@ -1,7 +1,6 @@
 #include "ResourceBase.h"
 #include <iostream>
 
-
 namespace Vkbase
 {
     ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
@@ -13,6 +12,9 @@ namespace Vkbase
 
     ResourceBase::~ResourceBase()
     {
+#ifdef DEBUG
+        std::cout << "[Info] Success to remove the resource. Type: " << toString(_resourceType) << ", Name: " << _name << std::endl;
+#endif
         // std::cout << "Destroy the Resource. Type: " << toString(_resourceType) << " Name: " << _name << std::endl;
         for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend(); ++iter)
             (*iter)->disuseSuperresource(this);
@@ -70,7 +72,6 @@ namespace Vkbase
     {
         return _resourceType;
     }
-
 
     void ResourceBase::destroy() const
     {

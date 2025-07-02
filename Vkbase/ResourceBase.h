@@ -3,6 +3,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 #include "ResourceManager.h"
+#define DEBUG
 
 namespace Vkbase
 {

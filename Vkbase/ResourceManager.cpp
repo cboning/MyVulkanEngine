@@ -89,7 +89,7 @@ namespace Vkbase
             return ;
         }
 
-        std::unordered_map<std::__1::string, Vkbase::ResourceBase *>::iterator iter = _pResources[type].find(name);
+        std::unordered_map<std::string, Vkbase::ResourceBase *>::iterator iter = _pResources[type].find(name);
         if (iter == _pResources[type].end())
         {
 #ifdef DEBUG
@@ -104,9 +104,6 @@ namespace Vkbase
         if (_pResources[type].empty())
             _pResources.erase(type);
         
-#ifdef DEBUG
-        std::cout << "[Info] Success to remove the resource. Type: " << toString(type) << ", Name: " << name << std::endl;
-#endif
     }
 
     const vk::Instance &ResourceManager::instance() const

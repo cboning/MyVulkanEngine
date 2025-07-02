@@ -1,5 +1,6 @@
 #include "RenderPass.h"
 #include "Framebuffer.h"
+#include "Pipeline.h"
 #include "Device.h"
 #include <iostream>
 
@@ -38,5 +39,10 @@ namespace Vkbase
     const Framebuffer &RenderPass::createFramebuffer(const std::string &resourceName, const std::vector<const std::string> &attachmentNames, uint32_t width, uint32_t height) const
     {
         return *(new Framebuffer(resourceName, _device.name(), name(), attachmentNames, width, height));
+    }
+
+    const Pipeline &RenderPass::createPipeline(const std::string &resourceName, const PipelineCreateInfo &createInfo) const
+    {
+        return *(new Pipeline(resourceName, _device.name(), name(), createInfo));
     }
 }

@@ -12,5 +12,6 @@ glslc inverstedHull.vert -o inverstedHullVert.spv
 glslc inverstedHull.frag -o inverstedHullFrag.spv
 glslc cloud.vert -o cloudVert.spv
 glslc cloud.frag -o cloudFrag.spv
-
+glslc baseShader.vert -o baseShaderVert.spv
+glslc baseShader.frag -o baseShaderFrag.spv
 

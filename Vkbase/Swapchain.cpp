@@ -91,7 +91,6 @@ namespace Vkbase
 
             _imageViews.push_back(_device.device().createImageView(viewInfo));
         }
-
         _imageNames = Image::getImagesWithSwapchain(*this);
     }
 
