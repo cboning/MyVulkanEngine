@@ -7,7 +7,6 @@
 
 namespace Vkbase
 {
-
     enum class ResourceType
     {
         Window,

@@ -1,6 +1,7 @@
 #include "Window.h"
 #include "Device.h"
 #include "Swapchain.h"
+#include "CommandPool.h"
 #include <iostream>
 
 namespace Vkbase
@@ -12,8 +13,11 @@ namespace Vkbase
         if (_surface)
         {
             _pDevice = connectTo(Device::getSuitableDevice(_surface));
+            connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Graphics));
+            connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute));
+            connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Present));
 
-            _pSwapchain = connectTo(new Swapchain(resourceName, _pDevice->name(), _surface, _width, _height));
+            _pSwapchain = new Swapchain(resourceName, _pDevice->name(), resourceName, _width, _height);
         }
     }
 
@@ -54,15 +58,10 @@ namespace Vkbase
     void Window::windowClosedCallback(GLFWwindow *pWindow)
     {
         Window &window = *static_cast<Window *>(glfwGetWindowUserPointer(pWindow));
-        window.close();
+        window.destroy();
     }
 
-    void Window::close()
-    {
-        resourceManager().remove(_resourceType, _name);
-    }
-
-    vk::SurfaceKHR &Window::surface()
+    const vk::SurfaceKHR &Window::surface() const
     {
         return _surface;
     }

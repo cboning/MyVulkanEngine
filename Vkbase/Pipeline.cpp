@@ -1,37 +1,64 @@
 #include "Pipeline.h"
 #include "Device.h"
+#include "RenderPass.h"
 #include <fstream>
 
 namespace Vkbase
 {
     Pipeline::Pipeline(const std::string &resourceName,
-                const std::string &renderPassName,
-                const std::string &deviceName,
-                const std::vector<ShaderInfo> &shaderInfos,
-                const VertexInfo &vertexInfo,
-                std::vector<vk::DescriptorSetLayout> descriptorSetLayouts)
-        : ResourceBase(Vkbase::ResourceType::Pipeline, resourceName), _device(*dynamic_cast<const Device *>(resourceManager().resource(ResourceType::Device, deviceName)))
+                       const std::string &renderPassName,
+                       const std::string &deviceName,
+                       const std::vector<ShaderInfo> &shaderInfos,
+                       const VertexInfo &vertexInfo,
+                       std::vector<vk::DescriptorSetLayout> descriptorSetLayouts,
+                       const PipelineRenderInfo &renderInfo)
+        : ResourceBase(Vkbase::ResourceType::Pipeline, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName))))
     {
-        createPipeline(renderPassName, shaderInfos, vertexInfo, descriptorSetLayouts);
+        createPipeline(renderPassName, shaderInfos, vertexInfo, descriptorSetLayouts, renderInfo);
     }
 
     Pipeline::~Pipeline()
     {
+        vk::Device device = _device.device();
+        device.destroy(_pipeline);
+        device.destroy(_pipelineLayout);
         for (const vk::ShaderModule &shaderModule : _shaderModules)
-            _device.device().destroy(shaderModule);
+            device.destroy(shaderModule);
     }
 
     void Pipeline::createPipeline(const std::string &renderPassName,
-                                const std::vector<ShaderInfo> &shaderInfos,
-                                const VertexInfo &vertexInfo,
-                                std::vector<vk::DescriptorSetLayout> descriptorSetLayouts)
+                                  const std::vector<ShaderInfo> &shaderInfos,
+                                  const VertexInfo &vertexInfo,
+                                  std::vector<vk::DescriptorSetLayout> descriptorSetLayouts,
+                                  const PipelineRenderInfo &renderInfo)
     {
-        vk::GraphicsPipelineCreateInfo createInfo;
         std::vector<vk::PipelineShaderStageCreateInfo> stages = getShaderStageInfos(shaderInfos);
-        
-        createInfo.setStages(stages);
 
+        vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
+        pipelineLayoutInfo.setSetLayouts(descriptorSetLayouts);
+        _pipelineLayout = _device.device().createPipelineLayout(pipelineLayoutInfo);
+        const RenderPass *renderPassResource = dynamic_cast<const RenderPass *>(
+            resourceManager().resource(ResourceType::RenderPass, renderPassName));
+        if (!renderPassResource)
+            throw std::runtime_error("RenderPass resource not found: " + renderPassName);
+        const vk::RenderPass &renderPass = renderPassResource->renderPass();
+
+        vk::PipelineVertexInputStateCreateInfo vertexInputState;
+        vertexInputState.setVertexBindingDescriptions(vertexInfo.inputBindings)
+                       .setVertexAttributeDescriptions(vertexInfo.inputAttributes);
         
+        
+        vk::GraphicsPipelineCreateInfo pipelineInfo = renderInfo.getGraphicsPipelineCreateInfo();
+        pipelineInfo.setStages(stages)
+                   .setLayout(_pipelineLayout)
+                   .setRenderPass(renderPass);
+        
+        vk::ResultValue result = _device.device().createGraphicsPipeline(nullptr, pipelineInfo);
+
+        if (result.result != vk::Result::eSuccess)
+            throw std::runtime_error("Failed to create graphics pipeline!");
+
+        _pipeline = result.value;
     }
 
     vk::ShaderModule Pipeline::createShaderModule(std::string filename)
@@ -70,7 +97,7 @@ namespace Vkbase
         return stages;
     }
 
-    const std::vector<Pipeline::ShaderInfo> getDefaultShader(const std::string &vertexShaderFilename, const std::string &fragmentShaderFilename, const std::string &vertexShaderName = "main", const std::string &fragmentShaderName = "main")
+    const std::vector<Pipeline::ShaderInfo> Pipeline::getDefaultShader(const std::string &vertexShaderFilename, const std::string &fragmentShaderFilename, const std::string &vertexShaderName = "main", const std::string &fragmentShaderName = "main")
     {
         return {{vertexShaderFilename, vertexShaderName, vk::ShaderStageFlagBits::eVertex}, {fragmentShaderFilename, fragmentShaderName, vk::ShaderStageFlagBits::eFragment}};
     }

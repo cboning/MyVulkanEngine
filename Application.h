@@ -8,6 +8,8 @@ class Application
 {
 private:
     Vkbase::ResourceManager &_resourceManager;
+    void init();
+    void createRenderPass();
     void cleanup();
     void mainLoop();
 

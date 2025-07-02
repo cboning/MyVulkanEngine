@@ -9,7 +9,6 @@ namespace Vkbase
         _physicalDevice = pickPhysicalDevice(surface);
         _queueFamilyIndices = findQueueFamilies(_physicalDevice, surface);
         createLogicalDevice();
-        _commandPool = connectTo(new CommandPool(_name, _name, CommandPoolQueueType::Graphics));
     }
 
     Device::~Device()
@@ -154,20 +153,16 @@ namespace Vkbase
     {
         return _queueFamilyIndices;
     }
-
-    const CommandPool &Device::commandPool() const
-    {
-        return *_commandPool;
-    }
     
     Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
     {
-        for (const auto pDevice : resourceManager().resources().at(ResourceType::Device))
-        {
-            Device &targetDevice = *dynamic_cast<Device *>(pDevice.second);
-            if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) && targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
-                return &targetDevice;
-        }
+        if (resourceManager().resources().count(ResourceType::Device))
+            for (const auto pDevice : resourceManager().resources().at(ResourceType::Device))
+            {
+                Device &targetDevice = *dynamic_cast<Device *>(pDevice.second);
+                if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) && targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
+                    return &targetDevice;
+            }
         return new Device("", surface);
     }
 }

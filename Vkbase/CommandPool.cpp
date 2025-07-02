@@ -4,7 +4,7 @@
 namespace Vkbase
 {
     CommandPool::CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType)
-        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<const Device *>(resourceManager().resource(ResourceType::Device, deviceName))), _queue(determineQueue(queueType)), _queueIndex(determineQueueIndex(queueType))
+        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName)))), _queue(determineQueue(queueType)), _queueIndex(determineQueueIndex(queueType))
     {
         determineQueue(queueType);
         createCommandPool();
@@ -51,7 +51,7 @@ namespace Vkbase
         _commandPool = _device.device().createCommandPool(createInfo);
     }
 
-    std::vector<vk::CommandBuffer> CommandPool::allocateFlightCommandBuffers(uint32_t maxFlightFrameCount)
+    std::vector<vk::CommandBuffer> CommandPool::allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const
     {
         vk::CommandBufferAllocateInfo allocateInfo;
         allocateInfo.setCommandPool(_commandPool)
@@ -61,21 +61,19 @@ namespace Vkbase
         return _device.device().allocateCommandBuffers(allocateInfo);
     }
 
-    vk::CommandBuffer CommandPool::allocateOnceCommandBuffer()
+    vk::CommandBuffer CommandPool::allocateOnceCommandBuffer() const
     {
-        vk::CommandBufferAllocateInfo allocateInfo;
-        allocateInfo.setCommandPool(_commandPool)
+        vk::CommandBuffer commandBuffer = _device.device().allocateCommandBuffers(vk::CommandBufferAllocateInfo()
+            .setCommandPool(_commandPool)
             .setCommandBufferCount(1)
-            .setLevel(vk::CommandBufferLevel::ePrimary);
-        vk::CommandBuffer commandBuffer = _device.device().allocateCommandBuffers(allocateInfo)[0];
-        vk::CommandBufferBeginInfo beginInfo;
-        beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+            .setLevel(vk::CommandBufferLevel::ePrimary)
+        )[0];
 
-        commandBuffer.begin(beginInfo);
+        commandBuffer.begin(vk::CommandBufferBeginInfo().setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
         return commandBuffer;
     }
 
-    void CommandPool::endOnceCommandBuffer(vk::CommandBuffer commandBuffer)
+    void CommandPool::endOnceCommandBuffer(vk::CommandBuffer commandBuffer) const
     {
         commandBuffer.end();
 
@@ -86,8 +84,17 @@ namespace Vkbase
         freeCommandBuffers(commandBuffer);
     }
 
-    void CommandPool::freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers)
+    void CommandPool::freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers) const
     {
         _device.device().freeCommandBuffers(_commandPool, commandBuffers);
+    }
+
+    const CommandPool &CommandPool::getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType)
+    {
+        const CommandPool *pCommandPool = dynamic_cast<const CommandPool *>(resourceManager().resource(Vkbase::ResourceType::CommandPool, toString(queueType) + deviceName));
+        if (pCommandPool)
+            return *pCommandPool;
+        else
+            return *(new CommandPool(toString(queueType) + deviceName, deviceName, queueType));
     }
 };

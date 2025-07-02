@@ -1,5 +1,4 @@
 #pragma once
-#include <vulkan/vulkan.hpp>
 #include "ResourceBase.h"
 
 namespace Vkbase
@@ -10,8 +9,19 @@ namespace Vkbase
         Compute,
         Present
     };
+    inline const std::string toString(CommandPoolQueueType type)
+    {
+        switch (type)
+        {
+            case CommandPoolQueueType::Graphics:
+                return "Graphics";
+            case CommandPoolQueueType::Compute:
+                return "Compute";
+            case CommandPoolQueueType::Present:
+                return "Present";
+        }
+    }
     class Device;
-    class CommandBuffer;
     class CommandPool : public ResourceBase
     {
     private:
@@ -23,13 +33,14 @@ namespace Vkbase
         void createCommandPool();
         const vk::Queue &determineQueue(CommandPoolQueueType queueType) const;
         const uint32_t determineQueueIndex(CommandPoolQueueType queueType) const;
+        CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType);
         
     public:
-        CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType);
         ~CommandPool();
-        std::vector<vk::CommandBuffer> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount);
-        vk::CommandBuffer allocateOnceCommandBuffer();
-        void endOnceCommandBuffer(vk::CommandBuffer commandBuffer);
-        void freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers);
+        std::vector<vk::CommandBuffer> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const;
+        vk::CommandBuffer allocateOnceCommandBuffer() const;
+        void endOnceCommandBuffer(vk::CommandBuffer commandBuffer) const;
+        void freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers) const;
+        static const CommandPool &getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType);
     };
 }
