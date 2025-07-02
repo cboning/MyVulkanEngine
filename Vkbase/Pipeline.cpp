@@ -109,7 +109,7 @@ namespace Vkbase
         renderInfo.multisampleStateInfo.setSampleShadingEnable(vk::False)
             .setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
-        renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront)
+        renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eBack)
             .setFrontFace(vk::FrontFace::eClockwise)
             .setDepthClampEnable(vk::False)
             .setRasterizerDiscardEnable(vk::False)
@@ -135,5 +135,10 @@ namespace Vkbase
         renderInfo.dynamicStates = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
         renderInfo.dynamicStateInfo.setDynamicStates(renderInfo.dynamicStates);
         return renderInfo;
+    }
+
+    const vk::Pipeline &Pipeline::pipeline() const
+    {
+        return _pipeline;
     }
 }
