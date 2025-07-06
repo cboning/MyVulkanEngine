@@ -240,6 +240,7 @@ namespace Vkbase
         {
             Image *pImage = new Image(swapchain, i);
             imageNames.push_back(pImage->name());
+            pImage->setLock();
         }
         return imageNames;
     }

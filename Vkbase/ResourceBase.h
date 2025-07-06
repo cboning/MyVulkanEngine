@@ -11,12 +11,13 @@ namespace Vkbase
     {
     private:
         inline static ResourceManager _resourceManager{};
+        bool _locked = false;
 
         void useSuperresource(ResourceBase *pResource);
         void disuseSuperresource(ResourceBase *pResource);
     protected:
         const ResourceType _resourceType;
-        const std::string _name;
+        std::string _name;
         std::vector<ResourceBase *> _pSubresources;
         std::vector<ResourceBase *> _pSuperresources;
         inline static uint32_t _nameId = 0;
@@ -42,5 +43,8 @@ namespace Vkbase
         const ResourceType &type() const;
         void destroy() const;
         void preDestroy();
+        void rename(const std::string &name);
+        void setLock();
+        void setUnlock();
     };
 }

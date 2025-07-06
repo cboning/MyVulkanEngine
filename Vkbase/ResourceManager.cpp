@@ -47,18 +47,23 @@ namespace Vkbase
         std::vector<vk::PhysicalDevice> physicalDevices = _instance.enumeratePhysicalDevices();
     }
 
-    void ResourceManager::addResource(ResourceType type, std::string name, ResourceBase *pResource)
+    void ResourceManager::addResource(ResourceBase *pResource)
     {
-        std::unordered_map<std::string, ResourceBase *> &resources = _pResources[type];
-        std::unordered_map<std::string, ResourceBase *>::iterator iter = resources.find(name);
+        std::unordered_map<std::string, ResourceBase *> &resources = _pResources[pResource->type()];
+        std::unordered_map<std::string, ResourceBase *>::iterator iter = resources.find(pResource->name());
         if (iter != resources.end())
         {
+            if (iter->second == pResource)
+                return ;
 #ifdef DEBUG
-            std::cout << "[Warning] Resource with name " << toString(type) << "_" << name << " already exists. Cannot add resource. So the old resource deleted." << std::endl;
+            std::cout << "[Warning] Resource with Type: " << toString(pResource->type()) << ", Name: " << pResource->name() << " already exists. Cannot add resource. So the old resource is destroyed." << std::endl;
 #endif
-            delete iter->second; // Clean up the old resource to avoid memory leak
+            iter->second->destroy();
+            
+            _pResources[pResource->type()].insert({pResource->name(), pResource});
         }
-        resources.insert({name, pResource});
+        else
+            resources.insert({pResource->name(), pResource});
     }
 
     const ResourceSet &ResourceManager::resources() const
@@ -66,7 +71,7 @@ namespace Vkbase
         return _pResources;
     }
 
-    const ResourceBase *ResourceManager::resource(ResourceType type, std::string name) const
+    ResourceBase *ResourceManager::resource(ResourceType type, std::string name) const
     {
         Vkbase::ResourceSet::const_iterator typeIter = _pResources.find(type);
         if (typeIter == _pResources.end())
@@ -103,7 +108,28 @@ namespace Vkbase
 
         if (_pResources[type].empty())
             _pResources.erase(type);
-        
+    }
+
+    void ResourceManager::renameResource(const ResourceBase *pResource, const std::string &newName)
+    {
+        ResourceType type = pResource->type();
+        Vkbase::ResourceSet::const_iterator typeIter = _pResources.find(type);
+        if (typeIter == _pResources.end())
+            std::cout << "[ERROR] Failed to rename the resouce." << std::endl;
+            return ;
+        const std::unordered_map<std::string, ResourceBase *> &resources = typeIter->second;
+        const std::unordered_map<std::string, ResourceBase *>::const_iterator iter = resources.find(pResource->name());
+        if (iter == resources.end())
+            std::cout << "[ERROR] Failed to rename the resouce." << std::endl;
+            return ;
+
+        const ResourceBase *pTempResource = resource(type, newName);
+        if (pTempResource)
+            pTempResource->destroy();
+
+        iter->second->rename(newName);
+        _pResources[type].erase(iter);
+        _pResources[type].insert({newName, iter->second});
     }
 
     const vk::Instance &ResourceManager::instance() const

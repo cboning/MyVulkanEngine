@@ -7,7 +7,7 @@
 namespace Vkbase
 {
     Window::Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height)
-        : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(800), _height(600), _title("Vulkan Window")
+        : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(width), _height(height), _title("Vulkan Window")
     {
         init();
         if (_surface)
@@ -17,7 +17,7 @@ namespace Vkbase
             connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute));
             connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Present));
 
-            _pSwapchain = new Swapchain(resourceName, _pDevice->name(), resourceName, _width, _height);
+            _pSwapchain = new Swapchain(resourceName, _pDevice->name(), resourceName);
         }
     }
 
@@ -44,7 +44,6 @@ namespace Vkbase
         // Set the close callback to handle window close events
         glfwSetWindowCloseCallback(_pWindow, windowClosedCallback);
 
-
         // Create Vulkan surface
         glfwCreateWindowSurface(resourceManager().instance(), _pWindow, nullptr, reinterpret_cast<VkSurfaceKHR *>(&_surface));
         if (!_surface)
@@ -57,12 +56,27 @@ namespace Vkbase
 
     void Window::windowClosedCallback(GLFWwindow *pWindow)
     {
-        Window &window = *static_cast<Window *>(glfwGetWindowUserPointer(pWindow));
-        window.destroy();
+        _delayDestroyWindows.insert(static_cast<Window *>(glfwGetWindowUserPointer(pWindow)));
     }
 
     const vk::SurfaceKHR &Window::surface() const
     {
         return _surface;
+    }
+
+    void Window::delayDestroy()
+    {
+        for (Window *pWindow : _delayDestroyWindows)
+            pWindow->destroy();
+        _delayDestroyWindows.clear();
+    }
+
+    uint32_t Window::width() const
+    {
+        return _width;
+    }
+    uint32_t Window::height() const
+    {
+        return _height;
     }
 }

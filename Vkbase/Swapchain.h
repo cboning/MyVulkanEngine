@@ -19,7 +19,9 @@ namespace Vkbase
         std::vector<vk::ImageView> _imageViews;
         std::vector<std::string> _imageNames;
         const Device &_device;
+        Window &_window;
         const vk::SurfaceKHR &_surface;
+        bool _cleaned = false;
 
         void init();
         void cleanup();
@@ -28,11 +30,12 @@ namespace Vkbase
         void determinePresentMode(SurfaceSupportDetails &details);
 
     public:
-        Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName, uint32_t width, uint32_t height);
+        Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName);
         ~Swapchain() override;
 
         vk::Format format() const;
         vk::Extent2D extent() const;
+        Swapchain *recreate();
         const vk::SwapchainKHR &swapchain() const;
         const std::vector<vk::Image> &images() const;
         const std::vector<std::string> &imageNames() const;
