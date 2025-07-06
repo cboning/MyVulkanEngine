@@ -8,10 +8,11 @@
 
 namespace Vkbase
 {
-    Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName, uint32_t width, uint32_t height)
-        : ResourceBase(ResourceType::Swapchain, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName)))), _surface(dynamic_cast<const Window *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Window, windowName)))->surface())
+    Swapchain::Swapchain(const std::string& resourceName, const std::string &deviceName, const std::string &windowName)
+        : ResourceBase(ResourceType::Swapchain, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName)))), _window(*dynamic_cast<Window *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Window, windowName)))), _surface(_window.surface())
     {
-        _extent.setWidth(width).setHeight(height);
+        const Window &window = *dynamic_cast<const Window *>(resourceManager().resource(Vkbase::ResourceType::Window, windowName));
+        _extent.setWidth(window.width()).setHeight(window.height());
         SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
 
         // Determine some properties from surface details
@@ -24,6 +25,19 @@ namespace Vkbase
     Swapchain::~Swapchain()
     {
         cleanup();
+    }
+
+    Swapchain *Swapchain::recreate()
+    {
+        Window &window = _window;
+        const std::string resourceName = name();
+        const std::string deviceName = _device.name();
+        const std::string windowName = window.name();
+        window.setLock();
+        destroy();
+        Swapchain *pNewSwapchain = new Swapchain(resourceName, deviceName, windowName);
+        window.setUnlock();
+        return pNewSwapchain;
     }
 
     void Swapchain::init()
@@ -141,11 +155,14 @@ namespace Vkbase
     }
 
     void Swapchain::cleanup()
-    {        
-        for (const auto& imageView : _imageViews) {
-            _device.device().destroyImageView(imageView);
-        }
-        _device.device().destroySwapchainKHR(_swapchain);
+    {
+        if (_cleaned)
+            return ;
+        _cleaned = true;
+        for (const auto& imageView : _imageViews)
+            _device.device().destroy(imageView);
+        
+        _device.device().destroy(_swapchain);
     }
 
     const vk::SwapchainKHR &Swapchain::swapchain() const

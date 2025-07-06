@@ -12,9 +12,9 @@ private:
     Vkbase::RenderDelegator *_pRenderDelegator;
     void init();
     void createRenderPass();
+    void createRenderDelegator();
     void cleanup();
     void mainLoop();
-    
 
 public:
     Application();

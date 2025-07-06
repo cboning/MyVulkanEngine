@@ -6,7 +6,7 @@ namespace Vkbase
     ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
         : _name(resourceName.empty() ? std::to_string(_nameId++) : resourceName), _resourceType(resourceType)
     {
-        _resourceManager.addResource(resourceType, _name, this);
+        _resourceManager.addResource(this);
         std::cout << "[Info] " << toString(resourceType) << " Resource " << _name << " created." << std::endl;
     }
 
@@ -23,6 +23,7 @@ namespace Vkbase
 
     void ResourceBase::preDestroy()
     {
+        // auto resourceManager = _resourceManager;
         for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSuperresources.rbegin(); iter != _pSuperresources.rend(); ++iter)
             (*iter)->disusedSubresource(this);
     }
@@ -59,7 +60,7 @@ namespace Vkbase
     {
         std::vector<ResourceBase *>::iterator iter = std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource);
         _pSuperresources.erase(iter);
-        if (_pSuperresources.empty())
+        if (_pSuperresources.empty() && !_locked)
             destroy();
     }
 
@@ -76,5 +77,21 @@ namespace Vkbase
     void ResourceBase::destroy() const
     {
         _resourceManager.remove(_resourceType, _name);
+    }
+
+    void ResourceBase::rename(const std::string &name)
+    {
+        _name = name;
+        _resourceManager.addResource(this);
+    }
+
+    void ResourceBase::setLock()
+    {
+        _locked = true;
+    }
+
+    void ResourceBase::setUnlock()
+    {
+        _locked = false;
     }
 }

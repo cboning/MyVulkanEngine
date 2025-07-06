@@ -1,3 +1,4 @@
+#include <iostream>
 #include "RenderDelegator.h"
 #include "Device.h"
 #include "Swapchain.h"
@@ -6,22 +7,28 @@
 
 namespace Vkbase
 {
-    RenderDelegator::RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const std::string &swapchainName, const std::string &commandPoolName)
-        : ResourceBase(Vkbase::ResourceType::RenderDelegator, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _swapchain(*dynamic_cast<const Swapchain *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Swapchain, swapchainName)))), _commandPool(*dynamic_cast<const CommandPool *>(connectTo(resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))))
+    RenderDelegator::RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::vector<std::string> &swapchainNames, const std::string &commandPoolName)
+        : ResourceBase(Vkbase::ResourceType::RenderDelegator, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _commandPool(*dynamic_cast<const CommandPool *>(connectTo(resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))) )
     {
+        for (const auto& swapchainName : swapchainNames) {
+            _pSwapchains.emplace_back(dynamic_cast<Swapchain *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Swapchain, swapchainName))));
+        }
         init();
     }
 
     RenderDelegator::~RenderDelegator()
     {
+        _device.device().waitIdle();
         _commandPool.freeCommandBuffers(_commandBuffers);
 
-        for (const vk::Semaphore &semaphore : _renderFinishSemaphores)
-            _device.device().destroySemaphore(semaphore);
+        for (const auto& semaphoreVec : _renderFinishSemaphores)
+            for (const vk::Semaphore &semaphore : semaphoreVec)
+                _device.device().destroySemaphore(semaphore);
         _renderFinishSemaphores.clear();
 
-        for (const vk::Semaphore &semaphore : _imageAvailableSemaphores)
-            _device.device().destroySemaphore(semaphore);
+        for (const auto& semaphoreVec : _imageAvailableSemaphores)
+            for (const vk::Semaphore &semaphore : semaphoreVec)
+                _device.device().destroySemaphore(semaphore);
         _imageAvailableSemaphores.clear();
 
         for (const vk::Fence &fence : _inFlightFences)
@@ -35,19 +42,42 @@ namespace Vkbase
         createSyncObjects();
     }
 
+    void RenderDelegator::recreateSwapchain(int32_t swapchainIndex)
+    {
+        _device.device().waitIdle();
+        auto renderPassCreateFunc = _renderPassCreateFunc;
+        auto pSwapchains = _pSwapchains;
+        if (swapchainIndex == -1){
+            std::cout << pSwapchains.size() << std::endl;
+            for (uint32_t i = 0; i < pSwapchains.size(); ++i)
+                pSwapchains[i]->recreate();}
+        else
+            pSwapchains[swapchainIndex]->recreate();
+
+        if (renderPassCreateFunc)
+            renderPassCreateFunc();
+    }
+
     void RenderDelegator::createSyncObjects()
     {
-        _imageAvailableSemaphores.resize(MAX_FLIGHT_COUNT);
-        _renderFinishSemaphores.resize(MAX_FLIGHT_COUNT);
+        // 为每个 swapchain/帧分配独立信号量
+        size_t swapchainCount = _pSwapchains.size();
+        _imageAvailableSemaphores.resize(swapchainCount);
+        _renderFinishSemaphores.resize(swapchainCount);
+        for (size_t i = 0; i < swapchainCount; ++i) {
+            _imageAvailableSemaphores[i].resize(MAX_FLIGHT_COUNT);
+            _renderFinishSemaphores[i].resize(MAX_FLIGHT_COUNT);
+        }
         _inFlightFences.resize(MAX_FLIGHT_COUNT);
-
         vk::SemaphoreCreateInfo semaphoreCreateInfo;
         vk::FenceCreateInfo fenceCreateInfo;
         fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
         for (int i = 0; i < MAX_FLIGHT_COUNT; i++)
         {
-            _imageAvailableSemaphores[i] = _device.device().createSemaphore(semaphoreCreateInfo);
-            _renderFinishSemaphores[i] = _device.device().createSemaphore(semaphoreCreateInfo);
+            for (size_t j = 0; j < swapchainCount; ++j) {
+                _imageAvailableSemaphores[j][i] = _device.device().createSemaphore(semaphoreCreateInfo);
+                _renderFinishSemaphores[j][i] = _device.device().createSemaphore(semaphoreCreateInfo);
+            }
             _inFlightFences[i] = _device.device().createFence(fenceCreateInfo);
         }
     }
@@ -56,56 +86,68 @@ namespace Vkbase
     {
         if (!_commandRecordFunc)
             return ;
-        
-        _device.device().waitForFences(_inFlightFences[_currentFrame], vk::True, UINT64_MAX);
-        vk::ResultValue<uint32_t> uintResult = _device.device().acquireNextImageKHR(_swapchain.swapchain(), std::numeric_limits<uint64_t>::max(), _imageAvailableSemaphores[_currentFrame]);
-        uint32_t imageIndex = uintResult.value;
-        if (uintResult.result == vk::Result::eErrorOutOfDateKHR)
-        {
-            
+        (void)_device.device().waitForFences(_inFlightFences[_currentFrame], vk::True, UINT64_MAX);
+        size_t swapchainCount = _pSwapchains.size();
+        std::vector<uint32_t> imageIndices(swapchainCount);
+        std::vector<vk::Semaphore> acquireSemaphores(swapchainCount);
+        for (size_t i = 0; i < swapchainCount; ++i) {
+            auto& pSwapchain = _pSwapchains[i];
+            vk::Semaphore acquireSemaphore = _imageAvailableSemaphores[i][_currentFrame];
+            vk::ResultValue<uint32_t> uintResult = _device.device().acquireNextImageKHR(pSwapchain->swapchain(), std::numeric_limits<uint64_t>::max(), acquireSemaphore, nullptr);
+            imageIndices[i] = uintResult.value;
+            acquireSemaphores[i] = acquireSemaphore;
+            if (uintResult.result == vk::Result::eErrorOutOfDateKHR) {
+                // 处理重建
+                recreateSwapchain(i);
+                return;
+            } else if (uintResult.result != vk::Result::eSuccess && uintResult.result != vk::Result::eSuboptimalKHR) {
+                throw std::runtime_error("Failed to acquire swap chain image!");
+            }
         }
-        else if (uintResult.result != vk::Result::eSuccess && uintResult.result != vk::Result::eSuboptimalKHR)
-            throw std::runtime_error("Failed to acquire swap chain image!");
-
         _device.device().resetFences(_inFlightFences[_currentFrame]);
         vk::CommandBuffer &commandBuffer = _commandBuffers[_currentFrame];
-        commandBuffer.reset();
-
         vk::CommandBufferBeginInfo beginInfo;
         beginInfo.setFlags(vk::CommandBufferUsageFlagBits::eSimultaneousUse)
             .setPInheritanceInfo(nullptr);
-
+        commandBuffer.reset();
         commandBuffer.begin(beginInfo);
-
-        _commandRecordFunc(resourceManager(), commandBuffer, imageIndex);
-
-        commandBuffer.end(); // 结束命令记录
-
-        std::vector<vk::Semaphore> waitSemaphores = {_imageAvailableSemaphores[_currentFrame]};
-        std::vector<vk::PipelineStageFlags> waitStages = {vk::PipelineStageFlagBits::eColorAttachmentOutput};
-        std::vector<vk::Semaphore> signalSemaphores = {_renderFinishSemaphores[_currentFrame]};
-
+        // 这里只传第一个 swapchain 的 imageIndex，实际可根据需求扩展
+        _commandRecordFunc(resourceManager(), commandBuffer, imageIndices[0]);
+        commandBuffer.end();
+        // 多 swapchain 时，waitSemaphores 取所有 acquireSemaphores
+        std::vector<vk::Semaphore> waitSemaphores = acquireSemaphores;
+        std::vector<vk::PipelineStageFlags> waitStages(waitSemaphores.size(), vk::PipelineStageFlagBits::eColorAttachmentOutput);
+        // signalSemaphores 取所有 renderFinishSemaphores
+        std::vector<vk::Semaphore> signalSemaphores(swapchainCount);
+        for (size_t i = 0; i < swapchainCount; ++i) {
+            signalSemaphores[i] = _renderFinishSemaphores[i][_currentFrame];
+        }
         vk::SubmitInfo submitInfo;
         submitInfo.setCommandBuffers(commandBuffer)
             .setSignalSemaphores(signalSemaphores)
             .setWaitDstStageMask(waitStages)
             .setWaitSemaphores(waitSemaphores);
+        try {
+            _device.graphicsQueue().submit(submitInfo, _inFlightFences[_currentFrame]);
+        } catch (const vk::SystemError& err) {
+            std::cerr << "Vulkan error: " << err.what() << std::endl;
+        }
 
-        _device.graphicsQueue().submit(submitInfo, _inFlightFences[_currentFrame]);
-
-        vk::SwapchainKHR swapChains[] = {_swapchain.swapchain()};
-
+        std::vector<vk::SwapchainKHR> vkSwapchains;
+        for (size_t i = 0; i < swapchainCount; ++i)
+            vkSwapchains.push_back(_pSwapchains[i]->swapchain());
+        
         vk::PresentInfoKHR presentInfo;
-        presentInfo.setImageIndices(imageIndex)
-            .setSwapchains(swapChains)
+        presentInfo.setImageIndices(imageIndices)
+            .setSwapchains(vkSwapchains)
             .setWaitSemaphores(signalSemaphores);
-
         vk::Result presentResult = _device.presentQueue().presentKHR(presentInfo);
-
         if (presentResult == vk::Result::eErrorOutOfDateKHR || presentResult == vk::Result::eSuboptimalKHR || _isSizeChanged)
         {
             _isSizeChanged = false;
-            // _pSurface->swapChain()->recreateSwapChain();
+            // 处理重建
+            recreateSwapchain(-1);
+            return;
         }
         else if (presentResult != vk::Result::eSuccess)
             throw std::runtime_error("Failed to present swap chain image!");
@@ -120,5 +162,9 @@ namespace Vkbase
     void RenderDelegator::setCommandRecordFunc(void (* recordFunc)(ResourceManager &resourceManager, const vk::CommandBuffer &commandBuffer, uint32_t imageIndex))
     {
         _commandRecordFunc = recordFunc;
+    }
+
+    void RenderDelegator::setRenderPassCreateFunc(const std::function<void()>& func) {
+        _renderPassCreateFunc = func;
     }
 }

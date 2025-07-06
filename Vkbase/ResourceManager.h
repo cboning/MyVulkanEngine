@@ -9,6 +9,7 @@ namespace Vkbase
 {
     enum class ResourceType
     {
+        Unknown,
         Window,
         Swapchain,
         Device,
@@ -29,6 +30,8 @@ namespace Vkbase
     {
         switch (type)
         {
+            case ResourceType::Unknown:
+                return "Unknown";
             case ResourceType::Window:
                 return "Window";
             case ResourceType::Swapchain:
@@ -61,10 +64,11 @@ namespace Vkbase
     public:
         ResourceManager();
         ~ResourceManager();
-        void addResource(ResourceType type, std::string name, ResourceBase *pResource);
+        void addResource(ResourceBase *pResource);
         const ResourceSet &resources() const;
-        const ResourceBase *resource(ResourceType type, std::string name) const;
+        ResourceBase *resource(ResourceType type, std::string name) const;
         void remove(ResourceType type, std::string name);
         const vk::Instance &instance() const;
+        void renameResource(const ResourceBase *pResource, const std::string &newName);
     };
 }
