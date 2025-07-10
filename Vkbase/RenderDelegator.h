@@ -1,6 +1,7 @@
 #pragma once
 #include "ResourceBase.h"
 #include <functional>
+#define MAX_FLIGHT_COUNT 3
 
 namespace Vkbase
 {
@@ -14,13 +15,15 @@ namespace Vkbase
         ~RenderDelegator();
         void draw();
         void sizeChanged();
-        void setCommandRecordFunc(void (* recordFunc)(ResourceManager &resourceManager, const vk::CommandBuffer &commandBuffer, uint32_t imageIndex));
+        void setCommandRecordFunc(const std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)>& func);
         void setRenderPassCreateFunc(const std::function<void()>& func);
+        static uint32_t maxFlightCount();
     private:
         void init();
         void createSyncObjects();
         void recreateSwapchain(int32_t swapchainIndex);
         const Device &_device;
+        inline static uint32_t _maxFlightCount = MAX_FLIGHT_COUNT;
         std::vector<Swapchain *> _pSwapchains;
         const CommandPool &_commandPool;
         std::vector<vk::CommandBuffer> _commandBuffers;
@@ -29,7 +32,7 @@ namespace Vkbase
         std::vector<vk::Fence> _inFlightFences;
         uint32_t _currentFrame = 0;
         bool _isSizeChanged = false;
-        void (* _commandRecordFunc)(ResourceManager &resourceManager, const vk::CommandBuffer &commandBuffer, uint32_t imageIndex) = nullptr;
+        std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)> _commandRecordFunc;
         std::function<void()> _renderPassCreateFunc;
     };
 }

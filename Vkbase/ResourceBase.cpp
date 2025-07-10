@@ -23,9 +23,12 @@ namespace Vkbase
 
     void ResourceBase::preDestroy()
     {
-        // auto resourceManager = _resourceManager;
-        for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSuperresources.rbegin(); iter != _pSuperresources.rend(); ++iter)
-            (*iter)->disusedSubresource(this);
+        while (_pSuperresources.size())
+        {
+            Vkbase::ResourceBase *back = _pSuperresources.back();
+            _pSuperresources.pop_back();
+            back->disusedSubresource(this);
+        }
     }
 
     ResourceManager &ResourceBase::resourceManager()

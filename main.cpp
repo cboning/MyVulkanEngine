@@ -4,7 +4,6 @@ using namespace std;
 
 
 int main() {
-
     Application application;
 
     application.run();

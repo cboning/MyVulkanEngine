@@ -3,7 +3,6 @@
 #include "Device.h"
 #include "Swapchain.h"
 #include "CommandPool.h"
-#define MAX_FLIGHT_COUNT 3
 
 namespace Vkbase
 {
@@ -38,7 +37,7 @@ namespace Vkbase
 
     void RenderDelegator::init()
     {
-        _commandBuffers = _commandPool.allocateFlightCommandBuffers(MAX_FLIGHT_COUNT);
+        _commandBuffers = _commandPool.allocateFlightCommandBuffers(_maxFlightCount);
         createSyncObjects();
     }
 
@@ -65,14 +64,14 @@ namespace Vkbase
         _imageAvailableSemaphores.resize(swapchainCount);
         _renderFinishSemaphores.resize(swapchainCount);
         for (size_t i = 0; i < swapchainCount; ++i) {
-            _imageAvailableSemaphores[i].resize(MAX_FLIGHT_COUNT);
-            _renderFinishSemaphores[i].resize(MAX_FLIGHT_COUNT);
+            _imageAvailableSemaphores[i].resize(_maxFlightCount);
+            _renderFinishSemaphores[i].resize(_maxFlightCount);
         }
-        _inFlightFences.resize(MAX_FLIGHT_COUNT);
+        _inFlightFences.resize(_maxFlightCount);
         vk::SemaphoreCreateInfo semaphoreCreateInfo;
         vk::FenceCreateInfo fenceCreateInfo;
         fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
-        for (int i = 0; i < MAX_FLIGHT_COUNT; i++)
+        for (int i = 0; i < _maxFlightCount; i++)
         {
             for (size_t j = 0; j < swapchainCount; ++j) {
                 _imageAvailableSemaphores[j][i] = _device.device().createSemaphore(semaphoreCreateInfo);
@@ -112,7 +111,7 @@ namespace Vkbase
         commandBuffer.reset();
         commandBuffer.begin(beginInfo);
         // 这里只传第一个 swapchain 的 imageIndex，实际可根据需求扩展
-        _commandRecordFunc(resourceManager(), commandBuffer, imageIndices[0]);
+        _commandRecordFunc(commandBuffer, imageIndices[0], _currentFrame);
         commandBuffer.end();
         // 多 swapchain 时，waitSemaphores 取所有 acquireSemaphores
         std::vector<vk::Semaphore> waitSemaphores = acquireSemaphores;
@@ -151,7 +150,7 @@ namespace Vkbase
         }
         else if (presentResult != vk::Result::eSuccess)
             throw std::runtime_error("Failed to present swap chain image!");
-        _currentFrame = (_currentFrame + 1) % MAX_FLIGHT_COUNT;
+        _currentFrame = (_currentFrame + 1) % _maxFlightCount;
     }
 
     void RenderDelegator::sizeChanged()
@@ -159,9 +158,14 @@ namespace Vkbase
         _isSizeChanged = true;
     }
 
-    void RenderDelegator::setCommandRecordFunc(void (* recordFunc)(ResourceManager &resourceManager, const vk::CommandBuffer &commandBuffer, uint32_t imageIndex))
+    uint32_t RenderDelegator::maxFlightCount()
     {
-        _commandRecordFunc = recordFunc;
+        return _maxFlightCount;
+    }
+
+    void RenderDelegator::setCommandRecordFunc(const std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)>& func)
+    {
+        _commandRecordFunc = func;
     }
 
     void RenderDelegator::setRenderPassCreateFunc(const std::function<void()>& func) {

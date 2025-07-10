@@ -29,7 +29,7 @@ namespace Vkbase
         const vk::ImageType _type;
         const vk::ImageViewType _viewType;
 
-        void loadImage(const std::string &fileName, vk::ImageUsageFlags usage);
+        void loadImage(std::string fileName, vk::ImageUsageFlags usage);
         void transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
         void createImageView();
         void createImage(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, uint32_t mipLevels = 1, uint32_t arrayLayers = 1);

@@ -115,12 +115,12 @@ namespace Vkbase
         ResourceType type = pResource->type();
         Vkbase::ResourceSet::const_iterator typeIter = _pResources.find(type);
         if (typeIter == _pResources.end())
-            std::cout << "[ERROR] Failed to rename the resouce." << std::endl;
+            std::cerr << "[ERROR] Failed to rename the resouce." << std::endl;
             return ;
         const std::unordered_map<std::string, ResourceBase *> &resources = typeIter->second;
         const std::unordered_map<std::string, ResourceBase *>::const_iterator iter = resources.find(pResource->name());
         if (iter == resources.end())
-            std::cout << "[ERROR] Failed to rename the resouce." << std::endl;
+            std::cerr << "[ERROR] Failed to rename the resouce." << std::endl;
             return ;
 
         const ResourceBase *pTempResource = resource(type, newName);
