@@ -5,6 +5,7 @@
 #include "Swapchain.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
+#include <iostream>
 
 namespace Vkbase
 {
@@ -24,6 +25,10 @@ namespace Vkbase
         : ResourceBase(Vkbase::ResourceType::Image, resourceName), _pDevice(dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _format(format), _type(type), _viewType(viewType)
     {
         createImage(width, height, depth, usage);
+        if (isDepthImage())
+            transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+        else
+            transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
         createImageView();
     }
 
@@ -53,16 +58,23 @@ namespace Vkbase
         copyBufferDataToImage(*buffer, width, height, depth);
         transitionImageLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-        resourceManager().remove(buffer->type(), buffer->name());
+        buffer->destroy();
         createImageView();
     }
 
-    void Image::loadImage(const std::string &fileName, vk::ImageUsageFlags usage)
+
+    void Image::loadImage(std::string fileName, vk::ImageUsageFlags usage)
     {
         int width, height, channels;
+        std::replace(fileName.begin(), fileName.end(), '\\', '/');
         stbi_uc *pData = stbi_load(fileName.c_str(), &width, &height, &channels, STBI_rgb_alpha);
+        uint32_t emptyColor = 0xFFFF00FF;
         if (!pData)
-            throw std::runtime_error(std::string("Failed to load image") + fileName);
+        {
+            std::cerr << "Failed to load image: " << fileName.c_str() << std::endl;
+            createImageWithData(1, 1, 1, usage, &emptyColor);
+            return;
+        }
         createImageWithData(width, height, 1, usage, pData);
 
         stbi_image_free(pData);
@@ -79,7 +91,7 @@ namespace Vkbase
     void Image::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
     {
         vk::ImageSubresourceRange subresourceRange;
-        subresourceRange.setAspectMask(vk::ImageAspectFlagBits::eColor)
+        subresourceRange.setAspectMask(isDepthImage() ? vk::ImageAspectFlagBits::eDepth : vk::ImageAspectFlagBits::eColor)
             .setBaseArrayLayer(0)
             .setLayerCount(1)
             .setBaseMipLevel(0)
@@ -108,6 +120,20 @@ namespace Vkbase
             barrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite)
                 .setDstAccessMask(vk::AccessFlagBits::eShaderRead);
         }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eDepthStencilAttachmentOptimal)
+        {
+            srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            dstStage = vk::PipelineStageFlagBits::eEarlyFragmentTests;
+            barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
+                .setDstAccessMask(vk::AccessFlagBits::eDepthStencilAttachmentRead | vk::AccessFlagBits::eDepthStencilAttachmentWrite);
+        } 
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eColorAttachmentOptimal)
+        {
+            srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            dstStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+            barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
+                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
+        } 
         else
         {
             throw std::runtime_error("Unsupported layout transition!");
@@ -200,6 +226,7 @@ namespace Vkbase
 
             case vk::Format::eR8G8B8A8Unorm:
             case vk::Format::eB8G8R8A8Unorm:
+            case vk::Format::eR8G8B8A8Srgb:
             case vk::Format::eR32Uint:
             case vk::Format::eD32Sfloat:
                 return 4;

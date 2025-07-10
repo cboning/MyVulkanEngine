@@ -1,64 +1,83 @@
+// {
+//     "tasks": [
+//         {
+//             "type": "cppbuild",
+//             "label": "Vulkan程序编译",
+//             "command": "/usr/bin/clang++",
+//             "args": [
+//                 "-fcolor-diagnostics",
+//                 "-fansi-escape-codes",
+//                 "-std=c++17",
+//                 "-g",
+//                 "${fileDirname}/*.cpp",
+//                 "${fileDirname}/Vkbase/*.cpp",
+//                 "${fileDirname}/Modelbase/*.cpp",
+//                 // "-O2",
+//                 "-I",
+//                 "${fileDirname}/include",
+//                 "-L./lib",
+//                 "-Wl,-rpath,@executable_path/lib",
+//                 "-Wl,-rpath,@executable_path/share/vulkan/icd.d/MoltenVK_icd.json",
+//                 "-lglfw.3",
+//                 "-lassimp",
+//                 "-lvulkan.1.3.296",
+//                 "-o",
+//                 "${fileDirname}/main"
+//             ],
+//             "options": {
+//                 "cwd": "${fileDirname}"
+//             },
+//             "problemMatcher": [
+//                 "$gcc"
+//             ],
+//             "group": {
+//                 "kind": "build",
+//                 "isDefault": true
+//             },
+//             "detail": "Vulkan demo build"
+//         },
+//         {
+//             "type": "shell",
+//             "label": "着色器编译",
+//             "command": "./compile.sh",
+//             "args": [],
+//             "options": {
+//                 "cwd": "${fileDirname}/shader"
+//             },
+//             "problemMatcher": [],
+//             "group": {
+//                 "kind": "build",
+//                 "isDefault": true
+//             },
+//             "detail": "Shader build"
+//         },
+//         {
+//           "label": "调试前置任务",
+//           "dependsOn": ["着色器编译", "Vulkan程序编译"],
+//           "options": {
+//               "cwd": "${fileDirname}" // 再次统一路径
+//           },
+//           "problemMatcher": [],
+//           "type": "shell"
+//         }
+//     ],
+//     "version": "2.0.0"
+// }
+
 {
+    "version": "2.0.0",
     "tasks": [
         {
-            "type": "cppbuild",
-            "label": "Vulkan程序编译",
-            "command": "/usr/bin/clang++",
-            "args": [
-                "-fcolor-diagnostics",
-                "-fansi-escape-codes",
-                "-std=c++17",
-                "-g",
-                "${fileDirname}/*.cpp",
-                "${fileDirname}/Vkbase/*.cpp",
-                // "-O2",
-                "-I",
-                "${fileDirname}/include",
-                "-L./lib",
-                "-Wl,-rpath,@executable_path/lib",
-                "-Wl,-rpath,@executable_path/share/vulkan/icd.d/MoltenVK_icd.json",
-                "-lglfw.3",
-                "-lassimp",
-                "-lvulkan.1.3.296",
-                "-o",
-                "${fileDirname}/main"
-            ],
-            "options": {
-                "cwd": "${fileDirname}"
-            },
-            "problemMatcher": [
-                "$gcc"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "detail": "Vulkan demo build"
-        },
-        {
+            "label": "CMake: Build",
             "type": "shell",
-            "label": "着色器编译",
-            "command": "./compile.sh",
-            "args": [],
-            "options": {
-                "cwd": "${fileDirname}/shader"
-            },
-            "problemMatcher": [],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "detail": "Shader build"
+            "command": "cmake --build build",
+            "group": "build",
+            "problemMatcher": ["$gcc"]
         },
         {
-          "label": "调试前置任务",
-          "dependsOn": ["着色器编译", "Vulkan程序编译"],
-          "options": {
-              "cwd": "${fileDirname}" // 再次统一路径
-          },
-          "problemMatcher": [],
-          "type": "shell"
+            "label": "CMake: Build with Shaders",
+            "dependsOn": ["CMake: Build"],
+            "group": "build"
         }
-    ],
-    "version": "2.0.0"
+    ]
 }

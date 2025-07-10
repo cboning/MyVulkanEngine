@@ -1,44 +1,86 @@
+// {
+//     "version": "0.2.0",
+//     "configurations": [
+//         {
+//             "name": "着色器编译+调试",
+//             "type": "cppdbg",
+//             "request": "launch",
+//             "program": "${fileDirname}/main",
+//             "args": [],
+//             "stopAtEntry": false,
+//             "cwd": "${fileDirname}",
+//             "environment": [
+//             ],
+//             "logging": {
+//                 "moduleLoad": false,
+//                 "engineLogging": false,
+//                 "exceptions": false
+//             },
+//             "externalConsole": false,
+//             "MIMode": "lldb",
+//             "preLaunchTask": "着色器编译",
+//         },
+
+//         {
+//             "name": "全编译+调试",
+//             "type": "cppdbg",
+//             "request": "launch",
+//             "program": "${fileDirname}/main",
+//             "args": [],
+//             "stopAtEntry": false,
+//             "cwd": "${fileDirname}",
+//             "environment": [
+//             ],
+//             "logging": {
+//                 "moduleLoad": false,
+//                 "engineLogging": false,
+//                 "exceptions": false
+//             },
+//             "externalConsole": false,
+//             "MIMode": "lldb",
+//             "preLaunchTask": "调试前置任务"
+//         }
+//     ]
+// }
+
 {
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "着色器编译+调试",
+            "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/main",
+            "program": "${workspaceFolder}/main",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [
-            ],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
             "logging": {
                 "moduleLoad": false,
                 "engineLogging": false,
                 "exceptions": false
             },
-            "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "着色器编译",
+            "preLaunchTask": "CMake: Build with Shaders"
         },
-
         {
-            "name": "全编译+调试",
+            "name": "Debug (Shaders Only)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${fileDirname}/main",
+            "program": "${workspaceFolder}/main",
             "args": [],
             "stopAtEntry": false,
-            "cwd": "${fileDirname}",
-            "environment": [
-            ],
+            "cwd": "${workspaceFolder}",
+            "environment": [],
+            "externalConsole": false,
             "logging": {
                 "moduleLoad": false,
                 "engineLogging": false,
                 "exceptions": false
             },
-            "externalConsole": false,
             "MIMode": "lldb",
-            "preLaunchTask": "调试前置任务"
+            "preLaunchTask": "compile_shaders"
         }
     ]
 }

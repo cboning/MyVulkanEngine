@@ -17,7 +17,7 @@ namespace Vkbase
         void copyBuffer(vk::Buffer &src, vk::Buffer &dst);
 
     public:
-        Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData);
+        Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData = nullptr);
         ~Buffer() override;
 
         const vk::Buffer &buffer() const;

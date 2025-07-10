@@ -46,6 +46,7 @@ namespace Vkbase
         const vk::Queue &presentQueue() const;
         const vk::Queue &computeQueue() const;
         const QueueFamilyIndices &queueFamilyIndices() const;
+        vk::Format findSupportedFormat(std::vector<vk::Format> formats, vk::ImageTiling tiling, vk::FormatFeatureFlags feature) const;
     
     private:
         vk::Device _device;

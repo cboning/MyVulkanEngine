@@ -3,6 +3,7 @@
 #include <GLFW/glfw3.h>
 #include <unordered_set>
 #include "ResourceBase.h"
+#include <functional>
 
 namespace Vkbase
 {
@@ -19,10 +20,14 @@ namespace Vkbase
         const Device *_pDevice = nullptr;
         const Swapchain *_pSwapchain = nullptr;
         const CommandPool *_pGraphicsCommandPool;
+        double _cursorPosX, _cursorPosY;
+        int _cursorState = GLFW_CURSOR_NORMAL;
+        std::function<void(double, double)> _mouseMoveCallback;
         inline static std::unordered_set<Window *> _delayDestroyWindows;
 
         void init();
         static void windowClosedCallback(GLFWwindow *pWindow);
+        static void mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos);
     public:
         Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height);
         ~Window() override;
@@ -30,5 +35,10 @@ namespace Vkbase
         static void delayDestroy();
         uint32_t width() const;
         uint32_t height() const;
+        GLFWwindow *window() const;
+        void setMouseMoveCallback(const std::function<void(double, double)> &func);
+        void cursorCapture(int value);
+        void switchCursorState();
+
     };
 }

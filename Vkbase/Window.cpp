@@ -39,10 +39,12 @@ namespace Vkbase
             resourceManager().remove(_resourceType, _name);
             return;
         }
+        cursorCapture(_cursorState);
         // Set the user pointer to this window instance
         glfwSetWindowUserPointer(_pWindow, this);
         // Set the close callback to handle window close events
         glfwSetWindowCloseCallback(_pWindow, windowClosedCallback);
+        glfwSetCursorPosCallback(_pWindow, mouseMoveCallback);
 
         // Create Vulkan surface
         glfwCreateWindowSurface(resourceManager().instance(), _pWindow, nullptr, reinterpret_cast<VkSurfaceKHR *>(&_surface));
@@ -57,6 +59,20 @@ namespace Vkbase
     void Window::windowClosedCallback(GLFWwindow *pWindow)
     {
         _delayDestroyWindows.insert(static_cast<Window *>(glfwGetWindowUserPointer(pWindow)));
+    }
+
+    void Window::mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos)
+    {
+        Window &window = *static_cast<Window *>(glfwGetWindowUserPointer(pWindow));
+        if (window._mouseMoveCallback)
+            window._mouseMoveCallback(xPos - window._cursorPosX, yPos - window._cursorPosY);
+        window._cursorPosX = xPos;
+        window._cursorPosY = yPos;
+    }
+
+    void Window::setMouseMoveCallback(const std::function<void(double, double)> &func)
+    {
+        _mouseMoveCallback = func;
     }
 
     const vk::SurfaceKHR &Window::surface() const
@@ -75,8 +91,25 @@ namespace Vkbase
     {
         return _width;
     }
+
     uint32_t Window::height() const
     {
         return _height;
+    }
+
+    GLFWwindow *Window::window() const
+    {
+        return _pWindow;
+    }
+
+    void Window::cursorCapture(int value)
+    {
+        glfwSetInputMode(_pWindow, GLFW_CURSOR, value);
+    }
+
+    void Window::switchCursorState()
+    {
+        _cursorState = _cursorState == GLFW_CURSOR_DISABLED ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
+        cursorCapture(_cursorState);
     }
 }

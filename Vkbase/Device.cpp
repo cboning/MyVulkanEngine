@@ -165,4 +165,17 @@ namespace Vkbase
             }
         return new Device("", surface);
     }
+
+    vk::Format Device::findSupportedFormat(std::vector<vk::Format> formats, vk::ImageTiling tiling, vk::FormatFeatureFlags feature) const
+    {
+        for (const vk::Format &format : formats)
+        {
+            vk::FormatProperties properties = _physicalDevice.getFormatProperties(format);
+            if (tiling == vk::ImageTiling::eLinear && (properties.linearTilingFeatures & feature) == feature)
+                return format;
+            else if (tiling == vk::ImageTiling::eOptimal && (properties.optimalTilingFeatures & feature) == feature)
+                return format;
+        }
+        return vk::Format::eUndefined;
+    }
 }

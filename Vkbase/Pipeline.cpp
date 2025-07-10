@@ -109,7 +109,7 @@ namespace Vkbase
         renderInfo.multisampleStateInfo.setSampleShadingEnable(vk::False)
             .setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
-        renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eBack)
+        renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone)
             .setFrontFace(vk::FrontFace::eClockwise)
             .setDepthClampEnable(vk::False)
             .setRasterizerDiscardEnable(vk::False)
@@ -140,5 +140,10 @@ namespace Vkbase
     const vk::Pipeline &Pipeline::pipeline() const
     {
         return _pipeline;
+    }
+
+    const vk::PipelineLayout &Pipeline::layout() const
+    {
+        return _pipelineLayout;
     }
 }

@@ -19,6 +19,8 @@ namespace Vkbase
         Framebuffer,
         CommandPool,
         RenderPass,
+        Sampler,
+        DescriptorSets,
         RenderDelegator
     };
 
@@ -50,6 +52,10 @@ namespace Vkbase
                 return "CommandPool";
             case ResourceType::RenderPass:
                 return "RenderPass";
+            case ResourceType::Sampler:
+                return "Sampler";
+            case ResourceType::DescriptorSets:
+                return "DescriptorSets";
             case ResourceType::RenderDelegator:
                 return "RenderDelegator";
         }

@@ -4,8 +4,8 @@
 
 namespace Vkbase
 {
-    Buffer::Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData = nullptr)
-        : ResourceBase(Vkbase::ResourceType::Buffer, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))))
+    Buffer::Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData)
+        : ResourceBase(Vkbase::ResourceType::Buffer, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _size(size)
     {
         if (pData)
         {

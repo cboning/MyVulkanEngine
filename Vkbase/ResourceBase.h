@@ -26,6 +26,8 @@ namespace Vkbase
         template <typename T>
         T *connectTo(T *pResource)
         {
+            if (pResource == this)
+                return pResource;
             ResourceBase *pBase = (ResourceBase *)pResource;
             if (!pBase) {
                 throw std::runtime_error("Invalid type: not the expected derived class");
