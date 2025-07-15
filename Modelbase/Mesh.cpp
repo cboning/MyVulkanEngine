@@ -2,7 +2,7 @@
 
 namespace Modelbase
 {
-    Mesh::Mesh(const std::string &name, const std::string &deviceName, const std::vector<ModelData::Vertex> &vertices, const std::vector<uint16_t> &indices, const std::array<std::vector<std::string>, 4> &textureNames)
+    Mesh::Mesh(const std::string &name, const std::string &deviceName, const std::vector<ModelData::Vertex> &vertices, const std::vector<uint16_t> &indices, const std::vector<std::vector<std::string>> &textureNames)
         : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))), _vertices(vertices), _indices(indices), _textureNames(textureNames), _vertexBuffer(*(new Vkbase::Buffer(getNewBufferName(name + "_Vertex"), deviceName, _vertices.size() * sizeof(_vertices[0]), vk::BufferUsageFlagBits::eVertexBuffer, _vertices.data()))), _indexBuffer(*(new Vkbase::Buffer(getNewBufferName(name + "_Index"), deviceName, _indices.size() * sizeof(_indices[0]), vk::BufferUsageFlagBits::eIndexBuffer, _indices.data()))), _name(name)
     {
     }
@@ -19,7 +19,7 @@ namespace Modelbase
         commandBuffer.drawIndexed(_indices.size(), 1, 0, 0, 0);
     }
 
-    const std::array<std::vector<std::string>, 4> &Mesh::textureNames() const
+    const std::vector<std::vector<std::string>> &Mesh::textureNames() const
     {
         return _textureNames;
     }

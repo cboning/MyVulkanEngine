@@ -72,8 +72,6 @@ namespace Modelbase
 
         std::vector<Animation *> _pAnimations;
 
-        uint _imageDescriptorSetMask;
-
         vk::Sampler _sampler;
 
         uint32_t _animationCount;
@@ -85,6 +83,10 @@ namespace Modelbase
         std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> _descriptorTypes;
 
         std::vector<AnimationInstance> _animationInstances;
+
+        const std::vector<aiTextureType> _textureTypeFeatures;
+
+        std::unordered_map<std::string, std::string> _meshPipelineNames;
 
         Vkbase::DescriptorSets &_descriptorSets;
 
@@ -104,7 +106,7 @@ namespace Modelbase
         inline static std::unordered_set<Model *> _models;
         
     public:
-        Model(const std::string &deviceName, const std::string &commandPoolName, const std::string &fileName, uint imageDescripotrSetMask, vk::Sampler sampler);
+        Model(const std::string &deviceName, const std::string &commandPoolName, const std::string &fileName, const std::vector<aiTextureType> &textureTypeFeatures, vk::Sampler sampler);
         ~Model();
         void draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, uint32_t instanceIndex);
         std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap();
@@ -112,7 +114,6 @@ namespace Modelbase
         ModelData::AssimpNodeData *rootNode();
         void updateAnimation(uint32_t instanceIndex, float deltaTick);
         void updateAnimation(const std::string &instanceName, float deltaTick);
-        uint32_t imageDescriptorSetMask();
         std::vector<vk::DescriptorSetLayout> descriptorSetLayout(uint32_t instanceIndex) const;
         std::vector<vk::DescriptorSetLayout> descriptorSetLayout(const std::string &instanceName) const;
         uint32_t animationCount();

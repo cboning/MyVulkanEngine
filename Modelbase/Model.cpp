@@ -4,8 +4,8 @@
 
 namespace Modelbase
 {
-    Model::Model(const std::string &deviceName, const std::string &commandPoolName, const std::string &fileName, uint imageDescripotrSetMask, vk::Sampler sampler)
-        : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))), _commandPool(*dynamic_cast<const Vkbase::CommandPool *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))), _imageDescriptorSetMask(imageDescripotrSetMask), _sampler(sampler), _descriptorSets(*(new Vkbase::DescriptorSets(fileName, deviceName)))
+    Model::Model(const std::string &deviceName, const std::string &commandPoolName, const std::string &fileName, const std::vector<aiTextureType> &textureTypeFeatures, vk::Sampler sampler)
+        : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))), _commandPool(*dynamic_cast<const Vkbase::CommandPool *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))), _textureTypeFeatures(textureTypeFeatures), _sampler(sampler), _descriptorSets(*(new Vkbase::DescriptorSets(fileName, deviceName)))
     {
         _models.insert(this);
         if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
@@ -168,12 +168,11 @@ namespace Modelbase
         }
 
         aiMaterial *pMaterial = pScene->mMaterials[pMesh->mMaterialIndex];
-        std::array<std::vector<std::string>, 4> textureNames = {std::vector<std::string>{"Empty"}, std::vector<std::string>{"Empty"}, std::vector<std::string>{"Empty"}, std::vector<std::string>{"Empty"}};
+        std::vector<std::vector<std::string>> textureNames;
+        textureNames.resize(_textureTypeFeatures.size(), {"Empty"});
 
-        aiTextureType types[] = {aiTextureType_DIFFUSE, aiTextureType_SPECULAR, aiTextureType_HEIGHT, aiTextureType_AMBIENT};
-        for (uint i = 0; i < 4; ++i)
-            if ((_imageDescriptorSetMask >> i) & 1)
-                textureNames[i][0] = loadMaterialTextures(pMaterial, types[i])[0];
+        for (uint32_t i = 0; i < _textureTypeFeatures.size(); ++i)
+            textureNames[i][0] = loadMaterialTextures(pMaterial, _textureTypeFeatures[i])[0];
         _meshs.emplace_back(_descriptorSets.name() + "_" + pMesh->mName.C_Str(), _device.name(), vertices, indices, textureNames);
     }
 
@@ -203,10 +202,10 @@ namespace Modelbase
         {
             std::vector<vk::DescriptorSet> descriptorSets;
             descriptorSets.push_back(_animationInstances[instanceIndex].descriptorSets.sets("UBO")[currentFrame]);
-            const std::array<std::vector<std::string>, 4> &textureNames = mesh.textureNames();
-            for (uint i = 0; i < 4; ++i)
-                if ((_imageDescriptorSetMask >> i) & 1)
-                    descriptorSets.push_back(_descriptorSets.sets(textureNames[i][0])[0]);
+            const std::vector<std::vector<std::string>> &textureNames = mesh.textureNames();
+
+            for (const std::vector<std::string> &textureName : textureNames)
+                descriptorSets.push_back(_descriptorSets.sets(textureName[0])[0]);
             
             mesh.draw(commandBuffer, pipeline, descriptorSets);
         }
@@ -396,18 +395,12 @@ namespace Modelbase
         return &_rootNode;
     }
 
-    uint32_t Model::imageDescriptorSetMask()
-    {
-        return _imageDescriptorSetMask;
-    }
-
     std::vector<vk::DescriptorSetLayout> Model::descriptorSetLayout(uint32_t instanceIndex) const
     {
         std::vector<vk::DescriptorSetLayout> layout;
         layout.push_back(_animationInstances[instanceIndex].descriptorSets.layout("UBO"));
-        for (uint i = 0; i < 4; ++i)
-            if ((1 << i) & _imageDescriptorSetMask)
-                layout.push_back(_descriptorSets.layout(_files[0]));
+        for (uint32_t i = 0; i < _textureTypeFeatures.size(); ++i)
+            layout.push_back(_descriptorSets.layout(_files[0]));
         return layout;
     }
 
