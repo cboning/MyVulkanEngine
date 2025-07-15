@@ -11,7 +11,7 @@
 
 #include "ModelData.h"
 
-#define MAX_BONES 250
+#define MAX_BONES 300
 
 namespace Modelbase
 {

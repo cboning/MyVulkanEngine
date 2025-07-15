@@ -23,9 +23,9 @@ namespace Vkbase
 
     vk::SamplerCreateInfo Sampler::getDefaultCreateInfo()
     {
-        return vk::SamplerCreateInfo().setAddressModeU(vk::SamplerAddressMode::eRepeat)
-            .setAddressModeV(vk::SamplerAddressMode::eRepeat)
-            .setAddressModeW(vk::SamplerAddressMode::eRepeat)
+        return vk::SamplerCreateInfo().setAddressModeU(vk::SamplerAddressMode::eClampToEdge)
+            .setAddressModeV(vk::SamplerAddressMode::eClampToEdge)
+            .setAddressModeW(vk::SamplerAddressMode::eClampToEdge)
             .setAnisotropyEnable(vk::False)
             .setBorderColor(vk::BorderColor::eIntOpaqueBlack)
             .setCompareEnable(vk::False)
@@ -39,6 +39,4 @@ namespace Vkbase
     {
         return _sampler;
     }
-
-
 }

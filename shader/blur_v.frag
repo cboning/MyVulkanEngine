@@ -8,7 +8,6 @@ layout(binding = 0) uniform sampler2D texture1;
 
 float weight[5] = float[] (0.227027, 0.1945946, 0.1216216, 0.054054, 0.016216);
 
-
 float guassianBlur(int x)
 {
     float sigma = 10.0f;
@@ -16,7 +15,6 @@ float guassianBlur(int x)
 }
 
 void main() {
-
     vec2 texOffset = 1.0f / textureSize(texture1, 0);
     vec3 result = texture(texture1, fragTexCoord).rgb * guassianBlur(0);
     for (int i = 1; i < 20; ++i)
@@ -24,6 +22,5 @@ void main() {
         result += texture(texture1, fragTexCoord + vec2(0, i * texOffset.y)).rgb * guassianBlur(i);
         result += texture(texture1, fragTexCoord - vec2(0, i * texOffset.y)).rgb * guassianBlur(i);
     }
-    outColor = vec4(result, 1.0f);// * vec4(fragColor, 1.0);
+    outColor = vec4(result, 1.0f);
 }
-
