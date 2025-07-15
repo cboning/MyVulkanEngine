@@ -12,7 +12,7 @@ namespace Modelbase
 
         std::vector<ModelData::Vertex> _vertices;
         std::vector<uint16_t> _indices;
-        const std::array<std::vector<std::string>, 4> _textureNames;
+        const std::vector<std::vector<std::string>> _textureNames;
         std::string _name;
         
         Vkbase::Buffer &_vertexBuffer;
@@ -20,9 +20,9 @@ namespace Modelbase
         static const std::string getNewBufferName(std::string name);
 
     public:
-        Mesh(const std::string &name, const std::string &deviceName, const std::vector<ModelData::Vertex> &vertices, const std::vector<uint16_t> &indices, const std::array<std::vector<std::string>, 4> &textureNames);
+        Mesh(const std::string &name, const std::string &deviceName, const std::vector<ModelData::Vertex> &vertices, const std::vector<uint16_t> &indices, const std::vector<std::vector<std::string>> &textureNames);
         ~Mesh();
         void draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const std::vector<vk::DescriptorSet> & descriptorSets) const;
-        const std::array<std::vector<std::string>, 4> &textureNames() const;
+        const std::vector<std::vector<std::string>> &textureNames() const;
     };
 };

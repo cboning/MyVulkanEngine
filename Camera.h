@@ -12,7 +12,7 @@ private:
     glm::mat4 _view = glm::lookAt(_position, _front, _up);
     float _fov = 45.0f;
     float _far = 2000.0f;
-    float _near = 0.001f;
+    float _near = 0.01f;
     glm::mat4 _perspective;
 
     glm::vec2 _frameSize;

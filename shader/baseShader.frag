@@ -22,7 +22,7 @@ void main() {
     vec3 lightColor;
     float weight = max(dot(normalize(light.position - subpassLoad(position).rgb), subpassLoad(normal).rgb), 0.0f);
     if(weight < 0.4)
-        lightColor = vec3(0.0f);
+        lightColor = vec3(0.3f);
     else
         lightColor = light.color;
     
