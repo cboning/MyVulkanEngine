@@ -2,7 +2,7 @@
 
 const int MAX_BONES = 250;
 const int MAX_BONE_INFLUENCE = 4;
-const float screenSizeScale = 0.001;
+const float screenSizeScale = 0.1;
 
 layout(binding = 0) uniform UniformBufferObject{
     mat4 model;
@@ -21,10 +21,9 @@ layout(location = 5) in vec4 inWeight;
 layout(location = 0) out vec2 fragTexCoord;
 
 
-
 void main() {
     vec4 position = vec4(0.0f);
-    vec3 normal = vec3(0.0f);
+    vec3 normal = inNormal;
     for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
     {
         if (inBoneIds[i] == -1)
@@ -35,7 +34,8 @@ void main() {
             break;
         }
         position += ubo.bonesMatrices[inBoneIds[i]] * vec4(inPosition, 1.0f) * inWeight[i];
-        normal += mat3(ubo.bonesMatrices[inBoneIds[i]]) * inNormal * inWeight[i];
+        
+        normal *= mat3(ubo.bonesMatrices[inBoneIds[i]]) * normal * inWeight[i];
     }
     if (normal == vec3(0.0f))
     {
@@ -45,13 +45,13 @@ void main() {
     normal = normalize(normal);
 
     vec3 cameraPosition = -transpose(mat3(ubo.view)) * ubo.view[3].xyz;
-    vec3 cameraFront = -ubo.view[2].xyz;
-    vec3 worldNormal = mat3(ubo.model) * normal;
+    vec3 cameraFront = -normalize(ubo.view[2].xyz);
+    vec3 worldNormal = normal;
     vec3 projectedNormal = normalize(worldNormal - dot(cameraFront, worldNormal) * cameraFront);
     float screenSpaceScale = screenSizeScale / length(position.xyz - cameraPosition);
-    projectedNormal *= screenSpaceScale;
+    // projectedNormal *= screenSpaceScale;
     vec3 reprojectedNormal = normal * dot(normal, projectedNormal);
-    position += vec4(reprojectedNormal, 0.0f);
+    position += vec4(projectedNormal * screenSizeScale, 0.0f);
 
     
     gl_Position = ubo.proj * ubo.view * ubo.model * position;

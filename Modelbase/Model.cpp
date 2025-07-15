@@ -263,7 +263,7 @@ namespace Modelbase
                 uniformData.bonesMatrices[i] = (*transforms)[i];
         }
 
-        uniformData.model = glm::scale(glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
+        uniformData.model = glm::translate(glm::scale(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f)), glm::vec3(0, 0, 0));
 
         uniformData.view = camera.view();
         uniformData.proj = camera.perspective();

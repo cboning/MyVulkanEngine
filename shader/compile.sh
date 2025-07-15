@@ -14,4 +14,6 @@ glslc cloud.vert -o cloudVert.spv
 glslc cloud.frag -o cloudFrag.spv
 glslc baseShader.vert -o baseShaderVert.spv
 glslc baseShader.frag -o baseShaderFrag.spv
+glslc g_buffer.vert -o g_bufferVert.spv
+glslc g_buffer.frag -o g_bufferFrag.spv
 

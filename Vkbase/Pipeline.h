@@ -12,6 +12,9 @@ namespace Vkbase
             : filename(filename), stageName(stageName), stageFlags(stageFlags)
         {
         }
+        ShaderInfo()
+        {
+        }
     };
 
     struct VertexInfo

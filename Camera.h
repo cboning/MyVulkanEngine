@@ -10,9 +10,9 @@ private:
     glm::vec3 _up = glm::vec3(0.0f, 1.0f, 0.0f);
     float _yaw = 90.0f, _pitch = 0.0f;
     glm::mat4 _view = glm::lookAt(_position, _front, _up);
-    float _fov = 90.0f;
+    float _fov = 45.0f;
     float _far = 2000.0f;
-    float _near = 0.1f;
+    float _near = 0.001f;
     glm::mat4 _perspective;
 
     glm::vec2 _frameSize;
