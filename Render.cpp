@@ -1,6 +1,7 @@
 #include "Render.h"
 #include "Modelbase/Modelbase.h"
 #include "Data.h"
+#include "Cloud.h"
 #define SPEED 10.0f
 
 void Render::init()
@@ -26,6 +27,8 @@ void Render::resourceInit()
     for (uint32_t i = 0; i < MAX_FLIGHT_COUNT; ++i)
         new Vkbase::Buffer("UBO" + std::to_string(i), "0", sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer);
     new Vkbase::Sampler("Sampler", "0");
+
+    delete new Cloud();
 
     Modelbase::Model *pModel = new Modelbase::Model("0", "Graphics0", "src/model/zhongli-from-genshin-impact/ze+hongli.fbx", {aiTextureType_DIFFUSE}, dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler());
     pModel->createNewInstance("1", {0, 0.0f});
@@ -162,10 +165,16 @@ void Render::createRenderPass()
     vk::DescriptorImageInfo imageInfo;
     imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
         .setSampler(sampler.sampler());
+    // {
+    //     std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
+    //     for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
+    //         imageInfos[i].setImageView(dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "BlurColor1_" + std::to_string(i)))->view());
+    //     descriptorSets.writeSets("BlurSampler1", 0, {}, imageInfos, swapchain.imageNames().size());
+    // }
     {
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "BlurColor1_" + std::to_string(i)))->view());
+            imageInfos[i].setImageView(dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Cloud"))->view());
         descriptorSets.writeSets("BlurSampler1", 0, {}, imageInfos, swapchain.imageNames().size());
     }
     {
@@ -193,6 +202,7 @@ void Render::createRenderPass()
             imageInfos[i].setImageView(dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "AlbedoSpec_" + std::to_string(i)))->view());
         descriptorSets.writeSets("G_BufferInputAttachments", 2, {}, imageInfos, swapchain.imageNames().size());
     }
+
     {
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
@@ -223,33 +233,33 @@ void Render::createRenderPass()
     renderInfo.blendAttachments.push_back(colorBlendAttachment);
 
     descriptorSetLayouts = {descriptorSets.layout("BlendInputAttachments")};
-    shaderInfos[0].filename = "shader/blendVert.spv";
-    shaderInfos[1].filename = "shader/blendFrag.spv";
+    shaderInfos[0].filename = "shader/bin/blendVert.spv";
+    shaderInfos[1].filename = "shader/bin/blendFrag.spv";
     renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
     renderInfo.subpass = 4;
-    renderPass.createPipeline("blend", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, renderInfo));
+    renderPass.createPipeline("blend", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
     descriptorSetLayouts = {descriptorSets.layout("BlurSampler1")};
-    shaderInfos[0].filename = "shader/blur_hVert.spv";
-    shaderInfos[1].filename = "shader/blur_hFrag.spv";
+    shaderInfos[0].filename = "shader/bin/blur_hVert.spv";
+    shaderInfos[1].filename = "shader/bin/blur_hFrag.spv";
     renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront);
     renderInfo.subpass = 2;
-    renderPass.createPipeline("blur_h", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, renderInfo));
+    renderPass.createPipeline("blur_h", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
     descriptorSetLayouts = {descriptorSets.layout("BlurSampler2")};
-    shaderInfos[0].filename = "shader/blur_vVert.spv";
-    shaderInfos[1].filename = "shader/blur_vFrag.spv";
+    shaderInfos[0].filename = "shader/bin/blur_vVert.spv";
+    shaderInfos[1].filename = "shader/bin/blur_vFrag.spv";
     renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront);
     renderInfo.subpass = 3;
-    renderPass.createPipeline("blur_v", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, renderInfo));
+    renderPass.createPipeline("blur_v", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
     renderInfo.blendAttachments.push_back(colorBlendAttachment);
     descriptorSetLayouts = {descriptorSets.layout("G_BufferInputAttachments")};
-    shaderInfos[0].filename = "shader/baseShaderVert.spv";
-    shaderInfos[1].filename = "shader/baseShaderFrag.spv";
+    shaderInfos[0].filename = "shader/bin/baseShaderVert.spv";
+    shaderInfos[1].filename = "shader/bin/baseShaderFrag.spv";
     renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
     renderInfo.subpass = 1;
-    renderPass.createPipeline("light", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, renderInfo));
+    renderPass.createPipeline("light", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
     std::vector<vk::DescriptorSetLayout> layout = (*Modelbase::Model::models().begin())->descriptorSetLayout(0);
     descriptorSetLayouts.clear();
@@ -265,16 +275,16 @@ void Render::createRenderPass()
         .setMaxDepthBounds(1.0f)
         .setStencilTestEnable(vk::False);
 
-    shaderInfos[0].filename = "shader/g_bufferVert.spv";
-    shaderInfos[1].filename = "shader/g_bufferFrag.spv";
+    shaderInfos[0].filename = "shader/bin/g_bufferVert.spv";
+    shaderInfos[1].filename = "shader/bin/g_bufferFrag.spv";
     renderInfo.subpass = 0;
-    renderPass.createPipeline("g_buffer", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, renderInfo));
+    renderPass.createPipeline("g_buffer", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, &renderInfo));
 
-    shaderInfos[0].filename = "shader/inverstedHullVert.spv";
-    shaderInfos[1].filename = "shader/inverstedHullFrag.spv";
+    shaderInfos[0].filename = "shader/bin/inverstedHullVert.spv";
+    shaderInfos[1].filename = "shader/bin/inverstedHullFrag.spv";
     renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eBack);
     renderInfo.subpass = 0;
-    renderPass.createPipeline("Inversted_Hull", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, renderInfo));
+    renderPass.createPipeline("Inversted_Hull", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, &renderInfo));
 
     createRenderDelegator();
 }
@@ -284,7 +294,6 @@ void Render::createDescriptorSets()
     Vkbase::DescriptorSets *pDescriptorSets = new Vkbase::DescriptorSets("MainDescriptorSets", "0");
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
     pDescriptorSets->addDescriptorSetCreateConfig("Camera", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, Vkbase::RenderDelegator::maxFlightCount());
-    pDescriptorSets->addDescriptorSetCreateConfig("Texture", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, 1);
     pDescriptorSets->addDescriptorSetCreateConfig("G_BufferInputAttachments", {{vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment}, {vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment}, {vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment}}, swapchain.images().size());
     pDescriptorSets->addDescriptorSetCreateConfig("BlurSampler1", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, swapchain.images().size());
     pDescriptorSets->addDescriptorSetCreateConfig("BlurSampler2", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, swapchain.images().size());
@@ -294,15 +303,6 @@ void Render::createDescriptorSets()
     vk::DescriptorBufferInfo bufferInfo;
     bufferInfo.setOffset(0)
         .setRange(sizeof(UniformBufferData));
-
-    {
-        vk::DescriptorImageInfo imageInfo;
-        imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal)
-            .setImageView(dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Texture"))->view())
-            .setSampler(dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler());
-        std::vector<vk::DescriptorImageInfo> imageInfos(1, imageInfo);
-        pDescriptorSets->writeSets("Texture", 0, {}, imageInfos, 1);
-    }
 
     {
         std::vector<vk::DescriptorBufferInfo> bufferInfos(Vkbase::RenderDelegator::maxFlightCount(), bufferInfo);

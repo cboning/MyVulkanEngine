@@ -8,10 +8,11 @@ namespace Vkbase
     Pipeline::Pipeline(const std::string &resourceName,
                        const std::string &deviceName,
                        const std::string &renderPassName,
-                       const PipelineCreateInfo &createInfo)
+                       const PipelineCreateInfo &createInfo,
+                       bool computePipeline)
         : ResourceBase(Vkbase::ResourceType::Pipeline, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName))))
     {
-        createPipeline(renderPassName, createInfo);
+        createPipeline(renderPassName, createInfo, computePipeline);
     }
 
     Pipeline::~Pipeline()
@@ -24,28 +25,48 @@ namespace Vkbase
     }
 
     void Pipeline::createPipeline(const std::string &renderPassName,
-                                  const PipelineCreateInfo &createInfo)
+                                  const PipelineCreateInfo &createInfo,
+                                  bool computePipelin)
     {
         std::vector<vk::PipelineShaderStageCreateInfo> stages = getShaderStageInfos(createInfo.shaderInfos);
 
         vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
         pipelineLayoutInfo.setSetLayouts(createInfo.descriptorSetLayouts);
+
         _pipelineLayout = _device.device().createPipelineLayout(pipelineLayoutInfo);
-        const RenderPass *renderPassResource = dynamic_cast<const RenderPass *>(
-            connectTo(resourceManager().resource(ResourceType::RenderPass, renderPassName)));
-        if (!renderPassResource)
-            throw std::runtime_error("RenderPass resource not found: " + renderPassName);
-        const vk::RenderPass &renderPass = renderPassResource->renderPass();
+        if (computePipelin)
+        {
+            vk::ComputePipelineCreateInfo pipelineInfo;
+            pipelineInfo.setStage(stages[0])
+                .setLayout(_pipelineLayout);
+
+            vk::ResultValue result = _device.device().createComputePipeline(nullptr, pipelineInfo);
+
+            if (result.result != vk::Result::eSuccess)
+                throw std::runtime_error("Failed to create compute pipeline!");
+
+            _pipeline = result.value;
+            return ;
+        }
 
         vk::PipelineVertexInputStateCreateInfo vertexInputState;
         vertexInputState.setVertexBindingDescriptions(createInfo.vertexInfo.inputBindings)
             .setVertexAttributeDescriptions(createInfo.vertexInfo.inputAttributes);
 
-        vk::GraphicsPipelineCreateInfo pipelineInfo = createInfo.renderInfo.getGraphicsPipelineCreateInfo();
+        vk::GraphicsPipelineCreateInfo pipelineInfo = createInfo.pRenderInfo->getGraphicsPipelineCreateInfo();
         pipelineInfo.setStages(stages)
             .setLayout(_pipelineLayout)
-            .setRenderPass(renderPass)
             .setPVertexInputState(&vertexInputState);
+        
+        if (!renderPassName.empty())
+        {
+            const RenderPass *renderPassResource = dynamic_cast<const RenderPass *>(
+                connectTo(resourceManager().resource(ResourceType::RenderPass, renderPassName)));
+            if (!renderPassResource)
+                throw std::runtime_error("RenderPass resource not found: " + renderPassName);
+            const vk::RenderPass &renderPass = renderPassResource->renderPass();
+            pipelineInfo.setRenderPass(renderPass);
+        }
 
         vk::ResultValue result = _device.device().createGraphicsPipeline(nullptr, pipelineInfo);
 

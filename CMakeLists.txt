@@ -29,16 +29,14 @@ add_executable(main ${SRC_FILES})
 
 # 设置目标属性
 target_compile_options(main PRIVATE
-    -fcolor-diagnostics
-    -fansi-escape-codes
     -g
 )
 
 # 链接库
 target_link_libraries(main
-    glfw.3
+    glfw3
     assimp
-    vulkan.1.3.296
+    vulkan
 )
 
 # 添加着色器编译自定义目标
@@ -64,6 +62,3 @@ if(APPLE)
         LINK_FLAGS "-Wl,-rpath,@executable_path/share/vulkan/icd.d/MoltenVK_icd.json"
     )
 endif()
-
-# 安装目标（可选）
-install(TARGETS main DESTINATION bin)

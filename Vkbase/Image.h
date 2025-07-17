@@ -18,6 +18,7 @@ namespace Vkbase
         const vk::ImageView &view() const;
         vk::Format format() const;
         static const std::vector<std::string> getImagesWithSwapchain(const Swapchain &swapchain);
+        void transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
         
     private:
         Image(const Swapchain &swapchain, uint32_t index);
@@ -30,7 +31,6 @@ namespace Vkbase
         const vk::ImageViewType _viewType;
 
         void loadImage(std::string fileName, vk::ImageUsageFlags usage);
-        void transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
         void createImageView();
         void createImage(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, uint32_t mipLevels = 1, uint32_t arrayLayers = 1);
         void createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, void *pData);
