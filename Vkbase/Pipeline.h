@@ -21,7 +21,7 @@ namespace Vkbase
     {
         std::vector<vk::VertexInputAttributeDescription> inputAttributes;
         std::vector<vk::VertexInputBindingDescription> inputBindings;
-        VertexInfo(const std::vector<vk::VertexInputAttributeDescription> &inputAttributes, const std::vector<vk::VertexInputBindingDescription> &inputBindings)
+        VertexInfo(const std::vector<vk::VertexInputAttributeDescription> &inputAttributes = {}, const std::vector<vk::VertexInputBindingDescription> &inputBindings = {})
             : inputAttributes(inputAttributes), inputBindings(inputBindings)
         {
         }
@@ -82,12 +82,12 @@ namespace Vkbase
         const std::vector<ShaderInfo> &shaderInfos;
         const VertexInfo &vertexInfo;
         const std::vector<vk::DescriptorSetLayout> &descriptorSetLayouts;
-        PipelineRenderInfo &renderInfo;
-        PipelineCreateInfo(const std::vector<ShaderInfo> &shaderInfos,
-                            const VertexInfo &vertexInfo,
-                            const std::vector<vk::DescriptorSetLayout> &descriptorSetLayouts,
-                            PipelineRenderInfo &renderInfo)
-            : shaderInfos(shaderInfos), vertexInfo(vertexInfo), descriptorSetLayouts(descriptorSetLayouts), renderInfo(renderInfo)
+        PipelineRenderInfo* pRenderInfo;
+        PipelineCreateInfo(const std::vector<ShaderInfo> &shaderInfos = {},
+                            const VertexInfo &vertexInfo = {},
+                            const std::vector<vk::DescriptorSetLayout> &descriptorSetLayouts = {},
+                            PipelineRenderInfo* renderInfo = nullptr)
+            : shaderInfos(shaderInfos), vertexInfo(vertexInfo), descriptorSetLayouts(descriptorSetLayouts), pRenderInfo(renderInfo)
         {}
     };
     class Device;
@@ -99,7 +99,8 @@ namespace Vkbase
         Pipeline(const std::string &resourceName,
                  const std::string &deviceName,
                  const std::string &renderPassName,
-                 const PipelineCreateInfo &createInfo);
+                 const PipelineCreateInfo &createInfo,
+                 bool computePipeline = false);
 
         ~Pipeline();
         const vk::Pipeline &pipeline() const;
@@ -113,7 +114,8 @@ namespace Vkbase
         const Device &_device;
         vk::ShaderModule createShaderModule(std::string filename);
         void createPipeline(const std::string &renderPassName,
-                            const PipelineCreateInfo &createInfo);
+                            const PipelineCreateInfo &createInfo,
+                            bool computePipelin);
         std::vector<vk::PipelineShaderStageCreateInfo> getShaderStageInfos(const std::vector<ShaderInfo> &shaderInfos);
     };
 

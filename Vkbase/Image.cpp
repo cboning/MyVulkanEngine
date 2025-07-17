@@ -25,10 +25,12 @@ namespace Vkbase
         : ResourceBase(Vkbase::ResourceType::Image, resourceName), _pDevice(dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _format(format), _type(type), _viewType(viewType)
     {
         createImage(width, height, depth, usage);
-        if (isDepthImage())
+        if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
             transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-        else
+        else if (usage & vk::ImageUsageFlagBits::eColorAttachment)
             transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+        else if (usage & vk::ImageUsageFlagBits::eStorage)
+            transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
         createImageView();
     }
 
@@ -133,7 +135,28 @@ namespace Vkbase
             dstStage = vk::PipelineStageFlagBits::eColorAttachmentOutput;
             barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
                 .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-        } 
+        }
+        else if (oldLayout == vk::ImageLayout::eGeneral && newLayout == vk::ImageLayout::eShaderReadOnlyOptimal)
+        {
+            srcStage = vk::PipelineStageFlagBits::eComputeShader;
+            dstStage = vk::PipelineStageFlagBits::eFragmentShader;
+            barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
+                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead);
+        }
+        else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eGeneral)
+        {
+            srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
+            dstStage = vk::PipelineStageFlagBits::eComputeShader;
+            const CommandPool &commandPool = CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute);
+            const vk::CommandBuffer commandBuffer = commandPool.allocateOnceCommandBuffer();
+            barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
+                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+
+            commandBuffer.pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
+
+            commandPool.endOnceCommandBuffer(commandBuffer);
+            return ;
+        }
         else
         {
             throw std::runtime_error("Unsupported layout transition!");

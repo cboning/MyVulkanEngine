@@ -3,6 +3,7 @@
 #include "Device.h"
 #include "Swapchain.h"
 #include "CommandPool.h"
+#include <limits>
 
 namespace Vkbase
 {
