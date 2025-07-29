@@ -68,7 +68,6 @@ namespace Modelbase
         std::unordered_map<std::string, ModelData::BoneInfo> _boneInfoMap; //与顶点输入中的权重与骨骼ID匹配
 
         int _boneCount = 0;
-        int _animationIndex = 0;
 
         std::vector<Animation *> _pAnimations;
 

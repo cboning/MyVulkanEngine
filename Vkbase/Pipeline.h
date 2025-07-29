@@ -69,7 +69,6 @@ namespace Vkbase
             vk::PipelineDepthStencilStateCreateInfo depthStencilState = vk::PipelineDepthStencilStateCreateInfo().setDepthTestEnable(vk::True).setDepthWriteEnable(vk::True).setDepthCompareOp(vk::CompareOp::eLess).setMinDepthBounds(0.0f).setMaxDepthBounds(1.0f).setStencilTestEnable(vk::False),
             vk::PipelineColorBlendStateCreateInfo colorBlendState = {},
             vk::PipelineDynamicStateCreateInfo dynamicState = {},
-            vk::RenderPass renderPass = {},
             uint32_t subpass = {},
             vk::Pipeline basePipelineHandle = {},
             int32_t basePipelineIndex = {})

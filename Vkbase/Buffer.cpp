@@ -55,7 +55,7 @@ namespace Vkbase
     uint32_t Buffer::findMemoryTypeIndex(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
     {
         vk::PhysicalDeviceMemoryProperties memoryProperties = _device.physicalDevice().getMemoryProperties();
-        for (int i = 0; i < memoryProperties.memoryTypeCount; i++)
+        for (uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i)
         {
             if (typeFilter & (1 << i) && (properties & memoryProperties.memoryTypes[i].propertyFlags) == properties)
                 return i;

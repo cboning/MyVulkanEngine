@@ -32,7 +32,7 @@ namespace Vkbase
 
         void createCommandPool();
         const vk::Queue &determineQueue(CommandPoolQueueType queueType) const;
-        const uint32_t determineQueueIndex(CommandPoolQueueType queueType) const;
+        uint32_t determineQueueIndex(CommandPoolQueueType queueType) const;
         CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType);
         
     public:

@@ -33,7 +33,6 @@ void Cloud::computeCloudData()
     depth = 32;
     Vkbase::DescriptorSets &descriptorSets = *dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, "Cloud"));
     Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, "Cloud"));
-    Vkbase::Device &device = *dynamic_cast<Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, "0"));
     const Vkbase::CommandPool &commandPool = Vkbase::CommandPool::getCommandPool("0", Vkbase::CommandPoolQueueType::Compute);
     vk::CommandBuffer commandBuffer = commandPool.allocateOnceCommandBuffer();
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eCompute, pipeline.pipeline());

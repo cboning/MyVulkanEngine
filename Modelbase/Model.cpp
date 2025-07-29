@@ -5,7 +5,7 @@
 namespace Modelbase
 {
     Model::Model(const std::string &deviceName, const std::string &commandPoolName, const std::string &fileName, const std::vector<aiTextureType> &textureTypeFeatures, vk::Sampler sampler)
-        : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))), _commandPool(*dynamic_cast<const Vkbase::CommandPool *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))), _textureTypeFeatures(textureTypeFeatures), _sampler(sampler), _descriptorSets(*(new Vkbase::DescriptorSets(fileName, deviceName)))
+        : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))), _commandPool(*dynamic_cast<const Vkbase::CommandPool *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))), _sampler(sampler), _textureTypeFeatures(textureTypeFeatures), _descriptorSets(*(new Vkbase::DescriptorSets(fileName, deviceName)))
     {
         _models.insert(this);
         if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
@@ -30,7 +30,7 @@ namespace Modelbase
     Model::~Model()
     {
         _models.erase(this);
-        for (int i = 0; i < _pAnimations.size(); ++i)
+        for (uint32_t i = 0; i < _pAnimations.size(); ++i)
             delete _pAnimations[i];
 
         _descriptorSets.destroy();
@@ -49,7 +49,7 @@ namespace Modelbase
         processNode(pScene->mRootNode, pScene, _rootNode);
         _animationCount = pScene->mNumAnimations;
 
-        for (int i = 0; i < _animationCount; i++)
+        for (uint32_t i = 0; i < _animationCount; ++i)
         {
             _pAnimations.push_back(new Animation(pScene->mAnimations[i], this));
         }
@@ -57,7 +57,7 @@ namespace Modelbase
 
     void Model::processNode(aiNode *pNode, const aiScene *pScene, ModelData::AssimpNodeData &src)
     {
-        for (int i = 0; i < pNode->mNumMeshes; i++)
+        for (uint32_t i = 0; i < pNode->mNumMeshes; ++i)
         {
             aiMesh *pMesh = pScene->mMeshes[pNode->mMeshes[i]];
             processMesh(pMesh, pScene);
@@ -67,7 +67,7 @@ namespace Modelbase
         src.transformation = AssimpGLMHelpers::getGLMMat4(pNode->mTransformation);
         src.childrenCount = pNode->mNumChildren;
 
-        for (int i = 0; i < pNode->mNumChildren; i++)
+        for (uint32_t i = 0; i < pNode->mNumChildren; ++i)
         {
             ModelData::AssimpNodeData nodeData;
             processNode(pNode->mChildren[i], pScene, nodeData);
@@ -77,7 +77,7 @@ namespace Modelbase
 
     void Model::initVertexBoneData(ModelData::Vertex &vertex)
     {
-        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        for (uint32_t i = 0; i < MAX_BONE_INFLUENCE; ++i)
         {
             vertex.boneIds[i] = -1;
             vertex.weights[i] = 0.0f;
@@ -86,7 +86,7 @@ namespace Modelbase
 
     void Model::setVertexBoneData(ModelData::Vertex &vertex, int boneId, float weight)
     {
-        for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+        for (uint32_t i = 0; i < MAX_BONE_INFLUENCE; ++i)
         {
             if (vertex.boneIds[i] < 0)
             {
@@ -99,7 +99,7 @@ namespace Modelbase
 
     void Model::loadVerticesBoneWeight(std::vector<ModelData::Vertex> &vertices, aiMesh *pMesh)
     {
-        for (int boneIndex = 0; boneIndex < pMesh->mNumBones; boneIndex++)
+        for (uint32_t boneIndex = 0; boneIndex < pMesh->mNumBones; ++boneIndex)
         {
             int boneId;
             std::string boneName = pMesh->mBones[boneIndex]->mName.C_Str();
@@ -117,7 +117,7 @@ namespace Modelbase
             aiVertexWeight *weights = pMesh->mBones[boneIndex]->mWeights;
             int weightCount = pMesh->mBones[boneIndex]->mNumWeights;
 
-            for (int weightIndex = 0; weightIndex < weightCount; weightIndex++)
+            for (int weightIndex = 0; weightIndex < weightCount; ++weightIndex)
             {
                 int vertexId = weights[weightIndex].mVertexId;
                 float weight = weights[weightIndex].mWeight;
@@ -140,8 +140,7 @@ namespace Modelbase
     {
         std::vector<ModelData::Vertex> vertices;
         std::vector<uint16_t> indices;
-        unsigned int descriptorSetIndex;
-        for (unsigned int i = 0; i < pMesh->mNumVertices; i++)
+        for (unsigned int i = 0; i < pMesh->mNumVertices; ++i)
         {
             ModelData::Vertex vertex;
             initVertexBoneData(vertex);
@@ -160,10 +159,10 @@ namespace Modelbase
         }
         loadVerticesBoneWeight(vertices, pMesh);
 
-        for (unsigned int i = 0; i < pMesh->mNumFaces; i++)
+        for (unsigned int i = 0; i < pMesh->mNumFaces; ++i)
         {
             aiFace face = pMesh->mFaces[i];
-            for (unsigned int j = 0; j < face.mNumIndices; j++)
+            for (unsigned int j = 0; j < face.mNumIndices; ++j)
                 indices.push_back(face.mIndices[j]);
         }
 
@@ -258,7 +257,7 @@ namespace Modelbase
         if (_animationCount)
         {
             std::vector<glm::mat4> *transforms = _pAnimations[_animationInstances[instanceIndex].animationIndexStack.back().animationIndex]->transformations();
-            for (int i = 0; i < transforms->size(); i++)
+            for (uint32_t i = 0; i < transforms->size(); ++i)
                 uniformData.bonesMatrices[i] = (*transforms)[i];
         }
 

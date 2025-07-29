@@ -104,7 +104,7 @@ namespace Vkbase
     void DescriptorSets::writeSets(const std::string &name, uint32_t binding, const std::vector<vk::DescriptorBufferInfo> &bufferInfos, const std::vector<vk::DescriptorImageInfo> &imageInfos, uint32_t count) const
     {
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets(count);
-        for (int i = 0; i < count; i++)
+        for (uint32_t i = 0; i < count; ++i)
         {
             writeDescriptorSets[i].setDstBinding(binding).setBufferInfo(bufferInfos[i]).setImageInfo(imageInfos[i]).setDstSet(_descriptorSets.at(name)[i]).setDescriptorType(_descriptorSetLayoutInfos.at(name)[binding].first);
         }

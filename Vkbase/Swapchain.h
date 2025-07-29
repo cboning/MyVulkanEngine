@@ -4,7 +4,7 @@
 namespace Vkbase
 {
     class Device; // Forward declaration of Device class
-    class SurfaceSupportDetails; // Forward declaration of Device class
+    struct SurfaceSupportDetails; // Forward declaration of SurfaceSupportDetails struct
     class Image;
     class Window;
 

@@ -22,10 +22,10 @@ namespace Vkbase
         
     private:
         Image(const Swapchain &swapchain, uint32_t index);
+        const Device *_pDevice;
         vk::Image _image;
         vk::DeviceMemory _memory;
         vk::ImageView _view;
-        const Device *_pDevice;
         const vk::Format _format;
         const vk::ImageType _type;
         const vk::ImageViewType _viewType;

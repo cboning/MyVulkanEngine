@@ -13,10 +13,10 @@ namespace Modelbase
         std::vector<ModelData::Vertex> _vertices;
         std::vector<uint16_t> _indices;
         const std::vector<std::vector<std::string>> _textureNames;
-        std::string _name;
         
         Vkbase::Buffer &_vertexBuffer;
         Vkbase::Buffer &_indexBuffer;
+        std::string _name;
         static const std::string getNewBufferName(std::string name);
 
     public:

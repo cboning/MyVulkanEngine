@@ -15,7 +15,6 @@ namespace Vkbase
 #ifdef DEBUG
         std::cout << "[Info] Success to remove the resource. Type: " << toString(_resourceType) << ", Name: " << _name << std::endl;
 #endif
-        // std::cout << "Destroy the Resource. Type: " << toString(_resourceType) << " Name: " << _name << std::endl;
         for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend(); ++iter)
             (*iter)->disuseSuperresource(this);
         
