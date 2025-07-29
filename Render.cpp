@@ -116,30 +116,12 @@ void Render::createRenderPass()
     subpasses[4].setColorAttachments(colorAttachmentRefs[4]).setInputAttachments(colorAttachmentRefs[8]);
 
     std::vector<vk::SubpassDependency> dependencies;
-    {
-        vk::SubpassDependency &info = dependencies.emplace_back();
-        info.setSrcSubpass(vk::SubpassExternal).setDstSubpass(0).setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader).setSrcAccessMask(vk::AccessFlagBits::eNone).setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-    }
-    {
-        vk::SubpassDependency &info = dependencies.emplace_back();
-        info.setSrcSubpass(0).setDstSubpass(1).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
-    }
-    {
-        vk::SubpassDependency &info = dependencies.emplace_back();
-        info.setSrcSubpass(1).setDstSubpass(2).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eShaderRead);
-    }
-    {
-        vk::SubpassDependency &info = dependencies.emplace_back();
-        info.setSrcSubpass(2).setDstSubpass(3).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eShaderRead);
-    }
-    {
-        vk::SubpassDependency &info = dependencies.emplace_back();
-        info.setSrcSubpass(3).setDstSubpass(4).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
-    }
-    {
-        vk::SubpassDependency &info = dependencies.emplace_back();
-        info.setSrcSubpass(1).setDstSubpass(4).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
-    }
+    dependencies.emplace_back().setSrcSubpass(vk::SubpassExternal).setDstSubpass(0).setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader).setSrcAccessMask(vk::AccessFlagBits::eNone).setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
+    dependencies.emplace_back().setSrcSubpass(0).setDstSubpass(1).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
+    dependencies.emplace_back().setSrcSubpass(1).setDstSubpass(2).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+    dependencies.emplace_back().setSrcSubpass(2).setDstSubpass(3).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+    dependencies.emplace_back().setSrcSubpass(3).setDstSubpass(4).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
+    dependencies.emplace_back().setSrcSubpass(1).setDstSubpass(4).setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput).setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite).setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader).setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
 
     vk::RenderPassCreateInfo createInfo;
     createInfo.setAttachments(attachments)
@@ -410,22 +392,23 @@ void Render::processInputs()
     _lastTime = _currentTime;
     _currentTime = glfwGetTime();
     _deltaTime = _currentTime - _lastTime;
-    GLFWwindow *pWindow = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->window();
+    Vkbase::Window *pWindow = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"));
     if (!pWindow)
         return;
-    if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
+    GLFWwindow *pGLFWwindow = pWindow->window();
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_W) == GLFW_PRESS)
         _camera.moveFront(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_S) == GLFW_PRESS)
         _camera.moveBack(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_A) == GLFW_PRESS)
         _camera.moveLeft(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_D) == GLFW_PRESS)
         _camera.moveRight(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_SPACE) == GLFW_PRESS)
         _camera.moveUp(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         _camera.moveDown(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->switchCursorState();
 }
 
