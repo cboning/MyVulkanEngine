@@ -26,7 +26,7 @@ namespace Vkbase
         vk::DeviceQueueCreateInfo queueCreateInfos[3];
         uint32_t queueCount = 0;
         float queuePriority = 1.0f;
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < 3; ++i)
             queueCreateInfos[i].setQueueCount(1).setPQueuePriorities(&queuePriority);
 
         queueCreateInfos[queueCount++].setQueueFamilyIndex(_queueFamilyIndices.graphicsFamilyIndex);
@@ -71,7 +71,7 @@ namespace Vkbase
     {
         QueueFamilyIndices indices;
         std::vector<vk::QueueFamilyProperties> queueFamilies = device.getQueueFamilyProperties();
-        for (uint32_t i = 0; i < queueFamilies.size(); i++)
+        for (uint32_t i = 0; i < queueFamilies.size(); ++i)
         {
             vk::Flags supportGraphics = queueFamilies[i].queueFlags & vk::QueueFlagBits::eGraphics;
             vk::Flags supportCompute = queueFamilies[i].queueFlags & vk::QueueFlagBits::eCompute;
@@ -157,9 +157,9 @@ namespace Vkbase
     Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
     {
         if (resourceManager().resources().count(ResourceType::Device))
-            for (const auto pDevice : resourceManager().resources().at(ResourceType::Device))
+            for (const std::pair<const std::string, Vkbase::ResourceBase *> &device : resourceManager().resources().at(ResourceType::Device))
             {
-                Device &targetDevice = *dynamic_cast<Device *>(pDevice.second);
+                Device &targetDevice = *dynamic_cast<Device *>(device.second);
                 if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) && targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
                     return &targetDevice;
             }

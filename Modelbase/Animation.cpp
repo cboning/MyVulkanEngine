@@ -9,7 +9,7 @@ namespace Modelbase
 
         std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap = pModel->boneInfoMap();
         int &boneCount = pModel->boneCount();
-        for (int i = 0; i < pAnimation->mNumChannels; i++)
+        for (uint32_t i = 0; i < pAnimation->mNumChannels; ++i)
         {
             aiNodeAnim *pChannel = pAnimation->mChannels[i];
             if (boneInfoMap.find(pChannel->mNodeName.data) == boneInfoMap.end())
@@ -20,7 +20,7 @@ namespace Modelbase
         }
 
         _transforms.reserve(boneInfoMap.size());
-        for (int i = 0; i < boneInfoMap.size(); i++)
+        for (uint32_t i = 0; i < boneInfoMap.size(); ++i)
             _transforms.push_back(glm::mat4(1.0f));
     }
 
@@ -48,7 +48,7 @@ namespace Modelbase
         if (boneInfoMap.find(pNode->name) != boneInfoMap.end())
             _transforms[boneInfoMap[pNode->name].id] = parentTransform * boneInfoMap[pNode->name].offset;
 
-        for (int i = 0; i < pNode->childrenCount; i++)
+        for (int i = 0; i < pNode->childrenCount; ++i)
             calculateBoneTransform(&pNode->children[i], parentTransform);
     }
 

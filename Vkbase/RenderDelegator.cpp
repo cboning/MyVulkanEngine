@@ -72,7 +72,7 @@ namespace Vkbase
         vk::SemaphoreCreateInfo semaphoreCreateInfo;
         vk::FenceCreateInfo fenceCreateInfo;
         fenceCreateInfo.setFlags(vk::FenceCreateFlagBits::eSignaled);
-        for (int i = 0; i < _maxFlightCount; i++)
+        for (uint32_t i = 0; i < _maxFlightCount; ++i)
         {
             for (size_t j = 0; j < swapchainCount; ++j) {
                 _imageAvailableSemaphores[j][i] = _device.device().createSemaphore(semaphoreCreateInfo);

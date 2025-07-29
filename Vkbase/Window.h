@@ -9,17 +9,15 @@ namespace Vkbase
 {
     class Device;
     class Swapchain;
-    class CommandPool;
     class Window : public ResourceBase
     {
     private:
         GLFWwindow *_pWindow;
-        std::string _title;
         vk::SurfaceKHR _surface;
         uint32_t _width, _height;
+        std::string _title;
         const Device *_pDevice = nullptr;
         const Swapchain *_pSwapchain = nullptr;
-        const CommandPool *_pGraphicsCommandPool;
         double _cursorPosX, _cursorPosY;
         int _cursorState = GLFW_CURSOR_NORMAL;
         std::function<void(double, double)> _mouseMoveCallback;
@@ -29,7 +27,7 @@ namespace Vkbase
         static void windowClosedCallback(GLFWwindow *pWindow);
         static void mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos);
     public:
-        Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height);
+        Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height);
         ~Window() override;
         const vk::SurfaceKHR &surface() const;
         static void delayDestroy();

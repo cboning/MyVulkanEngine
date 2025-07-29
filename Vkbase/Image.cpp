@@ -35,7 +35,13 @@ namespace Vkbase
     }
 
     Image::Image(const Swapchain &swapchain, uint32_t index)
-        : ResourceBase(Vkbase::ResourceType::Image, swapchain.name() + "_" + std::to_string(index)), _pDevice(nullptr), _format(swapchain.format()), _type(vk::ImageType::e2D), _viewType(vk::ImageViewType::e2D), _image(swapchain.images()[index]), _view(swapchain.imageViews()[index])
+        : ResourceBase(Vkbase::ResourceType::Image, swapchain.name() + "_" + std::to_string(index)),
+          _pDevice(nullptr),
+          _image(swapchain.images()[index]),
+          _view(swapchain.imageViews()[index]),
+          _format(swapchain.format()),
+          _type(vk::ImageType::e2D),
+          _viewType(vk::ImageViewType::e2D)
     {
         connectTo(&swapchain);
     }
@@ -184,9 +190,9 @@ namespace Vkbase
             .setSharingMode(vk::SharingMode::eExclusive)
             .setTiling(vk::ImageTiling::eOptimal)
             .setUsage(usage)
-            .setMipLevels(1)
+            .setMipLevels(mipLevels)
             .setExtent(extent)
-            .setArrayLayers(1);
+            .setArrayLayers(arrayLayers);
         _image = _pDevice->device().createImage(createInfo);
 
         vk::MemoryRequirements requirements = _pDevice->device().getImageMemoryRequirements(_image);
@@ -202,7 +208,7 @@ namespace Vkbase
     {
         vk::PhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
         physicalDeviceMemoryProperties = _pDevice->physicalDevice().getMemoryProperties();
-        for (int i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; i++)
+        for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; ++i)
         {
             if (filterType & (1 << i) && (properties & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags) == properties)
                 return i;
@@ -286,7 +292,7 @@ namespace Vkbase
     const std::vector<std::string> Image::getImagesWithSwapchain(const Swapchain &swapchain)
     {
         std::vector<std::string> imageNames;
-        for (uint32_t i = 0; i < swapchain.images().size(); i++)
+        for (uint32_t i = 0; i < swapchain.images().size(); ++i)
         {
             Image *pImage = new Image(swapchain, i);
             imageNames.push_back(pImage->name());

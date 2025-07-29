@@ -16,8 +16,8 @@ namespace Vkbase
         void useSuperresource(ResourceBase *pResource);
         void disuseSuperresource(ResourceBase *pResource);
     protected:
-        const ResourceType _resourceType;
         std::string _name;
+        const ResourceType _resourceType;
         std::vector<ResourceBase *> _pSubresources;
         std::vector<ResourceBase *> _pSuperresources;
         inline static uint32_t _nameId = 0;

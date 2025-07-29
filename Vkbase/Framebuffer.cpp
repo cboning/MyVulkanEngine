@@ -11,12 +11,12 @@ Framebuffer::Framebuffer(const std::string &resourceName,
                          const std::vector<std::string> &attachmentNames,
                          uint32_t width, uint32_t height)
     : ResourceBase(Vkbase::ResourceType::Framebuffer, resourceName),
-      _device(
-          *dynamic_cast<const Device *>(connectTo(resourceManager().resource(
-              Vkbase::ResourceType::Device, deviceName)))),
       _renderPass(*dynamic_cast<const RenderPass *>(
           connectTo(resourceManager().resource(Vkbase::ResourceType::RenderPass,
-                                               renderPassName)))) {
+                                               renderPassName)))),
+      _device(
+          *dynamic_cast<const Device *>(connectTo(resourceManager().resource(
+              Vkbase::ResourceType::Device, deviceName)))) {
   if (_renderPass.attachmentCount() != attachmentNames.size())
     throw std::runtime_error("The number of image given not enough.");
 
