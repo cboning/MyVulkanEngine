@@ -19,7 +19,11 @@ ResourceManager::ResourceManager() {
       {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, "VK_MVK_macos_surface"});
 }
 
-ResourceManager::~ResourceManager() { _instance.destroy(); }
+ResourceManager::~ResourceManager() { 
+  while (_pResources.count(Vkbase::ResourceType::Device))
+    _pResources[Vkbase::ResourceType::Device].begin()->second->destroy();
+  
+  _instance.destroy(); }
 
 void ResourceManager::createInstance(std::vector<const char *> layers,
                                      std::vector<const char *> extensions,
@@ -43,9 +47,9 @@ void ResourceManager::createInstance(std::vector<const char *> layers,
   for (const vk::LayerProperties &layer : usableLayers)
     usableLayerNames.push_back(layer.layerName);
   
-  for (std::string layerName : layers)
+  for (const char *layerName : layers)
     if (std::find(usableLayerNames.begin(), usableLayerNames.end(), layerName) != usableLayerNames.end())
-      tempLayerNames.push_back(layerName.c_str());
+      tempLayerNames.push_back(layerName);
 
   vk::InstanceCreateInfo createInfo;
   createInfo.setPApplicationInfo(&applicationInfo)
