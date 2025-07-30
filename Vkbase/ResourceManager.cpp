@@ -35,11 +35,22 @@ void ResourceManager::createInstance(std::vector<const char *> layers,
       glfwGetRequiredInstanceExtensions(&extensionCount);
   extensions.insert(extensions.end(), ppExtensions,
                     ppExtensions + extensionCount);
+  
+  std::vector<const char *> tempLayerNames;
+  
+  std::vector<vk::LayerProperties> usableLayers = vk::enumerateInstanceLayerProperties();
+  std::vector<std::string> usableLayerNames;
+  for (const vk::LayerProperties &layer : usableLayers)
+    usableLayerNames.push_back(layer.layerName);
+  
+  for (std::string layerName : layers)
+    if (std::find(usableLayerNames.begin(), usableLayerNames.end(), layerName) != usableLayerNames.end())
+      tempLayerNames.push_back(layerName.c_str());
 
   vk::InstanceCreateInfo createInfo;
   createInfo.setPApplicationInfo(&applicationInfo)
       .setPEnabledExtensionNames(extensions)
-      .setPEnabledLayerNames(layers)
+      .setPEnabledLayerNames(tempLayerNames)
       .setFlags(vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR);
 
   _instance = vk::createInstance(createInfo);
