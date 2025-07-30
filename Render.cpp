@@ -410,23 +410,24 @@ void Render::processInputs()
     _lastTime = _currentTime;
     _currentTime = glfwGetTime();
     _deltaTime = _currentTime - _lastTime;
-    GLFWwindow *pWindow = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->window();
+    Vkbase::Window *pWindow = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"));
     if (!pWindow)
         return;
-    if (glfwGetKey(pWindow, GLFW_KEY_W) == GLFW_PRESS)
+    GLFWwindow *pGLFWwindow = pWindow->window();
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_W) == GLFW_PRESS)
         _camera.moveFront(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_S) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_S) == GLFW_PRESS)
         _camera.moveBack(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_A) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_A) == GLFW_PRESS)
         _camera.moveLeft(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_D) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_D) == GLFW_PRESS)
         _camera.moveRight(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_SPACE) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_SPACE) == GLFW_PRESS)
         _camera.moveUp(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         _camera.moveDown(SPEED * (_deltaTime));
-    if (glfwGetKey(pWindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->switchCursorState();
+    if (glfwGetKey(pGLFWwindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        pWindow->switchCursorState();
 }
 
 bool Render::shouldEndApplication()
