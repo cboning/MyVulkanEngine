@@ -19,7 +19,6 @@
                 "exceptions": false
             },
             "MIMode": "lldb",
-            "miDebuggerPath": "lldb",
             "preLaunchTask": "CMake: Build with Shaders"
         },
         {
