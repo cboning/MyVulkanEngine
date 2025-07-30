@@ -1,26 +1,26 @@
 cmake_minimum_required(VERSION 3.15)
 project(VulkanDemo LANGUAGES CXX)
-if(WIN32)
-    set(CMAKE_CXX_COMPILER_TARGET "x86_64-w64-mingw32")
+# if(WIN32)
+#     set(CMAKE_CXX_COMPILER_TARGET "x86_64-w64-mingw32")
     
-    # 使用 MinGW 的运行时库
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
+#     # 使用 MinGW 的运行时库
+#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libstdc++")
     
-    # 指定 MinGW 库路径（替换为你的路径）
-    set(MINGW_PATH "E:/LLVM")
-    include_directories(
-        "${MINGW_PATH}/include"
-        "${MINGW_PATH}/x86_64-w64-mingw32/include"
-    )
-    # link_directories(
-    #     "${MINGW_PATH}/lib"
-    #     "${MINGW_PATH}/x86_64-w64-mingw32/lib"
-    # )
+#     # 指定 MinGW 库路径（替换为你的路径）
+#     set(MINGW_PATH "E:/LLVM")
+#     include_directories(
+#         "${MINGW_PATH}/include"
+#         "${MINGW_PATH}/x86_64-w64-mingw32/include"
+#     )
+#     # link_directories(
+#     #     "${MINGW_PATH}/lib"
+#     #     "${MINGW_PATH}/x86_64-w64-mingw32/lib"
+#     # )
     
-    # 使用 MinGW 的链接器
-    set(CMAKE_LINKER "${MINGW_PATH}/bin/ld.exe")
-    set(CMAKE_AR "${MINGW_PATH}/bin/ar.exe")
-endif()
+#     # 使用 MinGW 的链接器
+#     set(CMAKE_LINKER "${MINGW_PATH}/bin/ld.exe")
+#     set(CMAKE_AR "${MINGW_PATH}/bin/ar.exe")
+# endif()
 
 # 设置构建类型
 if(NOT CMAKE_BUILD_TYPE)
