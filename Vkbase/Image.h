@@ -10,7 +10,7 @@ namespace Vkbase
     {
     public:
         Image(const std::string &resourceName, const std::string &deviceName, const std::string &filename, vk::Format format, vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage);
-        Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format, vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, void *pData);
+        Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format, vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, const void *pData);
         Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format, vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage);
         ~Image() override;
         
@@ -33,7 +33,7 @@ namespace Vkbase
         void loadImage(std::string fileName, vk::ImageUsageFlags usage);
         void createImageView();
         void createImage(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, uint32_t mipLevels = 1, uint32_t arrayLayers = 1);
-        void createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, void *pData);
+        void createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData);
         void copyBufferDataToImage(const Buffer &buffer, uint32_t width, uint32_t height, uint32_t depth);
         uint32_t findMemoryType(uint32_t filterType, vk::MemoryPropertyFlags properties);
         bool isDepthImage();

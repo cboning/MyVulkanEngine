@@ -15,6 +15,7 @@
 
 namespace Modelbase
 {
+    template<typename T>
     class Mesh;
     class Animation;
 
@@ -38,6 +39,9 @@ namespace Modelbase
         bool isAnimationIndexStackLock = false;
         Vkbase::DescriptorSets &descriptorSets;
         std::vector<AnimationIndex> animationIndexStack;
+        glm::vec3 position;
+        glm::quat rotate;
+        glm::vec3 scale = glm::vec3(1.0f);
 
         AnimationInstance(const std::string &descriptorSetsName, const std::string &deviceName)
             : descriptorSets(*(new Vkbase::DescriptorSets(descriptorSetsName, deviceName)))
@@ -59,7 +63,7 @@ namespace Modelbase
         std::string _fileDirectory;
         Assimp::Importer _importer;
 
-        std::vector<Mesh> _meshs;
+        std::vector<Mesh<ModelData::Vertex>> _meshs;
         std::vector<std::string> _files;
         std::vector<std::array<unsigned int, 4>> _imageDescriptorSetMasks;
 

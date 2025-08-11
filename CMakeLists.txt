@@ -63,15 +63,15 @@ target_link_libraries(main
     vulkan
 )
 
-# # 添加着色器编译自定义目标
-# add_custom_target(compile_shaders
-#     COMMAND ./compile.sh
-#     WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/shader
-#     COMMENT "Compiling shaders..."
-# )
+# 添加着色器编译自定义目标
+add_custom_target(compile_shaders
+    COMMAND ./compile.sh
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}/shader
+    COMMENT "Compiling shaders..."
+)
 
-# # 主目标依赖着色器编译
-# add_dependencies(main compile_shaders)
+# 主目标依赖着色器编译
+add_dependencies(main compile_shaders)
 
 # macOS特定设置
 if(APPLE)

@@ -40,7 +40,7 @@ void Cloud::computeCloudData()
     uint32_t groupCountX = (width + 7) / 8;
     uint32_t groupCountY = (height + 7) / 8;
     uint32_t groupCountZ = (depth + 7) / 8;
-    vkCmdDispatch(commandBuffer, groupCountX, groupCountY, groupCountZ);
+    commandBuffer.dispatch(groupCountX, groupCountY, groupCountZ);
     commandPool.endOnceCommandBuffer(commandBuffer);
     pipeline.destroy();
 
