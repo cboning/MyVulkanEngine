@@ -21,6 +21,6 @@ namespace Vkbase
         ~Buffer() override;
 
         const vk::Buffer &buffer() const;
-        void updateBufferData(void *pData) const;
+        void updateBufferData(const void *pData) const;
     };
 }

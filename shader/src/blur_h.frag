@@ -21,4 +21,5 @@ void main() {
         result += texture(texture1, vec3(fragTexCoord - vec2(i * texOffset.x, 0), 0.0f)).rgb * guassianBlur(i);
     }
     outColor = vec4(result, 1.0f);
+    discard;
 }

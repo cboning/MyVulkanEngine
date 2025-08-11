@@ -1,6 +1,7 @@
 #include "Modelbase.h"
 #include "AssimpGLMHelpers.h"
 #include <iostream>
+template class Modelbase::Mesh<ModelData::Vertex>;
 
 namespace Modelbase
 {
@@ -9,10 +10,7 @@ namespace Modelbase
     {
         _models.insert(this);
         if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
-        {
-            uint32_t emptyColor = 0xFFFF00FF;
-            new Vkbase::Image("Empty", deviceName, 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, &emptyColor);
-        }
+            new Vkbase::Image("Empty", deviceName, 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
         _files.push_back("Empty");
 
@@ -197,7 +195,7 @@ namespace Modelbase
 
     void Model::draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, uint32_t instanceIndex)
     {
-        for (Mesh &mesh : _meshs)
+        for (Mesh<ModelData::Vertex> &mesh : _meshs)
         {
             std::vector<vk::DescriptorSet> descriptorSets;
             descriptorSets.push_back(_animationInstances[instanceIndex].descriptorSets.sets("UBO")[currentFrame]);
@@ -253,15 +251,16 @@ namespace Modelbase
 
     void Model::updateUniformBuffers(uint32_t instanceIndex, uint32_t currentFrame, const Camera &camera)
     {
+        AnimationInstance &instance = _animationInstances[instanceIndex];
         ModelUniformData uniformData;
         if (_animationCount)
         {
-            std::vector<glm::mat4> *transforms = _pAnimations[_animationInstances[instanceIndex].animationIndexStack.back().animationIndex]->transformations();
+            std::vector<glm::mat4> *transforms = _pAnimations[instance.animationIndexStack.back().animationIndex]->transformations();
             for (uint32_t i = 0; i < transforms->size(); ++i)
                 uniformData.bonesMatrices[i] = (*transforms)[i];
         }
 
-        uniformData.model = glm::translate(glm::scale(glm::rotate(glm::mat4(1.0f), glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f)), glm::vec3(1.0f, 1.0f, 1.0f)), glm::vec3(0, 0, 0));
+        uniformData.model = glm::translate(glm::scale(glm::toMat4(instance.rotate), instance.scale), instance.position);
 
         uniformData.view = camera.view();
         uniformData.proj = camera.perspective();

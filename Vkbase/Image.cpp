@@ -15,7 +15,7 @@ namespace Vkbase
         loadImage(filename, usage);
     }
 
-    Image::Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format, vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, void *pData)
+    Image::Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format, vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, const void *pData)
         : ResourceBase(Vkbase::ResourceType::Image, resourceName), _pDevice(dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _format(format), _type(type), _viewType(viewType)
     {
         createImageWithData(width, height, depth, usage, pData);
@@ -55,7 +55,7 @@ namespace Vkbase
         _pDevice->device().freeMemory(_memory);
     }
 
-    void Image::createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, void *pData)
+    void Image::createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData)
     {
         vk::DeviceSize imageSize = width * height * depth * getPixelSize(_format);
         Buffer *buffer = new Buffer("temp", _pDevice->name(), imageSize, vk::BufferUsageFlagBits::eTransferSrc, nullptr);
@@ -76,11 +76,14 @@ namespace Vkbase
         int width, height, channels;
         std::replace(fileName.begin(), fileName.end(), '\\', '/');
         stbi_uc *pData = stbi_load(fileName.c_str(), &width, &height, &channels, STBI_rgb_alpha);
-        uint32_t emptyColor = 0xFFFF00FF;
+
         if (!pData)
         {
-            std::cerr << "Failed to load image: " << fileName.c_str() << std::endl;
-            createImageWithData(1, 1, 1, usage, &emptyColor);
+#ifdef DEBUG
+            std::cerr << "[Warning] Failed to load image: " << fileName.c_str() << std::endl;
+#endif
+            uint32_t empty_color = 0xFFFF00FF;
+            createImageWithData(1, 1, 1, usage, &empty_color);
             return;
         }
         createImageWithData(width, height, 1, usage, pData);
@@ -147,7 +150,7 @@ namespace Vkbase
             srcStage = vk::PipelineStageFlagBits::eComputeShader;
             dstStage = vk::PipelineStageFlagBits::eFragmentShader;
             barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
-                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead);
+                .setDstAccessMask(vk::AccessFlagBits::eShaderRead);
         }
         else if (oldLayout == vk::ImageLayout::eUndefined && newLayout == vk::ImageLayout::eGeneral)
         {
@@ -156,7 +159,7 @@ namespace Vkbase
             const CommandPool &commandPool = CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute);
             const vk::CommandBuffer commandBuffer = commandPool.allocateOnceCommandBuffer();
             barrier.setSrcAccessMask(vk::AccessFlagBits::eNone)
-                .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentWrite);
+                .setDstAccessMask(vk::AccessFlagBits::eShaderWrite);
 
             commandBuffer.pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
 

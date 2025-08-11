@@ -78,7 +78,7 @@ namespace Vkbase
         commandPool.endOnceCommandBuffer(commandBuffer);
     }
 
-    void Buffer::updateBufferData(void *pData) const
+    void Buffer::updateBufferData(const void *pData) const
     {
         memcpy(_device.device().mapMemory(_memory, 0, _size), pData, _size);
         _device.device().unmapMemory(_memory);

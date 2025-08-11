@@ -13,19 +13,19 @@ void Render::resourceInit()
 {
     new Vkbase::Window("mainWindow1", "Vulkan Window", 800, 600);
     Vkbase::Window *pWindow = new Vkbase::Window("mainWindow", "Vulkan Window", 800, 600);
-    pWindow->setMouseMoveCallback([this](double x, double y)
-                                  { Render::camera().addViewBy(x, -y); });
+    pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
 
-    VertexData vertices[] = {{glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
+    VertexData frameVertices[] = {{glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                              {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                              {glm::vec3(1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                              {glm::vec3(1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                              {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                              {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)}};
 
-    new Vkbase::Buffer("Vertex", "0", sizeof(VertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, vertices);
+    _pFrameVerticesBuffer = new Vkbase::Buffer("Vertex", "0", sizeof(VertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
     for (uint32_t i = 0; i < MAX_FLIGHT_COUNT; ++i)
         new Vkbase::Buffer("UBO" + std::to_string(i), "0", sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer);
+        
     new Vkbase::Sampler("Sampler", "0");
 
     delete new Cloud();
@@ -349,12 +349,7 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     const Vkbase::RenderPass &renderPass = *dynamic_cast<const Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
     const Vkbase::Pipeline &g_bufferPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "g_buffer"));
-    const Vkbase::Pipeline &lightPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "light"));
     // const Vkbase::Pipeline &pipeline1 = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "Inversted_Hull"));
-    const Vkbase::Pipeline &blendPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "blend"));
-    const Vkbase::Pipeline &blur_hPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "blur_h"));
-    const Vkbase::Pipeline &blur_vPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "blur_v"));
-    const Vkbase::Buffer &screenVertexBuffer = *dynamic_cast<const Vkbase::Buffer *>(_resourceManager.resource(Vkbase::ResourceType::Buffer, "Vertex"));
     const Vkbase::DescriptorSets &descriptorSets = *dynamic_cast<const Vkbase::DescriptorSets *>(_resourceManager.resource(Vkbase::ResourceType::DescriptorSets, "MainDescriptorSets"));
 
     std::vector<vk::ClearValue> clearValues = {vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setDepthStencil({1.0f, 0})};
@@ -370,34 +365,27 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     }
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, lightPipeline.pipeline());
-    commandBuffer.bindVertexBuffers(0, {screenVertexBuffer.buffer()}, {0});
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, lightPipeline.layout(), 0, descriptorSets.sets("G_BufferInputAttachments")[imageIndex], {});
-    commandBuffer.draw(6, 1, 0, 0);
+    renderFrame(commandBuffer, "light", descriptorSets.sets("G_BufferInputAttachments")[imageIndex]);
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, blur_hPipeline.pipeline());
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, blur_hPipeline.layout(), 0, descriptorSets.sets("BlurSampler1")[imageIndex], {});
-    commandBuffer.bindVertexBuffers(0, {screenVertexBuffer.buffer()}, {0});
-    commandBuffer.draw(6, 1, 0, 0);
+    renderFrame(commandBuffer, "blur_h", descriptorSets.sets("BlurSampler1")[imageIndex]);
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, blur_vPipeline.pipeline());
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, blur_vPipeline.layout(), 0, descriptorSets.sets("BlurSampler2")[imageIndex], {});
-    commandBuffer.bindVertexBuffers(0, {screenVertexBuffer.buffer()}, {0});
-    commandBuffer.draw(6, 1, 0, 0);
+    renderFrame(commandBuffer, "blur_v", descriptorSets.sets("BlurSampler2")[imageIndex]);
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, blendPipeline.pipeline());
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, blendPipeline.layout(), 0, descriptorSets.sets("BlendInputAttachments")[imageIndex], {});
-    commandBuffer.bindVertexBuffers(0, {screenVertexBuffer.buffer()}, {0});
-    commandBuffer.draw(6, 1, 0, 0);
+    renderFrame(commandBuffer, "blend", descriptorSets.sets("BlendInputAttachments")[imageIndex]);
 
     renderPass.end(commandBuffer);
+}
+
+void Render::renderFrame(const vk::CommandBuffer &commandBuffer, const std::string &pipelineName, const vk::DescriptorSet &descriptorSet)
+{
+    Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, pipelineName));
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
+    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0, descriptorSet, {});
+    commandBuffer.bindVertexBuffers(0, {_pFrameVerticesBuffer->buffer()}, {0});
+    commandBuffer.draw(6, 1, 0, 0);
 }
 
 Camera &Render::camera()

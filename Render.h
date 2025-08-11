@@ -12,6 +12,7 @@ private:
     inline static float _lastTime = glfwGetTime();
     inline static float _currentTime = glfwGetTime();
     inline static float _deltaTime = 0.1f;
+    Vkbase::Buffer *_pFrameVerticesBuffer;
 
     void createRenderPass();
     void createDescriptorSets();
@@ -21,6 +22,7 @@ private:
     void recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame);
     void cleanup();
     static void processInputs();
+    void renderFrame(const vk::CommandBuffer &commandBuffer, const std::string &pipelineName, const vk::DescriptorSet &descriptorSet);
 
 public:
     void init();
