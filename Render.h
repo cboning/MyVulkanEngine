@@ -1,11 +1,12 @@
 #pragma once
-#include "Vkbase/Vkbase.h"
 #include "Camera.h"
+#include "VkGUI/Font.h"
+#include "VkGUI/Text.h"
+#include "Vkbase/Vkbase.h"
 
 class Render
 {
-private:
-
+  private:
     inline static Camera _camera = Camera({800, 600});
     inline static Vkbase::ResourceManager &_resourceManager = Vkbase::ResourceBase::resourceManager();
     Vkbase::RenderDelegator *_pRenderDelegator;
@@ -13,6 +14,8 @@ private:
     inline static float _currentTime = glfwGetTime();
     inline static float _deltaTime = 0.1f;
     Vkbase::Buffer *_pFrameVerticesBuffer;
+    Font *_pFont;
+    Text *_pText;
 
     void createRenderPass();
     void createDescriptorSets();
@@ -24,11 +27,9 @@ private:
     static void processInputs();
     void renderFrame(const vk::CommandBuffer &commandBuffer, const std::string &pipelineName, const vk::DescriptorSet &descriptorSet);
 
-public:
+  public:
     void init();
     static void draw();
     static bool shouldEndApplication();
     Camera &camera();
 };
-
-

@@ -1,20 +1,23 @@
-glslc src/shader.vert -o bin/shaderVert.spv
-glslc src/shader.frag -o bin/shaderFrag.spv
-glslc src/blend.vert -o bin/blendVert.spv
-glslc src/blend.frag -o bin/blendFrag.spv
-glslc src/presentFrame.vert -o bin/presentFrameVert.spv
-glslc src/presentFrame.frag -o bin/presentFrameFrag.spv
-glslc src/blur_v.vert -o bin/blur_vVert.spv
-glslc src/blur_v.frag -o bin/blur_vFrag.spv
-glslc src/blur_h.vert -o bin/blur_hVert.spv
-glslc src/blur_h.frag -o bin/blur_hFrag.spv
-glslc src/inverstedHull.vert -o bin/inverstedHullVert.spv
-glslc src/inverstedHull.frag -o bin/inverstedHullFrag.spv
-glslc src/cloud.vert -o bin/cloudVert.spv
-glslc src/cloud.frag -o bin/cloudFrag.spv
-glslc src/baseShader.vert -o bin/baseShaderVert.spv
-glslc src/baseShader.frag -o bin/baseShaderFrag.spv
-glslc src/g_buffer.vert -o bin/g_bufferVert.spv
-glslc src/g_buffer.frag -o bin/g_bufferFrag.spv
-glslc src/cloud.comp -o bin/cloudComp.spv
+#!/bin/bash
 
+SRC_DIR="src"
+OUT_DIR="bin"
+
+mkdir -p "$OUT_DIR"
+
+for file in "$SRC_DIR"/*.{vert,frag,comp}; do
+    # 跳过不存在的匹配
+    [ -f "$file" ] || continue
+    
+    filename=$(basename "$file")
+    name_no_ext="${filename%.*}"
+    ext="${filename##*.}"
+
+    # 首字母大写 + 文件类型后缀
+    type_suffix="$(tr '[:lower:]' '[:upper:]' <<< ${ext:0:1})${ext:1}"
+    out_file="$OUT_DIR/${name_no_ext}${type_suffix}.spv"
+
+    glslc "$file" -o "$out_file" || exit 1
+done
+
+echo "All shaders compiled successfully."

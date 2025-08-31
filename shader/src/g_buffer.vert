@@ -1,14 +1,15 @@
 #version 450
 
-const int MAX_BONES = 300;
+const int MAX_BONES = 500;
 const int MAX_BONE_INFLUENCE = 4;
 
-layout(binding = 0) uniform UniformBufferObject{
+layout(binding = 0) uniform UniformBufferObject {
     mat4 model;
     mat4 view;
     mat4 proj;
     mat4 bonesMatrices[MAX_BONES];
-} ubo;
+}
+ubo;
 
 layout(location = 0) in vec3 inPosition;
 layout(location = 1) in vec3 inNormal;
@@ -24,12 +25,10 @@ layout(location = 2) out vec3 fragPos;
 void main() {
     vec4 position = vec4(0.0f);
     vec3 normal = vec3(0.0f);
-    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
-    {
+    for (int i = 0; i < MAX_BONE_INFLUENCE; i++) {
         if (inBoneIds[i] == -1)
             continue;
-        if (inBoneIds[i] >= MAX_BONES)
-        {
+        if (inBoneIds[i] >= MAX_BONES) {
             position = vec4(inPosition, 1.0f);
             break;
         }
@@ -37,12 +36,11 @@ void main() {
         normal += mat3(ubo.bonesMatrices[inBoneIds[i]]) * inNormal * inWeight[i];
     }
 
-    if (normal == vec3(0.0f))
-    {
+    if (normal == vec3(0.0f)) {
         position = vec4(inPosition, 1.0f);
         normal = inNormal;
     }
-    
+
     outNormal = mat3(transpose(inverse(ubo.model))) * normal;
     fragPos = vec3(ubo.model * position);
 

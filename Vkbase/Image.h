@@ -1,4 +1,7 @@
 #pragma once
+#ifndef DEBUG
+#define DEBUG 0  // 默认值
+#endif
 #include "ResourceBase.h"
 
 namespace Vkbase

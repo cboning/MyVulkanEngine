@@ -18,7 +18,7 @@
                 "engineLogging": false,
                 "exceptions": false
             },
-            "MIMode": "gdb",
+            "MIMode": "lldb",
             "preLaunchTask": "CMake: Build with Shaders"
         },
         {
