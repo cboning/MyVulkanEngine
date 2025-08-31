@@ -77,7 +77,7 @@ class ResourceManager {
   void addResource(ResourceBase *pResource);
   const ResourceSet &resources() const;
   ResourceBase *resource(ResourceType type, std::string name) const;
-  void remove(ResourceType type, std::string name);
+  void remove(ResourceType type, const std::string &name);
   const vk::Instance &instance() const;
   void renameResource(const ResourceBase *pResource,
                       const std::string &newName);

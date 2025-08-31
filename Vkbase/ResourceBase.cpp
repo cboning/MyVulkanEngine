@@ -3,97 +3,99 @@
 
 namespace Vkbase
 {
-    ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
-        : _name(resourceName.empty() ? std::to_string(_nameId++) : resourceName), _resourceType(resourceType)
-    {
-        _resourceManager.addResource(this);
-        std::cout << "[Info] " << toString(resourceType) << " Resource " << _name << " created." << std::endl;
-    }
-
-    ResourceBase::~ResourceBase()
-    {
+ResourceBase::ResourceBase(ResourceType resourceType, const std::string &resourceName)
+    : _name(getSuitableName(resourceType, resourceName)), _resourceType(resourceType)
+{
+    _resourceManager.addResource(this);
 #ifdef DEBUG
-        std::cout << "[Info] Success to remove the resource. Type: " << toString(_resourceType) << ", Name: " << _name << std::endl;
+    std::cout << "[Info] " << toString(resourceType) << " Resource " << _name << " created." << std::endl;
 #endif
-        for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend(); ++iter)
-            (*iter)->disuseSuperresource(this);
-        
-    }
+}
 
-    void ResourceBase::preDestroy()
-    {
-        while (_pSuperresources.size())
-        {
-            Vkbase::ResourceBase *back = _pSuperresources.back();
-            _pSuperresources.pop_back();
-            back->disusedSubresource(this);
-        }
-    }
+ResourceBase::~ResourceBase()
+{
+#ifdef DEBUG
+    std::cout << "[Info] Success to remove the resource. Type: " << toString(_resourceType) << ", Name: " << _name << std::endl;
+#endif
+    for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend(); ++iter)
+        (*iter)->disuseSuperresource(this);
+}
 
-    ResourceManager &ResourceBase::resourceManager()
+void ResourceBase::preDestroy()
+{
+    while (_pSuperresources.size())
     {
-        return _resourceManager;
-    }
-
-    void ResourceBase::useSuperresource(ResourceBase *pResource)
-    {
-        if (std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource) != _pSuperresources.end())
-            return ;
-        
-        _pSuperresources.push_back(pResource);
-    }
-
-    void ResourceBase::useSubresource(ResourceBase *pResource)
-    {
-        if (std::find(_pSubresources.begin(), _pSubresources.end(), pResource) != _pSubresources.end())
-            return ;
-        
-        _pSubresources.push_back(pResource);
-    }
-
-    void ResourceBase::disusedSubresource(ResourceBase *pResource)
-    {
-        std::vector<ResourceBase *>::iterator iter = std::find(_pSubresources.begin(), _pSubresources.end(), pResource);
-        _pSubresources.erase(iter);
-        destroy();
-    }
-
-    void ResourceBase::disuseSuperresource(ResourceBase *pResource)
-    {
-        std::vector<ResourceBase *>::iterator iter = std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource);
-        _pSuperresources.erase(iter);
-        if (_pSuperresources.empty() && !_locked)
-            destroy();
-    }
-
-    const std::string &ResourceBase::name() const
-    {
-        return _name;
-    }
-
-    const ResourceType &ResourceBase::type() const
-    {
-        return _resourceType;
-    }
-
-    void ResourceBase::destroy() const
-    {
-        _resourceManager.remove(_resourceType, _name);
-    }
-
-    void ResourceBase::rename(const std::string &name)
-    {
-        _name = name;
-        _resourceManager.addResource(this);
-    }
-
-    void ResourceBase::setLock()
-    {
-        _locked = true;
-    }
-
-    void ResourceBase::setUnlock()
-    {
-        _locked = false;
+        Vkbase::ResourceBase *back = _pSuperresources.back();
+        _pSuperresources.pop_back();
+        back->disusedSubresource(this);
     }
 }
+
+ResourceManager &ResourceBase::resourceManager() { return _resourceManager; }
+
+void ResourceBase::useSuperresource(ResourceBase *pResource)
+{
+    if (std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource) != _pSuperresources.end())
+        return;
+
+    _pSuperresources.push_back(pResource);
+}
+
+void ResourceBase::useSubresource(ResourceBase *pResource)
+{
+    if (std::find(_pSubresources.begin(), _pSubresources.end(), pResource) != _pSubresources.end())
+        return;
+
+    _pSubresources.push_back(pResource);
+}
+
+void ResourceBase::disusedSubresource(ResourceBase *pResource)
+{
+    std::vector<ResourceBase *>::iterator iter = std::find(_pSubresources.begin(), _pSubresources.end(), pResource);
+    _pSubresources.erase(iter);
+    destroy();
+}
+
+void ResourceBase::disuseSuperresource(ResourceBase *pResource)
+{
+    std::vector<ResourceBase *>::iterator iter = std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource);
+    _pSuperresources.erase(iter);
+    if (_pSuperresources.empty() && !_locked)
+        destroy();
+}
+
+const std::string &ResourceBase::name() const { return _name; }
+
+const ResourceType &ResourceBase::type() const { return _resourceType; }
+
+void ResourceBase::destroy() const { _resourceManager.remove(_resourceType, _name); }
+
+void ResourceBase::rename(const std::string &name)
+{
+    _name = name;
+    _resourceManager.addResource(this);
+}
+
+void ResourceBase::setLock() { _locked = true; }
+
+void ResourceBase::setUnlock() { _locked = false; }
+
+std::string ResourceBase::getSuitableName(const ResourceType &type, std::string name)
+{
+    if (!name.empty())
+        return name;
+
+    name = toString(type);
+
+    if (!_resourceManager.resource(type, name))
+        return name;
+
+    uint32_t index = 0;
+    while (true)
+    {
+        std::string currentName = name + "_" + std::to_string(++index);
+        if (!_resourceManager.resource(type, currentName))
+            return currentName;
+    }
+}
+} // namespace Vkbase

@@ -3,7 +3,6 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 #include "ResourceManager.h"
-#define DEBUG
 
 namespace Vkbase
 {
@@ -20,9 +19,9 @@ namespace Vkbase
         const ResourceType _resourceType;
         std::vector<ResourceBase *> _pSubresources;
         std::vector<ResourceBase *> _pSuperresources;
-        inline static uint32_t _nameId = 0;
         void useSubresource(ResourceBase *pResource);
         void disusedSubresource(ResourceBase *pResource);
+        static std::string getSuitableName(const ResourceType &type, std::string name);
         template <typename T>
         T *connectTo(T *pResource)
         {

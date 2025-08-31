@@ -5,7 +5,9 @@
 
 Application::Application()
 {
+#ifdef DEBUG
     init();
+#endif
 }
 
 void Application::init()

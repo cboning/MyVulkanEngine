@@ -40,11 +40,15 @@ link_directories("./lib")
 # 包含项目头文件
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
+add_compile_definitions(DEBUG)
+
 # 收集源文件（推荐显式列出而非 GLOB）
 file(GLOB SRC_FILES 
     "*.cpp"
     "Vkbase/*.cpp"
+    "Object/*.cpp"
     "Modelbase/*.cpp"
+    "VkGUI/*.cpp"
 )
 
 # 创建可执行文件
@@ -56,11 +60,13 @@ target_compile_options(main PRIVATE
     -Wall -Wextra  # 启用警告
 )
 
+
 # 链接库
 target_link_libraries(main
     glfw3
     assimp
     vulkan
+    freetype
 )
 
 # 添加着色器编译自定义目标
