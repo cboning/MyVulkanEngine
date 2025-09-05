@@ -12,7 +12,7 @@ Text::Text(const Font &font) : _font(font) {}
 Text::~Text()
 {
     for (const std::string &bufferName : _vertexBufferNames)
-        Vkbase::ResourceManager().remove(Vkbase::ResourceType::Buffer, bufferName);
+        Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, bufferName);
     _vertexBufferNames.clear();
 }
 
@@ -80,6 +80,6 @@ void Text::updateBuffer()
 
         currentPos += glm::vec2(charData.advance >> 6, 0.0f) * _scale;
         _vertexBufferNames.push_back(
-            (new Vkbase::Buffer("", _font.deviceName(), 6 * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, vertices.data()))->name());
+            (Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("", _font.deviceName(), 6 * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, vertices.data()))->name());
     }
 }

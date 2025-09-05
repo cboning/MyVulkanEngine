@@ -1,6 +1,6 @@
 [
     {
-        "filename": "./src/model/nahida/untitled.fbx",
+        "filename": "./src/model/zhongli-from-genshin-impact/ze+hongli.fbx",
         "pipelines": [
             {
                 "name": "g_buffer",

@@ -38,7 +38,7 @@ class Font
                 return "Empty";
             }
 
-            return (new Vkbase::Image(std::string(face->style_name) + std::string((const char *)&character), deviceName, face->glyph->bitmap.width,
+            return (Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(std::string(face->style_name) + std::string((const char *)&character), deviceName, face->glyph->bitmap.width,
                                       face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D, vk::ImageViewType::e2D,
                                       vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer))
                 ->name();

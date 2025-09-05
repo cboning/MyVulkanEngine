@@ -62,7 +62,7 @@ Image::~Image()
 void Image::createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData)
 {
     vk::DeviceSize imageSize = width * height * depth * getPixelSize(_format);
-    Buffer *buffer = new Buffer("temp", _pDevice->name(), imageSize, vk::BufferUsageFlagBits::eTransferSrc, nullptr);
+    Buffer *buffer = resourceManager().create<Buffer>("temp", _pDevice->name(), imageSize, vk::BufferUsageFlagBits::eTransferSrc, nullptr);
     buffer->updateBufferData(pData);
 
     createImage(width, height, depth, vk::ImageUsageFlagBits::eTransferDst | usage);

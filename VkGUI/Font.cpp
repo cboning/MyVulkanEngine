@@ -4,7 +4,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Font::Font(const std::string &deviceName, const std::string &filename)
-    : _deviceName(deviceName), _sampler(*(new Vkbase::Sampler("", deviceName))), _descriptorSets(*(new Vkbase::DescriptorSets("Text", deviceName)))
+    : _deviceName(deviceName), _sampler(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("", deviceName))), _descriptorSets(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>("Text", deviceName)))
 {
     _descriptorSets.addDescriptorSetCreateConfig("Character", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, 128);
     _descriptorSets.init();
@@ -73,7 +73,7 @@ void Font::writeProjectiveDescriptorSet(const std::string &descriptorSetsName, c
     bufferInfo.setOffset(0)
         .setRange(sizeof(UniformBufferData))
         .setBuffer(
-            (new Vkbase::Buffer("FontProjectiveUniformBuffer", deviceName, sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer))->buffer());
+            (Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("FontProjectiveUniformBuffer", deviceName, sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer))->buffer());
     descriptorSets.writeSets("FontProjective", 0, {bufferInfo}, {}, 1);
 }
 
