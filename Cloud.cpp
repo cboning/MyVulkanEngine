@@ -12,20 +12,20 @@ void Cloud::init()
 void Cloud::createComputePipeline()
 {
 
-    Vkbase::DescriptorSets &descriptorSets = *(new Vkbase::DescriptorSets("Cloud", "Device"));
+    Vkbase::DescriptorSets &descriptorSets = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>("Cloud", "Device"));
     descriptorSets.addDescriptorSetCreateConfig("Cloud", {{vk::DescriptorType::eStorageImage, vk::ShaderStageFlagBits::eCompute}}, 1);
     descriptorSets.init();
 
     descriptorSets.writeSets("Cloud", 0, {},
                              {vk::DescriptorImageInfo()
                                   .setImageLayout(vk::ImageLayout::eGeneral)
-                                  .setImageView((new Vkbase::Image("Cloud", "Device", 32, 32, 32, vk::Format::eR32Sfloat, vk::ImageType::e3D,
+                                  .setImageView((Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Cloud", "Device", 32, 32, 32, vk::Format::eR32Sfloat, vk::ImageType::e3D,
                                                                    vk::ImageViewType::e3D, vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled))
                                                     ->view())},
                              1);
 
     std::vector<Vkbase::ShaderInfo> shaderInfo = {{"./shader/bin/cloudComp.spv", "main", vk::ShaderStageFlagBits::eCompute}};
-    new Vkbase::Pipeline("Cloud", "Device", "", {shaderInfo, {}, {descriptorSets.layout("Cloud")}}, true);
+    Vkbase::ResourceBase::resourceManager().create<Vkbase::Pipeline>("Cloud", "Device", "", Vkbase::PipelineCreateInfo{shaderInfo, {}, {descriptorSets.layout("Cloud")}}, true);
 }
 
 void Cloud::computeCloudData()

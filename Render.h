@@ -1,5 +1,5 @@
 #pragma once
-#include "Camera.h"
+#include "Camera/Camera.h"
 #include "VkGUI/Font.h"
 #include "VkGUI/Text.h"
 #include "Vkbase/Vkbase.h"

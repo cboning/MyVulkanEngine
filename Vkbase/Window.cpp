@@ -17,7 +17,7 @@ namespace Vkbase
             connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute));
             connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Present));
 
-            _pSwapchain = new Swapchain(resourceName, _pDevice->name(), resourceName);
+            _pSwapchain = resourceManager().create<Swapchain>(resourceName, _pDevice->name(), resourceName);
         }
     }
 

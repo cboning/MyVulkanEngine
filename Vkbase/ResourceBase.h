@@ -8,6 +8,7 @@ namespace Vkbase
 {
     class ResourceBase
     {
+        friend class ResourceManager;
     private:
         inline static ResourceManager _resourceManager{};
         bool _locked = false;
@@ -15,6 +16,7 @@ namespace Vkbase
         void useSuperresource(ResourceBase *pResource);
         void disuseSuperresource(ResourceBase *pResource);
     protected:
+        ResourceBase(ResourceType resourceType, const std::string &resourceName);
         std::string _name;
         const ResourceType _resourceType;
         std::vector<ResourceBase *> _pSubresources;
@@ -37,7 +39,6 @@ namespace Vkbase
         }
 
     public:
-        ResourceBase(ResourceType resourceType, const std::string &resourceName);
         virtual ~ResourceBase();
         static ResourceManager &resourceManager();
         const std::string &name() const;

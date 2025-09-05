@@ -10,8 +10,8 @@ void Render::init() { resourceInit(); }
 
 void Render::resourceInit()
 {
-    new Vkbase::Window("mainWindow1", "Vulkan Window", 800, 600);
-    Vkbase::Window *pWindow = new Vkbase::Window("mainWindow", "Vulkan Window", 800, 600);
+    Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow1", "Vulkan Window", 800, 600);
+    Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
 
     VertexData frameVertices[] = {{glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
@@ -20,12 +20,11 @@ void Render::resourceInit()
                                   {glm::vec3(1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)}};
-
-    _pFrameVerticesBuffer = new Vkbase::Buffer("Vertex", "Device", sizeof(VertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
+    _pFrameVerticesBuffer = Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
     for (uint32_t i = 0; i < MAX_FLIGHT_COUNT; ++i)
-        new Vkbase::Buffer("UBO" + std::to_string(i), "Device", sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer);
+        Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("UBO" + std::to_string(i), "Device", sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer);
 
-    new Vkbase::Sampler("Sampler", "Device");
+    Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
 
     delete new Cloud();
 
@@ -40,14 +39,14 @@ void Render::resourceInit()
     }
 
     Modelbase::Model *pModel = new Modelbase::Model(
-        "Device", "GraphicsDevice", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
+        "Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
         modelConfig[0]);
 
     _pFont = new Font("Device", "./src/fonts/Minecraft.ttf");
     _pText = new Text(*_pFont, "Hello Vulkan!", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(10.0f, 50.0f), 1.0f);
 
-    pModel->createNewInstance("1", {0, 0.0f});
-    Object &modelObject = pModel->instanceObject("1");
+    Modelbase::ModelInstance &instance = pModel->createNewInstance("1", {0, 0.0f});
+    Object &modelObject = instance.object();
     modelObject.setScale(glm::vec3(1.0f));
 
     createDescriptorSets();
@@ -72,204 +71,41 @@ void Render::createRenderPass()
                                                         vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
 
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
-    // const Vkbase::Swapchain &swapchain1 = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain,
-    // "mainWindow1"));
 
-    // 附件
-    std::vector<vk::AttachmentDescription> attachments(8);
-    attachments[0]
-        .setFormat(vk::Format::eR16G16B16A16Sfloat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    attachments[1]
-        .setFormat(vk::Format::eR16G16B16A16Sfloat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    attachments[2]
-        .setFormat(vk::Format::eR16G16B16A16Sfloat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    attachments[3]
-        .setFormat(vk::Format::eR16G16B16A16Sfloat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    attachments[4]
-        .setFormat(vk::Format::eR16G16B16A16Sfloat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    attachments[5]
-        .setFormat(vk::Format::eR16G16B16A16Sfloat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+    json renderConfig;
+    {
+        std::ifstream config_file("config/render.json");
+        if (!config_file.is_open()) {
+            throw std::runtime_error("Cannot open config file");
+        }
+        config_file >> renderConfig;
 
-    attachments[6]
-        .setFormat(swapchain.format())
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eStore)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::ePresentSrcKHR);
-
-    attachments[7]
-        .setFormat(depthFormat)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setLoadOp(vk::AttachmentLoadOp::eClear)
-        .setStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setStencilLoadOp(vk::AttachmentLoadOp::eDontCare)
-        .setStencilStoreOp(vk::AttachmentStoreOp::eDontCare)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setFinalLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-    // 颜色附件
-    std::vector<vk::AttachmentReference> colorAttachmentRefs[9];
-    colorAttachmentRefs[0].resize(3);
-    colorAttachmentRefs[0][0].setAttachment(0).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    colorAttachmentRefs[0][1].setAttachment(1).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    colorAttachmentRefs[0][2].setAttachment(2).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    colorAttachmentRefs[1].resize(2);
-    colorAttachmentRefs[1][0].setAttachment(3).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-    colorAttachmentRefs[1][1].setAttachment(4).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    colorAttachmentRefs[2].resize(1);
-    colorAttachmentRefs[2][0].setAttachment(5).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    colorAttachmentRefs[3].resize(1);
-    colorAttachmentRefs[3][0].setAttachment(4).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    colorAttachmentRefs[4].resize(1);
-    colorAttachmentRefs[4][0].setAttachment(6).setLayout(vk::ImageLayout::eColorAttachmentOptimal);
-
-    colorAttachmentRefs[5].resize(3);
-    colorAttachmentRefs[5][0].setAttachment(0).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    colorAttachmentRefs[5][1].setAttachment(1).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    colorAttachmentRefs[5][2].setAttachment(2).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-    colorAttachmentRefs[6].resize(1);
-    colorAttachmentRefs[6][0].setAttachment(4).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-    colorAttachmentRefs[7].resize(1);
-    colorAttachmentRefs[7][0].setAttachment(5).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-    colorAttachmentRefs[8].resize(2);
-    colorAttachmentRefs[8][0].setAttachment(3).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-    colorAttachmentRefs[8][1].setAttachment(4).setLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-
-    // 深度模版附件
-    vk::AttachmentReference depthStencilRef;
-    depthStencilRef.setAttachment(7).setLayout(vk::ImageLayout::eDepthStencilAttachmentOptimal);
-
-    std::vector<vk::SubpassDescription> subpasses(5);
-    subpasses[0].setColorAttachments(colorAttachmentRefs[0]).setPDepthStencilAttachment(&depthStencilRef);
-    subpasses[1].setColorAttachments(colorAttachmentRefs[1]).setInputAttachments(colorAttachmentRefs[5]);
-    subpasses[2].setColorAttachments(colorAttachmentRefs[2]).setInputAttachments(colorAttachmentRefs[6]);
-    subpasses[3].setColorAttachments(colorAttachmentRefs[3]).setInputAttachments(colorAttachmentRefs[7]);
-    subpasses[4].setColorAttachments(colorAttachmentRefs[4]).setInputAttachments(colorAttachmentRefs[8]);
-
-    std::vector<vk::SubpassDependency> dependencies;
-    dependencies.emplace_back()
-        .setSrcSubpass(vk::SubpassExternal)
-        .setDstSubpass(0)
-        .setSrcStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-        .setSrcAccessMask(vk::AccessFlagBits::eNone)
-        .setDstStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-        .setDstAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite);
-    dependencies.emplace_back()
-        .setSrcSubpass(0)
-        .setDstSubpass(1)
-        .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-        .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
-        .setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-        .setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
-    dependencies.emplace_back()
-        .setSrcSubpass(1)
-        .setDstSubpass(2)
-        .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-        .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
-        .setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-        .setDstAccessMask(vk::AccessFlagBits::eShaderRead);
-    dependencies.emplace_back()
-        .setSrcSubpass(2)
-        .setDstSubpass(3)
-        .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-        .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
-        .setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-        .setDstAccessMask(vk::AccessFlagBits::eShaderRead);
-    dependencies.emplace_back()
-        .setSrcSubpass(3)
-        .setDstSubpass(4)
-        .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-        .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
-        .setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-        .setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
-    dependencies.emplace_back()
-        .setSrcSubpass(1)
-        .setDstSubpass(4)
-        .setSrcStageMask(vk::PipelineStageFlagBits::eColorAttachmentOutput)
-        .setSrcAccessMask(vk::AccessFlagBits::eColorAttachmentRead | vk::AccessFlagBits::eColorAttachmentWrite)
-        .setDstStageMask(vk::PipelineStageFlagBits::eFragmentShader)
-        .setDstAccessMask(vk::AccessFlagBits::eInputAttachmentRead);
-
-    vk::RenderPassCreateInfo createInfo;
-    createInfo.setAttachments(attachments).setDependencies(dependencies).setSubpasses(subpasses);
-
-    const Vkbase::RenderPass &renderPass = *(new Vkbase::RenderPass("mainWindow", "Device", createInfo));
+    }
+    const Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>("mainWindow", "Device", renderConfig[0]["renderPass"], "mainWindow", depthFormat));
 
     // -------------------------------- Framebuffer --------------------------------
     vk::Extent2D extent = swapchain.extent();
     for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
     {
         Vkbase::Image &positionAttachment =
-            *(new Vkbase::Image("Position_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
+            *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Position_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
                                 vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
         Vkbase::Image &normalAttachment =
-            *(new Vkbase::Image("Normal_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
+            *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Normal_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
                                 vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &albedoSpecAttachment = *(new Vkbase::Image("AlbedoSpec_" + std::to_string(i), "Device", extent.width, extent.height, 1,
+        Vkbase::Image &albedoSpecAttachment = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("AlbedoSpec_" + std::to_string(i), "Device", extent.width, extent.height, 1,
                                                                   vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D, vk::ImageViewType::e2D,
                                                                   vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &originalColorAttachment = *(new Vkbase::Image("OriginalColor_" + std::to_string(i), "Device", extent.width, extent.height, 1,
+        Vkbase::Image &originalColorAttachment = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("OriginalColor_" + std::to_string(i), "Device", extent.width, extent.height, 1,
                                                                      vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D, vk::ImageViewType::e2D,
                                                                      vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &blurColorAttachment1 = *(new Vkbase::Image(
+        Vkbase::Image &blurColorAttachment1 = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(
             "BlurColor1_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
             vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &blurColorAttachment2 = *(new Vkbase::Image(
+        Vkbase::Image &blurColorAttachment2 = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(
             "BlurColor2_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
             vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &depthImage = *(new Vkbase::Image("Depth_" + std::to_string(i), "Device", extent.width, extent.height, 1, depthFormat, vk::ImageType::e2D,
+        Vkbase::Image &depthImage = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Depth_" + std::to_string(i), "Device", extent.width, extent.height, 1, depthFormat, vk::ImageType::e2D,
                                                         vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eDepthStencilAttachment));
         renderPass.createFramebuffer("mainWindow_" + std::to_string(i),
                                      {positionAttachment.name(), normalAttachment.name(), albedoSpecAttachment.name(), originalColorAttachment.name(),
@@ -435,7 +271,7 @@ void Render::createRenderPass()
 
 void Render::createDescriptorSets()
 {
-    Vkbase::DescriptorSets *pDescriptorSets = new Vkbase::DescriptorSets("MainDescriptorSets", "Device");
+    Vkbase::DescriptorSets *pDescriptorSets = Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>("MainDescriptorSets", "Device");
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
     pDescriptorSets->addDescriptorSetCreateConfig("Camera", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}},
                                                   Vkbase::RenderDelegator::maxFlightCount());
@@ -478,7 +314,7 @@ void Render::createRenderDelegator()
     // *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain,
     // "mainWindow1"));
 
-    _pRenderDelegator = new Vkbase::RenderDelegator("mainRender", "Device", {swapchain.name()}, "GraphicsDevice");
+    _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("mainRender", "Device", std::vector<std::string>{swapchain.name()}, "GraphicsDevice");
     _pRenderDelegator->setCommandRecordFunc([this](const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
                                             { this->recordCommand(commandBuffer, imageIndex, currentFrame); });
     _pRenderDelegator->setRenderPassCreateFunc([this]() { this->createRenderPass(); });
@@ -529,9 +365,11 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, g_bufferPipeline.pipeline());
     for (Modelbase::Model *pModel : Modelbase::Model::models())
     {
-        pModel->updateUniformBuffers(0, currentFrame, _camera);
+        Modelbase::ModelInstance &instance = pModel->instance("1");
+
         pModel->updateAnimation(_deltaTime);
-        pModel->draw(currentFrame, commandBuffer, g_bufferPipeline, 0);
+        instance.updateUniformBuffers(currentFrame, _camera);
+        pModel->draw(currentFrame, commandBuffer, 0);
     }
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);

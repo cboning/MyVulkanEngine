@@ -9,8 +9,6 @@
 
 #include "../Vkbase/Vkbase.h"
 
-#include "../Camera.h"
-
 #include "../Object/Object.h"
 #include "ModelData.h"
 
@@ -21,6 +19,8 @@ namespace Modelbase
 {
 template <typename T> class Mesh;
 class Animation;
+class ModelInstance;
+struct AnimationIndex;
 
 struct ModelUniformData
 {
@@ -30,35 +30,15 @@ struct ModelUniformData
     glm::mat4 bonesMatrices[MAX_BONES];
 };
 
-struct AnimationIndex
-{
-    uint32_t animationIndex;
-    float beginTime = 0.0f;
-};
-
-struct Instance
-{
-    float animationProgress;
-    bool isAnimationIndexStackLock = false;
-    Vkbase::DescriptorSets &descriptorSets;
-    std::vector<AnimationIndex> animationIndexStack;
-    Object object;
-
-    Instance(const std::string &descriptorSetsName, const std::string &deviceName)
-        : descriptorSets(*(new Vkbase::DescriptorSets(descriptorSetsName, deviceName))) {};
-    ~Instance() { descriptorSets.destroy(); }
-};
-
 class Model
 {
+    friend class ModelLoader;
   private:
-    const Vkbase::Device &_device;
-    const Vkbase::CommandPool &_commandPool;
+    const std::string _deviceName;
 
     std::string _fileDirectory;
-    Assimp::Importer _importer;
 
-    std::vector<Mesh<ModelData::Vertex>> _meshs;
+    std::vector<Mesh<ModelData::Vertex>> _meshes;
     std::vector<std::string> _textureFiles;
 
     ModelData::AssimpNodeData _rootNode; // 更新动画要用
@@ -67,33 +47,23 @@ class Model
 
     int _boneCount = 0;
 
-    std::vector<Animation *> _pAnimations;
-    uint32_t _animationCount;
+    std::vector<Animation> _animations;
 
-    vk::Sampler _sampler;
+    const vk::Sampler &_sampler;
 
-    std::vector<uint32_t> _removedInstanceIndices; // 无序
-
-    std::vector<Instance> _instances;
+    std::vector<ModelInstance *> _pInstances;
 
     const std::unordered_map<std::string, std::vector<aiTextureType>> _textureTypeFeatures;
 
     const std::unordered_map<std::string, std::string> _meshPipelineNames;
 
-    Vkbase::DescriptorSets &_descriptorSets;
+    Vkbase::DescriptorSets &_descriptorSets; // 用于描述纹理与采样器，也提供UBO的layout，但不描述UBO
 
     std::unordered_map<std::string, uint32_t> _instanceIndexMap;
 
-    void loadModel(const std::string &fileName);
-    void processNode(aiNode *pNode, const aiScene *pScene, ModelData::AssimpNodeData &src);
-    void processMesh(aiMesh *pMesh, const aiScene *pScene);
-    std::vector<std::string> loadMaterialTextures(aiMaterial *pMaterial, aiTextureType textureType);
-    void initVertexBoneData(ModelData::Vertex &vertex);
-    void setVertexBoneData(ModelData::Vertex &vertex, int boneId, float weight);
-    void loadVerticesBoneWeight(std::vector<ModelData::Vertex> &vertices, aiMesh *pMesh);
-    void createDescriptorSets(uint32_t instanceIndex);
-    void addUBODescriptorSetsConfig(uint32_t instanceIndex);
-    void writeDescriptorSets(uint32_t instanceIndex);
+    void createDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const;
+    void addUBODescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) const;
+    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const;
     void applyTextureDescriptorSetConfig();
     void writeTextureDescriptorSets(const vk::Sampler &sampler) const;
     static std::unordered_map<std::string, std::vector<aiTextureType>> getTextureFeaturesWithConfig(const json &config);
@@ -104,12 +74,12 @@ class Model
     inline static std::unordered_set<Model *> _models;
 
   public:
-    Model(const std::string &deviceName, const std::string &commandPoolName, vk::Sampler sampler, const std::string &fileName,
+    Model(const std::string &deviceName, const vk::Sampler &sampler, const std::string &fileName,
           const std::unordered_map<std::string, std::vector<aiTextureType>> &textureTypeFeatures,
           const std::unordered_map<std::string, std::string> &meshPipelineNames);
-    Model(const std::string &deviceName, const std::string &commandPoolName, vk::Sampler sampler, json config);
+    Model(const std::string &deviceName, const vk::Sampler &sampler, json config);
     ~Model();
-    void draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, uint32_t instanceIndex);
+    void draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex);
     std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap();
     int &boneCount();
     ModelData::AssimpNodeData *rootNode();
@@ -118,20 +88,13 @@ class Model
     void updateAnimation(float deltaTick);
     std::vector<vk::DescriptorSetLayout> descriptorSetLayout(uint32_t instanceIndex, const std::string &pipelineName) const;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayout(const std::string &instanceName, const std::string &pipelineName) const;
-    uint32_t animationCount();
-    void addAnimationIndexToStack(uint32_t instanceIndex, std::vector<AnimationIndex> animationIndices);
-    void addAnimationIndexToStack(const std::string &instanceName, std::vector<AnimationIndex> animationIndices);
-    void updateUniformBuffers(uint32_t instanceIndex, uint32_t currentFrame, const Camera &camera);
-    void updateUniformBuffers(const std::string &instanceName, uint32_t currentFrame, const Camera &camera);
-    void setBasicAnimation(uint32_t instanceIndex, uint32_t animationIndex);
-    void setBasicAnimation(const std::string &instanceName, uint32_t animationIndex);
-    void createNewInstance(const std::string &instanceName, AnimationIndex basedAnimationIndex);
-    bool canAddAnimation(uint32_t instanceIndex);
-    bool canAddAnimation(const std::string &instanceName);
+    uint32_t animationCount() const;
+    Animation &animation(uint32_t index);
+    ModelInstance &createNewInstance(const std::string &instanceName, const AnimationIndex &basedAnimationIndex);
     int32_t instanceIndex(const std::string &instanceName) const;
     void removeInstance(const std::string &instanceName);
-    Object &instanceObject(uint32_t instanceIndex);
-    Object &instanceObject(const std::string &instanceName);
+    ModelInstance &instance(uint32_t instanceIndex);
+    ModelInstance &instance(const std::string &instanceName);
 
     static const std::unordered_set<Model *> &models();
 };

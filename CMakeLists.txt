@@ -49,6 +49,7 @@ file(GLOB SRC_FILES
     "Object/*.cpp"
     "Modelbase/*.cpp"
     "VkGUI/*.cpp"
+    "Camera/*.cpp"
 )
 
 # 创建可执行文件
@@ -57,6 +58,7 @@ add_executable(main ${SRC_FILES})
 # 设置目标属性
 target_compile_options(main PRIVATE
     -g
+    -O0
     -Wall -Wextra  # 启用警告
 )
 
