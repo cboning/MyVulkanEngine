@@ -1,6 +1,6 @@
 [
     {
-        "filename": "./src/model/zhongli-from-genshin-impact/ze+hongli.fbx",
+        "filename": "src/model/source/Angel's Share Genshin Impact Diarama/Angel's Share Genshin Impact Diarama.obj",
         "pipelines": [
             {
                 "name": "g_buffer",
