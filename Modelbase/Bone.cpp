@@ -7,21 +7,21 @@ namespace Modelbase
     Bone::Bone(const std::string &name, int id, const aiNodeAnim *channel)
         : _name(name), _id(id), _transform(1.0f)
     {
-        for (int i = 0; i < channel->mNumPositionKeys; i++)
+        for (uint32_t i = 0; i < channel->mNumPositionKeys; ++i)
         {
             ModelData::KeyPosition position;
             position.position = AssimpGLMHelpers::getGLMVec3(channel->mPositionKeys[i].mValue);
             position.timeStamp = channel->mPositionKeys[i].mTime;
             _positions.push_back(position);
         }
-        for (int i = 0; i < channel->mNumRotationKeys; i++)
+        for (uint32_t i = 0; i < channel->mNumRotationKeys; ++i)
         {
             ModelData::KeyRotation rotation;
             rotation.rotation = AssimpGLMHelpers::getGLMQuat(channel->mRotationKeys[i].mValue);
             rotation.timeStamp = channel->mPositionKeys[i].mTime;
             _rotations.push_back(rotation);
         }
-        for (int i = 0; i < channel->mNumScalingKeys; i++)
+        for (uint32_t i = 0; i < channel->mNumScalingKeys; ++i)
         {
             ModelData::KeyScale scale;
             scale.scale = AssimpGLMHelpers::getGLMVec3(channel->mScalingKeys[i].mValue);
@@ -64,7 +64,7 @@ namespace Modelbase
 
     int Bone::positionIndex(float animationTime)
     {
-        for (int i = 1; i < _positions.size(); i++)
+        for (uint32_t i = 1; i < _positions.size(); ++i)
             if (animationTime < _positions[i].timeStamp)
                 return i - 1;
         throw std::runtime_error("");
@@ -72,7 +72,7 @@ namespace Modelbase
 
     int Bone::rotationIndex(float animationTime)
     {
-        for (int i = 1; i < _rotations.size(); i++)
+        for (uint32_t i = 1; i < _rotations.size(); ++i)
             if (animationTime < _rotations[i].timeStamp)
                 return i - 1;
         throw std::runtime_error("");
@@ -80,7 +80,7 @@ namespace Modelbase
 
     int Bone::scaleIndex(float animationTime)
     {
-        for (int i = 1; i < _scales.size(); i++)
+        for (uint32_t i = 1; i < _scales.size(); ++i)
             if (animationTime < _scales[i].timeStamp)
                 return i - 1;
         throw std::runtime_error("");

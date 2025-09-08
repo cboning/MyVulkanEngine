@@ -15,7 +15,7 @@ struct PointLight {
     vec3 color;
 };
 
-PointLight light = {vec3(50, 50, 10), vec3(1.0, 0.996, 0.871) * 2};
+PointLight light = {vec3(50, 50, 10), vec3(1.0, 0.996, 0.471)};
 void main() {
     vec4 color = texture(texSampler1, texCoord);
     if (color.a < 0.1)

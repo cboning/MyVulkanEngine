@@ -1,15 +1,15 @@
 #include "Modelbase.h"
 namespace Modelbase
 {
-    Animation::Animation(aiAnimation *pAnimation, Model *pModel)
-        : _pModel(pModel)
+    Animation::Animation(aiAnimation *pAnimation, Model &model)
+        : _model(model)
     {
         _duration = pAnimation->mDuration;
         _ticksPerSecond = pAnimation->mTicksPerSecond;
 
-        std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap = pModel->boneInfoMap();
-        int &boneCount = pModel->boneCount();
-        for (int i = 0; i < pAnimation->mNumChannels; i++)
+        std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap = model.boneInfoMap();
+        int &boneCount = model.boneCount();
+        for (uint32_t i = 0; i < pAnimation->mNumChannels; ++i)
         {
             aiNodeAnim *pChannel = pAnimation->mChannels[i];
             if (boneInfoMap.find(pChannel->mNodeName.data) == boneInfoMap.end())
@@ -20,7 +20,7 @@ namespace Modelbase
         }
 
         _transforms.reserve(boneInfoMap.size());
-        for (int i = 0; i < boneInfoMap.size(); i++)
+        for (uint32_t i = 0; i < boneInfoMap.size(); ++i)
             _transforms.push_back(glm::mat4(1.0f));
     }
 
@@ -28,7 +28,7 @@ namespace Modelbase
     {
         _currentTime += deltaTime * _ticksPerSecond;
         _currentTime = fmod(_currentTime, _duration);
-        calculateBoneTransform(_pModel->rootNode(), glm::mat4(1.0f));
+        calculateBoneTransform(_model.rootNode(), glm::mat4(1.0f));
         return _currentTime;
     }
 
@@ -43,12 +43,12 @@ namespace Modelbase
         else
             parentTransform *= pNode->transformation;
 
-        std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap = _pModel->boneInfoMap();
+        std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap = _model.boneInfoMap();
 
         if (boneInfoMap.find(pNode->name) != boneInfoMap.end())
             _transforms[boneInfoMap[pNode->name].id] = parentTransform * boneInfoMap[pNode->name].offset;
 
-        for (int i = 0; i < pNode->childrenCount; i++)
+        for (int i = 0; i < pNode->childrenCount; ++i)
             calculateBoneTransform(&pNode->children[i], parentTransform);
     }
 

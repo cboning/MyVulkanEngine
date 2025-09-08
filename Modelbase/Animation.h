@@ -22,7 +22,7 @@ namespace Modelbase
         float _ticksPerSecond;
         float _duration;
 
-        Model *_pModel;
+        Model &_model;
         std::vector<Bone *> _pBones;
         std::vector<glm::mat4> _transforms;
         void calculateBoneTransform(const ModelData::AssimpNodeData *pNode, glm::mat4 parentTransform);
@@ -30,7 +30,7 @@ namespace Modelbase
         
 
     public:
-        Animation(aiAnimation *pAnimation, Model *pModel);
+        Animation(aiAnimation *pAnimation, Model &model);
         float update(float deltaTime);
         void replay();
         std::vector<glm::mat4> *transformations();

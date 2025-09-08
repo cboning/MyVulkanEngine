@@ -6,8 +6,8 @@
 
 namespace Vkbase
 {
-    Window::Window(const std::string &resourceName, std::string title, uint32_t width, uint32_t height)
-        : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(width), _height(height), _title("Vulkan Window")
+    Window::Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height)
+        : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(width), _height(height), _title(title)
     {
         init();
         if (_surface)
@@ -17,7 +17,7 @@ namespace Vkbase
             connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute));
             connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Present));
 
-            _pSwapchain = new Swapchain(resourceName, _pDevice->name(), resourceName);
+            _pSwapchain = resourceManager().create<Swapchain>(resourceName, _pDevice->name(), resourceName);
         }
     }
 

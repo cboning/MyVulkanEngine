@@ -1,11 +1,7 @@
 #include "Camera.h"
 #include <iostream>
 
-Camera::Camera(glm::vec2 frameSize)
-    : _frameSize(frameSize)
-{
-}
-
+Camera::Camera(glm::vec2 frameSize) : _frameSize(frameSize) {}
 
 void Camera::movePosTo(float x, float y, float z)
 {
@@ -18,7 +14,6 @@ void Camera::moveViewTo(float yaw, float pitch)
     _yaw = yaw;
     _pitch = pitch;
     updateView();
-
 }
 
 void Camera::addPosBy(float x, float y, float z)
@@ -49,7 +44,6 @@ void Camera::updateView()
     _front = glm::normalize(_front);
 
     _view = glm::lookAt(_position, _position + _front, _up);
-
 }
 
 void Camera::moveFront(float distance)
@@ -65,7 +59,6 @@ void Camera::moveBack(float distance)
     _position += back * distance;
     updateView();
 }
-
 
 void Camera::moveLeft(float distance)
 {
@@ -93,33 +86,18 @@ void Camera::moveDown(float distance)
     updateView();
 }
 
-const glm::mat4 &Camera::view() const
-{
-    return _view;
-}
+const glm::mat4 &Camera::view() const { return _view; }
 
-const glm::vec3 &Camera::position() const
-{
-    return _position;
-}
+const glm::vec3 &Camera::position() const { return _position; }
 
-const glm::vec3 &Camera::front() const
-{
-    return _front;
-}
+const glm::vec3 &Camera::front() const { return _front; }
 
 void Camera::updatePerspective()
 {
     _perspective = glm::perspective(glm::radians(_fov), _frameSize.x / _frameSize.y, _near, _far);
-    _perspective[1][1]  *= -1;
+    _perspective[1][1] *= -1;
 }
 
-const glm::mat4 &Camera::perspective() const
-{
-    return _perspective;
-}
+const glm::mat4 &Camera::perspective() const { return _perspective; }
 
-void Camera::setFrameSize(glm::vec2 size)
-{
-    _frameSize = size;
-}
+void Camera::setFrameSize(glm::vec2 size) { _frameSize = size; }
