@@ -4,13 +4,16 @@
             "name": "Mac",
             "includePath": [
                 "${default}",
-                "${workspaceFolder}/include"
+                "${workspaceFolder}/include",
+                "E:/LLVM/bin/../lib/gcc/x86_64-w64-mingw32/15.1.0/include/c++",
+                "E:/LLVM/bin/../lib/gcc/x86_64-w64-mingw32/15.1.0/include/c++/x86_64-w64-mingw32",
+                "E:/LLVM/bin/../lib/gcc/x86_64-w64-mingw32/15.1.0/include/c++/backward",
+                "E:/LLVM/bin/../lib/gcc/x86_64-w64-mingw32/15.1.0/include",
+                "E:/LLVM/bin/../lib/gcc/x86_64-w64-mingw32/15.1.0/include-fixed",
+                "E:/LLVM/bin/../lib/gcc/x86_64-w64-mingw32/15.1.0/../../../../x86_64-w64-mingw32/include"
             ],
             "defines": [],
-            "macFrameworkPath": [
-                "/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/System/Library/Frameworks"
-            ],
-            "compilerPath": "/usr/bin/clang",
+            "compilerPath": "clang++",
             "cStandard": "c17",
             "cppStandard": "c++17",
             "intelliSenseMode": "macos-clang-arm64",

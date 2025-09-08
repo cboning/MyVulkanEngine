@@ -4,7 +4,7 @@
 namespace Vkbase
 {
     CommandPool::CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType)
-        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName)))), _queue(determineQueue(queueType)), _queueIndex(determineQueueIndex(queueType))
+        : ResourceBase(ResourceType::CommandPool, resourceName), _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName)))), _queueIndex(determineQueueIndex(queueType)), _queue(determineQueue(queueType))
     {
         determineQueue(queueType);
         createCommandPool();
@@ -29,7 +29,7 @@ namespace Vkbase
         throw std::runtime_error("[ERROR] Unknown queue type.");
     }
 
-    const uint32_t CommandPool::determineQueueIndex(CommandPoolQueueType queueType) const
+    uint32_t CommandPool::determineQueueIndex(CommandPoolQueueType queueType) const
     {
         switch (queueType)
         {

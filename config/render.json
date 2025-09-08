@@ -1,0 +1,305 @@
+[
+    {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "SWAPCHAIN_FORMAT",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "PresentSrcKHR"
+                },
+                {
+                    "format": "DEPTH_FORMAT",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "DontCare",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "DepthStencilAttachmentOptimal"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ColorAttachmentOptimal"
+                    },
+                    {
+                        "attachment": 1,
+                        "layout": "ColorAttachmentOptimal"
+                    },
+                    {
+                        "attachment": 2,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 3,
+                        "layout": "ColorAttachmentOptimal"
+                    },
+                    {
+                        "attachment": 4,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 5,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 4,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 6,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ShaderReadOnlyOptimal"
+                    },
+                    {
+                        "attachment": 1,
+                        "layout": "ShaderReadOnlyOptimal"
+                    },
+                    {
+                        "attachment": 2,
+                        "layout": "ShaderReadOnlyOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 4,
+                        "layout": "ShaderReadOnlyOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 5,
+                        "layout": "ShaderReadOnlyOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 3,
+                        "layout": "ShaderReadOnlyOptimal"
+                    },
+                    {
+                        "attachment": 4,
+                        "layout": "ShaderReadOnlyOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 7,
+                        "layout": "DepthStencilAttachmentOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "colorAttachments": 0,
+                    "depthStencilAttachment": 9
+                },
+                {
+                    "colorAttachments": 1,
+                    "inputAttachments": 5
+                },
+                {
+                    "colorAttachments": 2,
+                    "inputAttachments": 6
+                },
+                {
+                    "colorAttachments": 3,
+                    "inputAttachments": 7
+                },
+                {
+                    "colorAttachments": 4,
+                    "inputAttachments": 8
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentRead",
+                        "ColorAttachmentWrite"
+                    ]
+                },
+                {
+                    "srcSubpass": 0,
+                    "dstSubpass": 1,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentRead",
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "InputAttachmentRead"
+                    ]
+                },
+                {
+                    "srcSubpass": 1,
+                    "dstSubpass": 2,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentRead",
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "ShaderRead"
+                    ]
+                },
+                {
+                    "srcSubpass": 2,
+                    "dstSubpass": 3,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentRead",
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "ShaderRead"
+                    ]
+                },
+                {
+                    "srcSubpass": 3,
+                    "dstSubpass": 4,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentRead",
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "InputAttachmentRead"
+                    ]
+                },
+                {
+                    "srcSubpass": 1,
+                    "dstSubpass": 4,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentRead",
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "InputAttachmentRead"
+                    ]
+                }
+            ]
+        },
+        "pipelines": [
+            {
+                "name": "g_buffer"
+            }
+        ]
+    }
+]

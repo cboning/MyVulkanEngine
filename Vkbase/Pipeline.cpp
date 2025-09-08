@@ -82,15 +82,15 @@ namespace Vkbase
         if (!vertexFile.is_open())
             throw std::runtime_error("Failed to open shader file!");
         size_t fileSize = (size_t)vertexFile.tellg();
-        char vertexBuffer[fileSize];
+        std::vector<char> vertexBuffer(fileSize);
 
         vertexFile.seekg(0);
-        vertexFile.read(vertexBuffer, fileSize);
+        vertexFile.read(vertexBuffer.data(), fileSize);
         vertexFile.close();
 
         vk::ShaderModuleCreateInfo createInfo;
         createInfo.setCodeSize(fileSize)
-            .setPCode((uint32_t *)vertexBuffer);
+            .setPCode(reinterpret_cast<const uint32_t *>(vertexBuffer.data()));
 
         vk::ShaderModule shaderModule = _device.device().createShaderModule(createInfo);
         _shaderModules.push_back(shaderModule);

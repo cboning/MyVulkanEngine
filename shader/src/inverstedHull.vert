@@ -1,6 +1,6 @@
 #version 450
 
-const int MAX_BONES = 250;
+const int MAX_BONES = 500;
 const int MAX_BONE_INFLUENCE = 4;
 const float screenSizeScale = 0.1;
 

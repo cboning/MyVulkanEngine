@@ -12,7 +12,7 @@ const float exposure = 1.0f;
 
 void main() {
 
-    vec4 color = vec4(subpassLoad(bloomColor).rgb, 1.0f);
+    vec4 color = vec4(subpassLoad(originColor).rgb + subpassLoad(bloomColor).rgb, 1.0f);
     float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
     
     vec3 mapped = vec3(1.0) - exp(-color.rgb * exposure);

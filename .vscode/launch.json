@@ -1,47 +1,4 @@
-// {
-//     "version": "0.2.0",
-//     "configurations": [
-//         {
-//             "name": "着色器编译+调试",
-//             "type": "cppdbg",
-//             "request": "launch",
-//             "program": "${fileDirname}/main",
-//             "args": [],
-//             "stopAtEntry": false,
-//             "cwd": "${fileDirname}",
-//             "environment": [
-//             ],
-//             "logging": {
-//                 "moduleLoad": false,
-//                 "engineLogging": false,
-//                 "exceptions": false
-//             },
-//             "externalConsole": false,
-//             "MIMode": "lldb",
-//             "preLaunchTask": "着色器编译",
-//         },
 
-//         {
-//             "name": "全编译+调试",
-//             "type": "cppdbg",
-//             "request": "launch",
-//             "program": "${fileDirname}/main",
-//             "args": [],
-//             "stopAtEntry": false,
-//             "cwd": "${fileDirname}",
-//             "environment": [
-//             ],
-//             "logging": {
-//                 "moduleLoad": false,
-//                 "engineLogging": false,
-//                 "exceptions": false
-//             },
-//             "externalConsole": false,
-//             "MIMode": "lldb",
-//             "preLaunchTask": "调试前置任务"
-//         }
-//     ]
-// }
 
 {
     "version": "0.2.0",
@@ -80,6 +37,7 @@
                 "exceptions": false
             },
             "MIMode": "lldb",
+            "miDebuggerPath": "lldb",
             "preLaunchTask": "compile_shaders"
         }
     ]
