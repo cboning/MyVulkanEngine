@@ -296,6 +296,92 @@
                 }
             ]
         },
+        "framebuffers": {
+            "count": 3,
+            "images":[
+                {
+                    "type": "create",
+                    "name": "Position",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["ColorAttachment", "InputAttachment"]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "Normal",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["ColorAttachment", "InputAttachment"]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "AlbedoSpec",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["ColorAttachment", "InputAttachment"]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "OriginalColor",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["ColorAttachment", "InputAttachment"]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "BlurColor1",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["ColorAttachment", "Sampled", "InputAttachment"]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "BlurColor2",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["ColorAttachment", "Sampled", "InputAttachment"]
+                    }
+                },
+                {
+                    "type": "use",
+                    "name": "mainWindow"
+                },
+                {
+                    "type": "create",
+                    "name": "Depth",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "DEPTH_FORMAT",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": ["DepthStencilAttachment"]
+                    }
+                }
+            ]
+        },
         "pipelines": [
             {
                 "name": "g_buffer"

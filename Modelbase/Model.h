@@ -68,7 +68,6 @@ class Model
     void writeTextureDescriptorSets(const vk::Sampler &sampler) const;
     static std::unordered_map<std::string, std::vector<aiTextureType>> getTextureFeaturesWithConfig(const json &config);
     static std::vector<aiTextureType> getTextureTypeWithConfig(const json &config);
-    static aiTextureType getTextureTypeWithString(const std::string &textureType);
     static std::unordered_map<std::string, std::string> getMeshToPipelineNamesWithConfig(const json &config);
 
     inline static std::unordered_set<Model *> _models;

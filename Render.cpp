@@ -1,12 +1,17 @@
 #include "Render.h"
 #include "Cloud.h"
 #include "Data.h"
+#include "Event/KeyInputEvent.h"
+#include "JsonConfigReader/JsonConfigReader.h"
 #include "Modelbase/Modelbase.h"
 
 #include <fstream>
-#define SPEED 10.0f
 
-void Render::init() { resourceInit(); }
+void Render::init()
+{
+    resourceInit();
+    initWindowEvents();
+}
 
 void Render::resourceInit()
 {
@@ -20,27 +25,19 @@ void Render::resourceInit()
                                   {glm::vec3(1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)}};
-    _pFrameVerticesBuffer = Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
+    _pFrameVerticesBuffer = Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6,
+                                                                                           vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
     for (uint32_t i = 0; i < MAX_FLIGHT_COUNT; ++i)
-        Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("UBO" + std::to_string(i), "Device", sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer);
+        Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("UBO" + std::to_string(i), "Device", sizeof(UniformBufferData),
+                                                                       vk::BufferUsageFlagBits::eUniformBuffer);
 
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
 
     delete new Cloud();
 
-    json modelConfig;
-    {
-        std::ifstream config_file("config/model.json");
-        if (!config_file.is_open()) {
-            throw std::runtime_error("Cannot open config file");
-        }
-        config_file >> modelConfig;
-
-    }
-
-    Modelbase::Model *pModel = new Modelbase::Model(
-        "Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
-        modelConfig[0]);
+    Modelbase::Model *pModel =
+        new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
+                             JsonConfigReader::load("config/model.json")[0]);
 
     _pFont = new Font("Device", "./src/fonts/Minecraft.ttf");
     _pText = new Text(*_pFont, "Hello Vulkan!", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(10.0f, 50.0f), 1.0f);
@@ -51,6 +48,19 @@ void Render::resourceInit()
 
     createDescriptorSets();
     createRenderPass();
+}
+
+void Render::initWindowEvents()
+{
+    Event::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->keyInputEvent();
+    event.addPressedKeyEvent(GLFW_KEY_W, []() { _camera.moveFront(_speed * (_deltaTime)); });
+    event.addPressedKeyEvent(GLFW_KEY_S, []() { _camera.moveBack(_speed * (_deltaTime)); });
+    event.addPressedKeyEvent(GLFW_KEY_A, []() { _camera.moveLeft(_speed * (_deltaTime)); });
+    event.addPressedKeyEvent(GLFW_KEY_D, []() { _camera.moveRight(_speed * (_deltaTime)); });
+    event.addPressedKeyEvent(GLFW_KEY_SPACE, []() { _camera.moveUp(_speed * (_deltaTime)); });
+    event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, []() { _camera.moveDown(_speed * (_deltaTime)); });
+    event.addDownKeyEvent(GLFW_KEY_ESCAPE,
+                          []() { dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->switchCursorState(); });
 }
 
 void Render::updateUniformBuffer(Vkbase::ResourceManager &resourceManager, uint32_t index)
@@ -72,46 +82,12 @@ void Render::createRenderPass()
 
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
 
-    json renderConfig;
-    {
-        std::ifstream config_file("config/render.json");
-        if (!config_file.is_open()) {
-            throw std::runtime_error("Cannot open config file");
-        }
-        config_file >> renderConfig;
-
-    }
-    const Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>("mainWindow", "Device", renderConfig[0]["renderPass"], "mainWindow", depthFormat));
+    const Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>(
+        "mainWindow", "Device", JsonConfigReader::load("config/render.json")[0]["renderPass"], "mainWindow", depthFormat));
 
     // -------------------------------- Framebuffer --------------------------------
     vk::Extent2D extent = swapchain.extent();
-    for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-    {
-        Vkbase::Image &positionAttachment =
-            *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Position_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
-                                vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &normalAttachment =
-            *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Normal_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
-                                vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &albedoSpecAttachment = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("AlbedoSpec_" + std::to_string(i), "Device", extent.width, extent.height, 1,
-                                                                  vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                                                  vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &originalColorAttachment = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("OriginalColor_" + std::to_string(i), "Device", extent.width, extent.height, 1,
-                                                                     vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                                                     vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &blurColorAttachment1 = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(
-            "BlurColor1_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
-            vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &blurColorAttachment2 = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(
-            "BlurColor2_" + std::to_string(i), "Device", extent.width, extent.height, 1, vk::Format::eR16G16B16A16Sfloat, vk::ImageType::e2D,
-            vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eColorAttachment | vk::ImageUsageFlagBits::eSampled | vk::ImageUsageFlagBits::eInputAttachment));
-        Vkbase::Image &depthImage = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Depth_" + std::to_string(i), "Device", extent.width, extent.height, 1, depthFormat, vk::ImageType::e2D,
-                                                        vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eDepthStencilAttachment));
-        renderPass.createFramebuffer("mainWindow_" + std::to_string(i),
-                                     {positionAttachment.name(), normalAttachment.name(), albedoSpecAttachment.name(), originalColorAttachment.name(),
-                                      blurColorAttachment1.name(), blurColorAttachment2.name(), swapchain.imageNames()[i], depthImage.name()},
-                                     extent.width, extent.height);
-    }
+    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"],extent.width, extent.height, "", depthFormat);
 
     const Vkbase::DescriptorSets &descriptorSets =
         *dynamic_cast<const Vkbase::DescriptorSets *>(_resourceManager.resource(Vkbase::ResourceType::DescriptorSets, "MainDescriptorSets"));
@@ -123,7 +99,7 @@ void Render::createRenderPass()
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "BlurColor1_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_BlurColor1_" + std::to_string(i)))->view());
         descriptorSets.writeSets("BlurSampler1", 0, {}, imageInfos, swapchain.imageNames().size());
     }
     // {
@@ -136,7 +112,7 @@ void Render::createRenderPass()
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "BlurColor2_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_BlurColor2_" + std::to_string(i)))->view());
         descriptorSets.writeSets("BlurSampler2", 0, {}, imageInfos, swapchain.imageNames().size());
     }
 
@@ -145,35 +121,35 @@ void Render::createRenderPass()
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Position_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_Position_" + std::to_string(i)))->view());
         descriptorSets.writeSets("G_BufferInputAttachments", 0, {}, imageInfos, swapchain.imageNames().size());
     }
     {
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Normal_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_Normal_" + std::to_string(i)))->view());
         descriptorSets.writeSets("G_BufferInputAttachments", 1, {}, imageInfos, swapchain.imageNames().size());
     }
     {
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "AlbedoSpec_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_AlbedoSpec_" + std::to_string(i)))->view());
         descriptorSets.writeSets("G_BufferInputAttachments", 2, {}, imageInfos, swapchain.imageNames().size());
     }
     {
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "OriginalColor_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_OriginalColor_" + std::to_string(i)))->view());
         descriptorSets.writeSets("BlendInputAttachments", 0, {}, imageInfos, swapchain.imageNames().size());
     }
     {
         std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
         for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
             imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "BlurColor1_" + std::to_string(i)))->view());
+                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_BlurColor1_" + std::to_string(i)))->view());
         descriptorSets.writeSets("BlendInputAttachments", 1, {}, imageInfos, swapchain.imageNames().size());
     }
 
@@ -310,11 +286,9 @@ void Render::createDescriptorSets()
 void Render::createRenderDelegator()
 {
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
-    // const Vkbase::Swapchain &swapchain1 = *dynamic_cast<const Vkbase::Swapchain
-    // *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain,
-    // "mainWindow1"));
 
-    _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("mainRender", "Device", std::vector<std::string>{swapchain.name()}, "GraphicsDevice");
+    _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("mainRender", "Device",
+                                                                                                std::vector<std::string>{swapchain.name()}, "GraphicsDevice");
     _pRenderDelegator->setCommandRecordFunc([this](const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
                                             { this->recordCommand(commandBuffer, imageIndex, currentFrame); });
     _pRenderDelegator->setRenderPassCreateFunc([this]() { this->createRenderPass(); });
@@ -323,7 +297,8 @@ void Render::createRenderDelegator()
 void Render::draw()
 {
     glfwPollEvents();
-    processInputs();
+    clacDeltaTime();
+    Event::KeyInputEvent::processing();
     if (_resourceManager.resources().count(Vkbase::ResourceType::RenderDelegator))
     {
         const std::unordered_map<std::string, Vkbase::ResourceBase *> resources = _resourceManager.resources().at(Vkbase::ResourceType::RenderDelegator);
@@ -343,6 +318,7 @@ void Render::cleanup()
 void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
     updateUniformBuffer(_resourceManager, currentFrame);
+    _pText->setText(std::to_string(1 / _deltaTime));
 
     const Vkbase::RenderPass &renderPass = *dynamic_cast<const Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
@@ -401,29 +377,11 @@ void Render::renderFrame(const vk::CommandBuffer &commandBuffer, const std::stri
 
 Camera &Render::camera() { return _camera; }
 
-void Render::processInputs()
+void Render::clacDeltaTime()
 {
     _lastTime = _currentTime;
     _currentTime = glfwGetTime();
     _deltaTime = _currentTime - _lastTime;
-    Vkbase::Window *pWindow = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"));
-    if (!pWindow)
-        return;
-    GLFWwindow *pGLFWwindow = pWindow->window();
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_W) == GLFW_PRESS)
-        _camera.moveFront(SPEED * (_deltaTime));
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_S) == GLFW_PRESS)
-        _camera.moveBack(SPEED * (_deltaTime));
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_A) == GLFW_PRESS)
-        _camera.moveLeft(SPEED * (_deltaTime));
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_D) == GLFW_PRESS)
-        _camera.moveRight(SPEED * (_deltaTime));
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_SPACE) == GLFW_PRESS)
-        _camera.moveUp(SPEED * (_deltaTime));
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
-        _camera.moveDown(SPEED * (_deltaTime));
-    if (glfwGetKey(pGLFWwindow, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-        pWindow->switchCursorState();
 }
 
 bool Render::shouldEndApplication() { return _resourceManager.resources().count(Vkbase::ResourceType::Window); }

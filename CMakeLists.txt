@@ -50,6 +50,8 @@ file(GLOB SRC_FILES
     "Modelbase/*.cpp"
     "VkGUI/*.cpp"
     "Camera/*.cpp"
+    "JsonConfigReader/JsonConfigReader.cpp"
+    "Event/*.cpp"
 )
 
 # 创建可执行文件

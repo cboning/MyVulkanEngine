@@ -17,11 +17,11 @@ const float exposure = 1.0f;
 PointLight light = {vec3(50, 50, 10), vec3(1.0, 0.996, 0.871) * 0.5};
 
 void main() {
-    vec3 color = subpassLoad(albedoSpec).rgb;
+    vec3 color = subpassLoad(normal).rgb;
     vec3 fragPos = subpassLoad(position).rgb;
     vec3 fragNormal = subpassLoad(normal).rgb;
 
-    float weight;
+    float weight = 0.0f;
     if (fragNormal != vec3(0.0f))
         weight = max(dot(normalize(light.position - fragPos), fragNormal), 0.0f);
 

@@ -1,6 +1,7 @@
 #include "ModelInstance.h"
 #include "ModelLoader.h"
 #include "Modelbase.h"
+#include "../JsonConfigReader/JsonConfigReader.h"
 #include <iostream>
 
 namespace Modelbase
@@ -152,46 +153,8 @@ std::vector<aiTextureType> Model::getTextureTypeWithConfig(const json &config)
 
     textureTypes.reserve(config.size());
     for (json textureTypeString : config)
-        textureTypes.push_back(getTextureTypeWithString(textureTypeString));
+        textureTypes.push_back(JsonConfigReader::getTextureTypeWithString(textureTypeString));
     return textureTypes;
-}
-
-aiTextureType Model::getTextureTypeWithString(const std::string &textureType)
-{
-    static const std::unordered_map<std::string, aiTextureType> typeMap = {{"NONE", aiTextureType_NONE},
-                                                                           {"DIFFUSE", aiTextureType_DIFFUSE},
-                                                                           {"SPECULAR", aiTextureType_SPECULAR},
-                                                                           {"AMBIENT", aiTextureType_AMBIENT},
-                                                                           {"EMISSIVE", aiTextureType_EMISSIVE},
-                                                                           {"HEIGHT", aiTextureType_HEIGHT},
-                                                                           {"NORMALS", aiTextureType_NORMALS},
-                                                                           {"SHININESS", aiTextureType_SHININESS},
-                                                                           {"OPACITY", aiTextureType_OPACITY},
-                                                                           {"DISPLACEMENT", aiTextureType_DISPLACEMENT},
-                                                                           {"LIGHTMAP", aiTextureType_LIGHTMAP},
-                                                                           {"REFLECTION", aiTextureType_REFLECTION},
-                                                                           {"BASE_COLOR", aiTextureType_BASE_COLOR},
-                                                                           {"NORMAL_CAMERA", aiTextureType_NORMAL_CAMERA},
-                                                                           {"EMISSION_COLOR", aiTextureType_EMISSION_COLOR},
-                                                                           {"METALNESS", aiTextureType_METALNESS},
-                                                                           {"DIFFUSE_ROUGHNESS", aiTextureType_DIFFUSE_ROUGHNESS},
-                                                                           {"AMBIENT_OCCLUSION", aiTextureType_AMBIENT_OCCLUSION},
-                                                                           {"SHEEN", aiTextureType_SHEEN},
-                                                                           {"CLEARCOAT", aiTextureType_CLEARCOAT},
-                                                                           {"TRANSMISSION", aiTextureType_TRANSMISSION},
-                                                                           {"MAYA_BASE", aiTextureType_MAYA_BASE},
-                                                                           {"MAYA_SPECULAR", aiTextureType_MAYA_SPECULAR},
-                                                                           {"MAYA_SPECULAR_COLOR", aiTextureType_MAYA_SPECULAR_COLOR},
-                                                                           {"MAYA_SPECULAR_ROUGHNESS", aiTextureType_MAYA_SPECULAR_ROUGHNESS},
-                                                                           {"ANISOTROPY", aiTextureType_ANISOTROPY},
-                                                                           {"GLTF_METALLIC_ROUGHNESS", aiTextureType_GLTF_METALLIC_ROUGHNESS},
-                                                                           {"UNKNOWN", aiTextureType_UNKNOWN}};
-
-    auto it = typeMap.find(textureType);
-    if (it != typeMap.end())
-        return it->second;
-    else
-        throw std::invalid_argument("Unknown texture type: " + textureType);
 }
 
 std::unordered_map<std::string, std::string> Model::getMeshToPipelineNamesWithConfig(const json &config)

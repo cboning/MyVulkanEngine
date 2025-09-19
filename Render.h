@@ -16,6 +16,7 @@ class Render
     Vkbase::Buffer *_pFrameVerticesBuffer;
     Font *_pFont;
     Text *_pText;
+    inline static float _speed = 10.f;
 
     void createRenderPass();
     void createDescriptorSets();
@@ -24,8 +25,10 @@ class Render
     void updateUniformBuffer(Vkbase::ResourceManager &resourceManager, uint32_t index);
     void recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame);
     void cleanup();
-    static void processInputs();
     void renderFrame(const vk::CommandBuffer &commandBuffer, const std::string &pipelineName, const vk::DescriptorSet &descriptorSet);
+    void initWindowEvents();
+
+    static void clacDeltaTime();
 
   public:
     void init();

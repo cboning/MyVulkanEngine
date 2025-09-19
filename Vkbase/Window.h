@@ -5,6 +5,12 @@
 #include <functional>
 #include <unordered_set>
 
+namespace Event
+{
+    class KeyInputEvent;
+}
+
+
 namespace Vkbase
 {
 class Device;
@@ -22,6 +28,7 @@ class Window : public ResourceBase
     const Swapchain *_pSwapchain = nullptr;
     double _cursorPosX, _cursorPosY;
     int _cursorState = GLFW_CURSOR_NORMAL;
+    Event::KeyInputEvent *_pKeyInputEvent;
     std::function<void(double, double)> _mouseMoveCallback;
     inline static std::unordered_set<Window *> _delayDestroyWindows;
 
@@ -40,5 +47,7 @@ class Window : public ResourceBase
     void setMouseMoveCallback(const std::function<void(double, double)> &func);
     void cursorCapture(int value);
     void switchCursorState();
+
+    Event::KeyInputEvent &keyInputEvent();
 };
 } // namespace Vkbase

@@ -41,7 +41,7 @@ void main() {
         normal = inNormal;
     }
 
-    outNormal = mat3(transpose(inverse(ubo.model))) * normal;
+    outNormal = inColor * 0.1;
     fragPos = vec3(ubo.model * position);
 
     gl_Position = ubo.proj * ubo.view * ubo.model * position;

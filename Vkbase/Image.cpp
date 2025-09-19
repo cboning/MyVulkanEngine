@@ -4,6 +4,7 @@
 #include "Device.h"
 #include "Swapchain.h"
 #define STB_IMAGE_IMPLEMENTATION
+#include "../JsonConfigReader/JsonConfigReader.h"
 #include "stb_image.h"
 #include <iostream>
 
@@ -33,14 +34,7 @@ Image::Image(const std::string &resourceName, const std::string &deviceName, uin
       _pDevice(dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))), _format(format), _type(type),
       _viewType(viewType)
 {
-    createImage(width, height, depth, usage);
-    if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
-        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
-    else if (usage & vk::ImageUsageFlagBits::eColorAttachment)
-        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
-    else if (usage & vk::ImageUsageFlagBits::eStorage)
-        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
-    createImageView();
+    createImageWithNoData(width, height, depth, usage);
 }
 
 Image::Image(const Swapchain &swapchain, uint32_t index)
@@ -50,6 +44,23 @@ Image::Image(const Swapchain &swapchain, uint32_t index)
     connectTo(&swapchain);
 }
 
+Image::Image(const std::string &resourceName, const std::string &deviceName, json config, const void *pData, const std::string &swapchainName, vk::Format depthFormat)
+    : ResourceBase(Vkbase::ResourceType::Image, resourceName),
+      _pDevice(dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
+      _format(JsonConfigReader::getFormatWithJson(config["format"], swapchainName, depthFormat)), _type(JsonConfigReader::getImageTypeWithJson(config["imageType"])), _viewType(JsonConfigReader::getImageViewTypeWithJson(config["viewType"]))
+{
+    vk::ImageUsageFlags usage = JsonConfigReader::getImageUsageFlagsWithJson(config["usage"]);
+    if (config["type"] == "NoData")
+        createImageWithNoData(config["width"], config["height"], config["depth"], usage);
+    else if (config["type"] == "Data")
+        createImageWithData(config["width"], config["height"], config["depth"], usage, pData);
+    else if (config["type"] == "file")
+        loadImage(config["filename"], usage);
+    else
+        throw std::runtime_error("Unknown type: " + config["type"]);
+    
+}
+
 Image::~Image()
 {
     if (!_pDevice)
@@ -57,6 +68,18 @@ Image::~Image()
     _pDevice->device().destroy(_view);
     _pDevice->device().destroy(_image);
     _pDevice->device().freeMemory(_memory);
+}
+
+void Image::createImageWithNoData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage)
+{
+    createImage(width, height, depth, usage);
+    if (usage & vk::ImageUsageFlagBits::eDepthStencilAttachment)
+        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eDepthStencilAttachmentOptimal);
+    else if (usage & vk::ImageUsageFlagBits::eColorAttachment)
+        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eColorAttachmentOptimal);
+    else if (usage & vk::ImageUsageFlagBits::eStorage)
+        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eGeneral);
+    createImageView();
 }
 
 void Image::createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData)

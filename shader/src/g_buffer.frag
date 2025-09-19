@@ -25,27 +25,4 @@ void main() {
     gAlbedoSpec.rgb = color.rgb;
     gAlbedoSpec.a = 1.0f;
 
-
-    // vec4 color = texture(texSampler1, texCoord);
-    // if (color.a < 0.1)
-    //     discard;
-    
-    // float weight = max(dot(normalize(light.position - fragPos), normal), 0.0f);
-    // vec3 lightColor;
-    // if (weight < 0.4)
-    //     lightColor = vec3(0.0f);
-    // else
-    //     lightColor = light.color;
-    
-    // color *= vec4(vec3(0.1) + lightColor, 1.0f);
-    // float brightness = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-    
-    // vec3 mapped = vec3(1.0) - exp(-color.rgb * exposure);
-    // // Gamma校正 
-    // mapped = pow(mapped, vec3(1.0 / gamma));
-    // outColor = vec4(mapped, color.a);
-
-    // if(brightness > 1.0f)
-    //     outColor1 = outColor;
-    
 }

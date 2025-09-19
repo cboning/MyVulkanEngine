@@ -3,6 +3,9 @@
 #define DEBUG 0 // 默认值
 #endif
 #include "ResourceBase.h"
+#include <json.hpp>
+
+using json = nlohmann::json;
 
 namespace Vkbase
 {
@@ -27,8 +30,9 @@ class Image : public ResourceBase
           vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, const void *pData);
     Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
           vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage);
-    ~Image() override;
+    Image(const std::string &resourceName, const std::string &deviceName, json config, const void *pData = nullptr, const std::string &swapchainName = "", vk::Format depthFormat = vk::Format());
     Image(const Swapchain &swapchain, uint32_t index);
+    ~Image() override;
     const Device *_pDevice;
     vk::Image _image;
     vk::DeviceMemory _memory;
@@ -40,6 +44,7 @@ class Image : public ResourceBase
     void loadImage(std::string fileName, vk::ImageUsageFlags usage);
     void createImageView();
     void createImage(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, uint32_t mipLevels = 1, uint32_t arrayLayers = 1);
+    void createImageWithNoData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage);
     void createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData);
     void copyBufferDataToImage(const Buffer &buffer, uint32_t width, uint32_t height, uint32_t depth);
     uint32_t findMemoryType(uint32_t filterType, vk::MemoryPropertyFlags properties);

@@ -2,6 +2,7 @@
 #include "Device.h"
 #include "Swapchain.h"
 #include "CommandPool.h"
+#include "../Event/KeyInputEvent.h"
 #include <iostream>
 
 namespace Vkbase
@@ -24,7 +25,10 @@ namespace Vkbase
     Window::~Window()
     {
         if (_pWindow)
+        {
             glfwDestroyWindow(_pWindow);
+            delete _pKeyInputEvent;
+        }
 
         if (_surface)
             resourceManager().instance().destroySurfaceKHR(_surface);
@@ -39,6 +43,9 @@ namespace Vkbase
             resourceManager().remove(_resourceType, _name);
             return;
         }
+
+        _pKeyInputEvent = new Event::KeyInputEvent(_pWindow);
+        
         cursorCapture(_cursorState);
         // Set the user pointer to this window instance
         glfwSetWindowUserPointer(_pWindow, this);
@@ -111,5 +118,10 @@ namespace Vkbase
     {
         _cursorState = _cursorState == GLFW_CURSOR_DISABLED ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED;
         cursorCapture(_cursorState);
+    }
+
+    Event::KeyInputEvent &Window::keyInputEvent()
+    {
+        return *_pKeyInputEvent;
     }
 }

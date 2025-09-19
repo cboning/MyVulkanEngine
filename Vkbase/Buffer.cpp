@@ -29,6 +29,7 @@ namespace Vkbase
 
     Buffer::~Buffer()
     {
+        _device.device().waitIdle();
         _device.device().freeMemory(_memory);
         _device.device().destroy(_buffer);
     }
