@@ -112,32 +112,23 @@ PipelineRenderInfo Pipeline::getDefaultRenderInfo()
 {
     PipelineRenderInfo renderInfo;
 
-    renderInfo.inputAssemblyStateInfo.setTopology(vk::PrimitiveTopology::eTriangleList).setPrimitiveRestartEnable(vk::False);
+    renderInfo.inputAssemblyStateInfo.setTopology(vk::PrimitiveTopology::eTriangleList);
 
     renderInfo.viewportStateInfo.setViewportCount(1).setScissorCount(1);
 
-    renderInfo.multisampleStateInfo.setSampleShadingEnable(vk::False).setRasterizationSamples(vk::SampleCountFlagBits::e1);
+    renderInfo.multisampleStateInfo.setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
     renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone)
         .setFrontFace(vk::FrontFace::eClockwise)
-        .setDepthClampEnable(vk::False)
-        .setRasterizerDiscardEnable(vk::False)
-        .setPolygonMode(vk::PolygonMode::eFill)
-        .setLineWidth(1.0f)
-        .setDepthBiasEnable(vk::False)
-        .setDepthBiasClamp(0.0f)
-        .setDepthBiasConstantFactor(0.0f)
-        .setDepthBiasSlopeFactor(0.0f);
+        .setLineWidth(1.0f);
 
     renderInfo.depthStencilStateInfo.setDepthTestEnable(vk::False)
         .setDepthWriteEnable(vk::True)
         .setDepthCompareOp(vk::CompareOp::eLess)
-        .setDepthBoundsTestEnable(vk::False)
         .setMinDepthBounds(0.0f)
-        .setMaxDepthBounds(1.0f)
-        .setStencilTestEnable(vk::False);
+        .setMaxDepthBounds(1.0f);
 
-    renderInfo.colorBlendStateInfo.setLogicOpEnable(vk::False).setLogicOp(vk::LogicOp::eCopy).setBlendConstants({0.0f, 0.0f, 0.0f, 0.0f});
+    renderInfo.colorBlendStateInfo.setLogicOp(vk::LogicOp::eCopy);
 
     renderInfo.dynamicStatus = {vk::DynamicState::eViewport, vk::DynamicState::eScissor};
     renderInfo.dynamicStateInfo.setDynamicStates(renderInfo.dynamicStatus);

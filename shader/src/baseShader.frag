@@ -17,7 +17,7 @@ const float exposure = 1.0f;
 PointLight light = {vec3(50, 50, 10), vec3(1.0, 0.996, 0.871) * 0.5};
 
 void main() {
-    vec3 color = subpassLoad(normal).rgb;
+    vec3 color = (subpassLoad(normal).rgb + 1) * 0.5;
     vec3 fragPos = subpassLoad(position).rgb;
     vec3 fragNormal = subpassLoad(normal).rgb;
 

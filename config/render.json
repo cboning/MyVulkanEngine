@@ -570,8 +570,13 @@
                         "topology": "TriangleList"
                     },
                     "rasterizationState": {
-                        "cullMode": "None"
+                        "cullMode": "None",
+                        "lineWidth": 1.0
                     },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
                     "depthStencilState": {
                         "depthTestEnable": true,
                         "depthWriteEnable": true,
@@ -583,6 +588,7 @@
                     "colorBlendState": {
                         "blendAttachments": [
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -613,8 +619,13 @@
                         "topology": "TriangleList"
                     },
                     "rasterizationState": {
-                        "cullMode": "Front"
+                        "cullMode": "None",
+                        "lineWidth": 1.0
                     },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
                     "depthStencilState": {
                         "depthTestEnable": true,
                         "depthWriteEnable": true,
@@ -626,6 +637,7 @@
                     "colorBlendState": {
                         "blendAttachments": [
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -656,8 +668,13 @@
                         "topology": "TriangleList"
                     },
                     "rasterizationState": {
-                        "cullMode": "Front"
+                        "cullMode": "None",
+                        "lineWidth": 1.0
                     },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
                     "depthStencilState": {
                         "depthTestEnable": true,
                         "depthWriteEnable": true,
@@ -669,6 +686,7 @@
                     "colorBlendState": {
                         "blendAttachments": [
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -699,8 +717,13 @@
                         "topology": "TriangleList"
                     },
                     "rasterizationState": {
-                        "cullMode": "None"
+                        "cullMode": "None",
+                        "lineWidth": 1.0
                     },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
                     "depthStencilState": {
                         "depthTestEnable": true,
                         "depthWriteEnable": true,
@@ -712,6 +735,7 @@
                     "colorBlendState": {
                         "blendAttachments": [
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -749,8 +773,13 @@
                         "topology": "TriangleList"
                     },
                     "rasterizationState": {
-                        "cullMode": "None"
+                        "cullMode": "None",
+                        "lineWidth": 1.0
                     },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
                     "depthStencilState": {
                         "depthTestEnable": true,
                         "depthWriteEnable": true,
@@ -762,6 +791,7 @@
                     "colorBlendState": {
                         "blendAttachments": [
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -770,6 +800,7 @@
                                 ]
                             },
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -800,8 +831,14 @@
                         "topology": "TriangleList"
                     },
                     "rasterizationState": {
-                        "cullMode": "None"
+                        "cullMode": "None",
+                        "frontFace": "Clockwise",
+                        "lineWidth": 1.0
                     },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
                     "depthStencilState": {
                         "depthTestEnable": true,
                         "depthWriteEnable": true,
@@ -813,6 +850,7 @@
                     "colorBlendState": {
                         "blendAttachments": [
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -821,6 +859,7 @@
                                 ]
                             },
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -829,6 +868,7 @@
                                 ]
                             },
                             {
+                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
