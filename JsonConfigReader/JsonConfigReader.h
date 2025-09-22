@@ -67,6 +67,11 @@ class JsonConfigReader
     static vk::BlendFactor getBlendFactorWithJson(const json &config);
     static std::vector<vk::DynamicState> getDynamicStatusWithJson(const json &config);
     static vk::DynamicState getDynamicStateWithJson(const json &config);
+    static std::vector<std::pair<vk::DescriptorType,vk::ShaderStageFlags>> getDescriptorTypeShaderStageWithJson(const json & config);
+    static vk::ShaderStageFlags getShaderStageFlagsWithJson(const json &config);
+    static vk::DescriptorType getDescriptorTypeWithJson(const json &config);
+    static vk::ShaderStageFlagBits getShaderStageFlagBitsWithJson(
+        const json &config);
 
     static json load(const std::string &filename);
 };

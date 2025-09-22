@@ -46,8 +46,8 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
 
     vk::PipelineVertexInputStateCreateInfo vertexInputState;
     vertexInputState.setVertexBindingDescriptions(createInfo.vertexInfo.inputBindings).setVertexAttributeDescriptions(createInfo.vertexInfo.inputAttributes);
-    createInfo.pRenderInfo->multisampleStateInfo.setPSampleMask(&_sampleMask);
-    vk::GraphicsPipelineCreateInfo pipelineInfo = createInfo.pRenderInfo->getGraphicsPipelineCreateInfo();
+    createInfo.renderInfo.multisampleStateInfo.setPSampleMask(_sampleMask);
+    vk::GraphicsPipelineCreateInfo pipelineInfo = createInfo.renderInfo.getGraphicsPipelineCreateInfo();
     pipelineInfo.setStages(stages).setLayout(_pipelineLayout).setPVertexInputState(&vertexInputState);
 
     if (!renderPassName.empty())

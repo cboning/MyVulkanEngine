@@ -1,5 +1,9 @@
 #include "DescriptorSets.h"
 #include "Device.h"
+#include "Image.h"
+#include "Sampler.h"
+#include "Buffer.h"
+#include "../JsonConfigReader/JsonConfigReader.h"
 namespace Vkbase
 {
     DescriptorSets::DescriptorSets(const std::string &resourceName, const std::string &deviceName)
@@ -97,7 +101,6 @@ namespace Vkbase
                     _descriptorPoolSizeInfo[descriptorType.first] = 0;
                 _descriptorPoolSizeInfo[descriptorType.first] += count;
             }
-
         return name;
     }
 
@@ -105,10 +108,60 @@ namespace Vkbase
     {
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets(count);
         for (uint32_t i = 0; i < count; ++i)
-        {
             writeDescriptorSets[i].setDstBinding(binding).setBufferInfo(bufferInfos[i]).setImageInfo(imageInfos[i]).setDstSet(_descriptorSets.at(name)[i]).setDescriptorType(_descriptorSetLayoutInfos.at(name)[binding].first);
-        }
+
         _device.device().updateDescriptorSets(writeDescriptorSets, nullptr);
+    }
+
+    void DescriptorSets::addDescriptorSetCreateConfigWithJson(const json &config)
+    {
+        for (const json &descriptorSetCreateConfig : config)
+            addDescriptorSetCreateConfig(descriptorSetCreateConfig["name"], JsonConfigReader::getDescriptorTypeShaderStageWithJson(descriptorSetCreateConfig["layoutConfig"]), descriptorSetCreateConfig["count"]);
+    }
+
+    void DescriptorSets::writeSetsWithJson(const json &config)
+    {
+        for (const json &writeConfig : config)
+        {
+            const std::string &type = writeConfig["type"];
+            if (type == "Image")
+            {
+                std::vector<vk::DescriptorImageInfo> imageInfos(writeConfig["count"]);
+                for (int i = 0; i < imageInfos.size(); ++i)
+                {
+                    const json &imageInfoJson = writeConfig["detail"]["imageInfos"][i];
+                    imageInfos[i].setImageView(dynamic_cast<Vkbase::Image *>(resourceManager().resource(Vkbase::ResourceType::Image, imageInfoJson["imageName"]))->view()).setImageLayout(JsonConfigReader::getImageLayoutWithJson(imageInfoJson["imageLayout"]));
+                    if (imageInfoJson.count("samplerName") && imageInfoJson["samplerName"].is_string())
+                        imageInfos[i].setSampler(dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::ResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
+                }
+                
+                writeSets(writeConfig["name"], writeConfig["binding"], {}, imageInfos, imageInfos.size());
+            }
+            else if (type == "Buffer")
+            {
+                std::vector<vk::DescriptorBufferInfo> bufferInfos(writeConfig["count"]);
+                for (int i = 0; i < bufferInfos.size(); ++i)
+                {
+                    const json &bufferInfoJson = writeConfig["detail"]["bufferInfos"][i];
+                    bufferInfos[i].setBuffer(dynamic_cast<Vkbase::Buffer *>(resourceManager().resource(Vkbase::ResourceType::Buffer, bufferInfoJson["bufferName"]))->buffer()).setOffset(bufferInfoJson["offset"]).setRange(bufferInfoJson["range"]);
+                }
+                writeSets(writeConfig["name"], writeConfig["binding"], bufferInfos, {}, bufferInfos.size());
+
+            }
+            else if (type == "Framebuffer")
+            {
+                std::vector<vk::DescriptorImageInfo> imageInfos(writeConfig["count"]);
+                for (int i = 0; i < imageInfos.size(); ++i)
+                {
+                    const json &imageInfoJson = writeConfig["detail"]["imageInfo"];
+                    imageInfos[i].setImageView(dynamic_cast<Vkbase::Image *>(resourceManager().resource(Vkbase::ResourceType::Image, "Framebuffer_Image_" + std::string(imageInfoJson["imageName"]) + std::string("_") + std::to_string(i)))->view()).setImageLayout(JsonConfigReader::getImageLayoutWithJson(imageInfoJson["imageLayout"]));
+                    if (imageInfoJson.count("samplerName") && imageInfoJson["samplerName"].is_string())
+                        imageInfos[i].setSampler(dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::ResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
+                }
+                
+                writeSets(writeConfig["name"], writeConfig["binding"], {}, imageInfos, imageInfos.size());
+            }
+        }
     }
 
     const std::vector<vk::DescriptorSet> &DescriptorSets::sets(const std::string &name) const

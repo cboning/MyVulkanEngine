@@ -25,7 +25,8 @@ void Cloud::createComputePipeline()
                              1);
 
     std::vector<Vkbase::ShaderInfo> shaderInfo = {{"./shader/bin/cloudComp.spv", "main", vk::ShaderStageFlagBits::eCompute}};
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Pipeline>("Cloud", "Device", "", Vkbase::PipelineCreateInfo{shaderInfo, {}, {descriptorSets.layout("Cloud")}}, true);
+    Vkbase::PipelineRenderInfo renderInfo;
+    Vkbase::ResourceBase::resourceManager().create<Vkbase::Pipeline>("Cloud", "Device", "", Vkbase::PipelineCreateInfo{shaderInfo, {}, {descriptorSets.layout("Cloud")}, renderInfo}, true);
 }
 
 void Cloud::computeCloudData()

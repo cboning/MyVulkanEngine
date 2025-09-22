@@ -780,8 +780,8 @@ vk::Rect2D JsonConfigReader::getScissorWithJson(const json &config)
 {
     vk::Rect2D scissor;
     static const std::unordered_map<std::string, std::function<void(vk::Rect2D &, const json &)>> attributeLoadMap = {
-        {"extent", [](vk::Rect2D &scissor, const json &config) { scissor.setExtent(getExtent2DWithJson(config["extent"])); }},
-        {"offset", [](vk::Rect2D &scissor, const json &config) { scissor.setOffset(getOffset2DWithJson(config["offset"])); }}};
+        {"extent", [](vk::Rect2D &scissor, const json &config) { scissor.setExtent(getExtent2DWithJson(config)); }},
+        {"offset", [](vk::Rect2D &scissor, const json &config) { scissor.setOffset(getOffset2DWithJson(config)); }}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {
@@ -814,12 +814,12 @@ vk::Viewport JsonConfigReader::getViewportWithJson(const json &config)
 {
     vk::Viewport viewport;
     static const std::unordered_map<std::string, std::function<void(vk::Viewport &, const json &)>> attributeLoadMap = {
-        {"width", [](vk::Viewport &viewport, const json &config) { viewport.setWidth(config["width"]); }},
-        {"height", [](vk::Viewport &viewport, const json &config) { viewport.setHeight(config["height"]); }},
-        {"x", [](vk::Viewport &viewport, const json &config) { viewport.setX(config["x"]); }},
-        {"y", [](vk::Viewport &viewport, const json &config) { viewport.setY(config["y"]); }},
-        {"maxDepth", [](vk::Viewport &viewport, const json &config) { viewport.setMaxDepth(config["maxDepth"]); }},
-        {"minDepth", [](vk::Viewport &viewport, const json &config) { viewport.setMinDepth(config["minDepth"]); }}};
+        {"width", [](vk::Viewport &viewport, const json &config) { viewport.setWidth(config); }},
+        {"height", [](vk::Viewport &viewport, const json &config) { viewport.setHeight(config); }},
+        {"x", [](vk::Viewport &viewport, const json &config) { viewport.setX(config); }},
+        {"y", [](vk::Viewport &viewport, const json &config) { viewport.setY(config); }},
+        {"maxDepth", [](vk::Viewport &viewport, const json &config) { viewport.setMaxDepth(config); }},
+        {"minDepth", [](vk::Viewport &viewport, const json &config) { viewport.setMinDepth(config); }}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {
@@ -838,25 +838,22 @@ vk::PipelineRasterizationStateCreateInfo JsonConfigReader::getPipelineRasterizat
 {
     vk::PipelineRasterizationStateCreateInfo createInfo;
     static const std::unordered_map<std::string, std::function<void(vk::PipelineRasterizationStateCreateInfo &, const json &)>> attributeLoadMap = {
-        {"cullMode", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config)
-         { createInfo.setCullMode(getCullModeFlagsWithJson(config["cullMode"])); }},
-        {"depthBiasClamp",
-         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBiasClamp(config["depthBiasClamp"]); }},
-        {"depthBiasConstantFactor", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthBiasConstantFactor(config["depthBiasConstantFactor"]); }},
-        {"depthBiasEnable", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthBiasEnable(getBooleanWithJson(config["depthBiasEnable"])); }},
-        {"depthBiasSlopeFactor",
-         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBiasSlopeFactor(config["depthBiasSlopeFactor"]); }},
-        {"depthClampEnable", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthClampEnable(getBooleanWithJson(config["depthClampEnable"])); }},
-        {"frontFace",
-         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setFrontFace(getFrontFaceWithJson(config["flags"])); }},
-        {"lineWidth", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setLineWidth(config["lineWidth"]); }},
-        {"polygonMode", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config)
-         { createInfo.setPolygonMode(getPolygonModeWithJson(config["polygonMode"])); }},
-        {"rasterizerDiscardEnable", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config)
-         { createInfo.setRasterizerDiscardEnable(getBooleanWithJson(config["rasterizerDiscardEnable"])); }}};
+        {"cullMode",
+         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setCullMode(getCullModeFlagsWithJson(config)); }},
+        {"depthBiasClamp", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBiasClamp(config); }},
+        {"depthBiasConstantFactor",
+         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBiasConstantFactor(config); }},
+        {"depthBiasEnable",
+         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBiasEnable(getBooleanWithJson(config)); }},
+        {"depthBiasSlopeFactor", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBiasSlopeFactor(config); }},
+        {"depthClampEnable",
+         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setDepthClampEnable(getBooleanWithJson(config)); }},
+        {"frontFace", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setFrontFace(getFrontFaceWithJson(config)); }},
+        {"lineWidth", [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setLineWidth(config); }},
+        {"polygonMode",
+         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setPolygonMode(getPolygonModeWithJson(config)); }},
+        {"rasterizerDiscardEnable",
+         [](vk::PipelineRasterizationStateCreateInfo &createInfo, const json &config) { createInfo.setRasterizerDiscardEnable(getBooleanWithJson(config)); }}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {
@@ -876,16 +873,15 @@ vk::PipelineMultisampleStateCreateInfo JsonConfigReader::getPipelineMultisampleS
 
     vk::PipelineMultisampleStateCreateInfo createInfo;
     static const std::unordered_map<std::string, std::function<void(vk::PipelineMultisampleStateCreateInfo &, const json &)>> attributeLoadMap = {
-        {"alphaToCoverageEnable", [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config)
-         { createInfo.setAlphaToCoverageEnable(getBooleanWithJson(config["alphaToCoverageEnable"])); }},
-        {"alphaToOneEnable", [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config)
-         { createInfo.setAlphaToOneEnable(getBooleanWithJson(config["alphaToOneEnable"])); }},
-        {"minSampleShading",
-         [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config) { createInfo.setMinSampleShading(config["minSampleShading"]); }},
+        {"alphaToCoverageEnable",
+         [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config) { createInfo.setAlphaToCoverageEnable(getBooleanWithJson(config)); }},
+        {"alphaToOneEnable",
+         [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config) { createInfo.setAlphaToOneEnable(getBooleanWithJson(config)); }},
+        {"minSampleShading", [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config) { createInfo.setMinSampleShading(config); }},
         {"rasterizationSamples", [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config)
-         { createInfo.setRasterizationSamples(getSampleCountFlagBitsWithJson(config["rasterizationSamples"])); }},
-        {"sampleShadingEnable", [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config)
-         { createInfo.setSampleShadingEnable(getBooleanWithJson(config["sampleShadingEnable"])); }}
+         { createInfo.setRasterizationSamples(getSampleCountFlagBitsWithJson(config)); }},
+        {"sampleShadingEnable",
+         [](vk::PipelineMultisampleStateCreateInfo &createInfo, const json &config) { createInfo.setSampleShadingEnable(getBooleanWithJson(config)); }}
 
     };
 
@@ -984,24 +980,21 @@ vk::PipelineDepthStencilStateCreateInfo JsonConfigReader::getPipelineDepthStenci
     static const std::unordered_map<std::string, std::function<void(vk::PipelineDepthStencilStateCreateInfo &, const json &)>> attributeLoadMap = {
         {"back",
          [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setBack(getStencilOpStateWithJson(config["back"])); }},
-        {"depthBoundsTestEnable", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthBoundsTestEnable(getBooleanWithJson(config["depthBoundsTestEnable"])); }},
-        {"depthCompareOp", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthCompareOp(getCompareOpWithJson(config["depthCompareOp"])); }},
-        {"depthTestEnable", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthTestEnable(getBooleanWithJson(config["depthTestEnable"])); }},
-        {"depthWriteEnable", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config)
-         { createInfo.setDepthWriteEnable(getBooleanWithJson(config["depthWriteEnable"])); }},
+        {"depthBoundsTestEnable",
+         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setDepthBoundsTestEnable(getBooleanWithJson(config)); }},
+        {"depthCompareOp",
+         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setDepthCompareOp(getCompareOpWithJson(config)); }},
+        {"depthTestEnable",
+         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setDepthTestEnable(getBooleanWithJson(config)); }},
+        {"depthWriteEnable",
+         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setDepthWriteEnable(getBooleanWithJson(config)); }},
         {"flags", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config)
-         { createInfo.setFlags(getPipelineDepthStencilStateCreateInfoFlagsWithJson(config["flags"])); }},
-        {"front",
-         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setFront(getStencilOpStateWithJson(config["front"])); }},
-        {"maxDepthBounds",
-         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setMaxDepthBounds(config["maxDepthBounds"]); }},
+         { createInfo.setFlags(getPipelineDepthStencilStateCreateInfoFlagsWithJson(config)); }},
+        {"front", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setFront(getStencilOpStateWithJson(config)); }},
+        {"maxDepthBounds", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setMaxDepthBounds(config); }},
+        {"minDepthBounds", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setMinDepthBounds(config); }},
         {"minDepthBounds",
-         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setMinDepthBounds(config["minDepthBounds"]); }},
-        {"minDepthBounds", [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config)
-         { createInfo.setStencilTestEnable(getBooleanWithJson(config["minDepthBounds"])); }}};
+         [](vk::PipelineDepthStencilStateCreateInfo &createInfo, const json &config) { createInfo.setStencilTestEnable(getBooleanWithJson(config)); }}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {
@@ -1020,13 +1013,13 @@ vk::StencilOpState JsonConfigReader::getStencilOpStateWithJson(const json &confi
 {
     vk::StencilOpState stencilOpState;
     static const std::unordered_map<std::string, std::function<void(vk::StencilOpState &, const json &)>> attributeLoadMap = {
-        {"compareMask", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setCompareMask(config["compareMask"]); }},
-        {"compareOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setCompareOp(getCompareOpWithJson(config["compareOp"])); }},
-        {"stencilOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setDepthFailOp(getStencilOpWithJson(config["stencilOp"])); }},
-        {"failOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setFailOp(getStencilOpWithJson(config["failOp"])); }},
-        {"passOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setPassOp(getStencilOpWithJson(config["passOp"])); }},
-        {"reference", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setReference(config["reference"]); }},
-        {"writeMask", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setWriteMask(config["writeMask"]); }}
+        {"compareMask", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setCompareMask(config); }},
+        {"compareOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setCompareOp(getCompareOpWithJson(config)); }},
+        {"stencilOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setDepthFailOp(getStencilOpWithJson(config)); }},
+        {"failOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setFailOp(getStencilOpWithJson(config)); }},
+        {"passOp", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setPassOp(getStencilOpWithJson(config)); }},
+        {"reference", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setReference(config); }},
+        {"writeMask", [](vk::StencilOpState &stencilOpState, const json &config) { stencilOpState.setWriteMask(config); }}
 
     };
 
@@ -1106,17 +1099,13 @@ vk::PipelineColorBlendStateCreateInfo JsonConfigReader::getPipelineColorBlendSta
 {
     vk::PipelineColorBlendStateCreateInfo createInfo;
     static const std::unordered_map<std::string, std::function<void(vk::PipelineColorBlendStateCreateInfo &, const json &)>> attributeLoadMap = {
-        {"blendConstants",
-         [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config)
-         {
-             const json &blendConstants = config["blendConstants"];
-             createInfo.setBlendConstants({blendConstants[0], blendConstants[1], blendConstants[2], blendConstants[3]});
-         }},
+        {"blendConstants", [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config)
+         { createInfo.setBlendConstants({config[0], config[1], config[2], config[3]}); }},
         {"flags", [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config)
-         { createInfo.setFlags(getPipelineColorBlendStateCreateFlagsWithJson(config["flags"])); }},
-        {"logicOp", [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config) { createInfo.setLogicOp(getLogicOp(config["logicOp"])); }},
-        {"logicOpEnable", [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config)
-         { createInfo.setLogicOpEnable(getBooleanWithJson(config["logicOpEnable"])); }}};
+         { createInfo.setFlags(getPipelineColorBlendStateCreateFlagsWithJson(config)); }},
+        {"logicOp", [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config) { createInfo.setLogicOp(getLogicOp(config)); }},
+        {"logicOpEnable",
+         [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config) { createInfo.setLogicOpEnable(getBooleanWithJson(config)); }}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {
@@ -1185,6 +1174,8 @@ std::vector<vk::PipelineColorBlendAttachmentState> JsonConfigReader::getPipeline
 
     for (const json &colorBlendAttachmentStateJson : config)
         colorBlendAttachmentStates.push_back(getPipelineColorBlendAttachmentStateWithJson(colorBlendAttachmentStateJson));
+
+    return colorBlendAttachmentStates;
 }
 
 vk::PipelineColorBlendAttachmentState JsonConfigReader::getPipelineColorBlendAttachmentStateWithJson(const json &config)
@@ -1192,21 +1183,21 @@ vk::PipelineColorBlendAttachmentState JsonConfigReader::getPipelineColorBlendAtt
     vk::PipelineColorBlendAttachmentState colorBlendAttachmentState;
     static const std::unordered_map<std::string, std::function<void(vk::PipelineColorBlendAttachmentState &, const json &)>> attributeLoadMap = {
         {"alphaBlendOp", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setAlphaBlendOp(getBlendOpWithJson(config["alphaBlendOp"])); }},
+         { colorBlendAttachmentState.setAlphaBlendOp(getBlendOpWithJson(config)); }},
         {"blendEnable", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setBlendEnable(getBooleanWithJson(config["blendEnable"])); }},
+         { colorBlendAttachmentState.setBlendEnable(getBooleanWithJson(config)); }},
         {"colorBlendOp", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setColorBlendOp(getBlendOpWithJson(config["colorBlendOp"])); }},
+         { colorBlendAttachmentState.setColorBlendOp(getBlendOpWithJson(config)); }},
         {"colorWriteMask", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setColorWriteMask(getColorComponentFlagsWithJson(config["colorWriteMask"])); }},
+         { colorBlendAttachmentState.setColorWriteMask(getColorComponentFlagsWithJson(config)); }},
         {"dstAlphaBlendFactor", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setDstAlphaBlendFactor(getBlendFactorWithJson(config["dstAlphaBlendFactor"])); }},
+         { colorBlendAttachmentState.setDstAlphaBlendFactor(getBlendFactorWithJson(config)); }},
         {"dstColorBlendFactor", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setDstColorBlendFactor(getBlendFactorWithJson(config["dstColorBlendFactor"])); }},
+         { colorBlendAttachmentState.setDstColorBlendFactor(getBlendFactorWithJson(config)); }},
         {"srcAlphaBlendFactor", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setSrcAlphaBlendFactor(getBlendFactorWithJson(config["srcAlphaBlendFactor"])); }},
+         { colorBlendAttachmentState.setSrcAlphaBlendFactor(getBlendFactorWithJson(config)); }},
         {"srcColorBlendFactor", [](vk::PipelineColorBlendAttachmentState &colorBlendAttachmentState, const json &config)
-         { colorBlendAttachmentState.setSrcColorBlendFactor(getBlendFactorWithJson(config["srcColorBlendFactor"])); }}};
+         { colorBlendAttachmentState.setSrcColorBlendFactor(getBlendFactorWithJson(config)); }}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {
@@ -1340,7 +1331,6 @@ std::vector<vk::DynamicState> JsonConfigReader::getDynamicStatusWithJson(const j
 
     for (const json &dynamicStateJson : config)
         dynamicStatus.push_back(getDynamicStateWithJson(dynamicStateJson));
-    
 }
 
 vk::DynamicState JsonConfigReader::getDynamicStateWithJson(const json &config)
@@ -1441,6 +1431,91 @@ vk::DynamicState JsonConfigReader::getDynamicStateWithJson(const json &config)
         return it->second;
     else
         throw std::invalid_argument("Unknown dynamicState: " + config);
+}
+
+std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> JsonConfigReader::getDescriptorTypeShaderStageWithJson(const json &config)
+{
+    std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> descriptorTypeShaderStages;
+    descriptorTypeShaderStages.reserve(config.size());
+    for (const json &descriptorTypeShaderStageJson : config)
+        descriptorTypeShaderStages.push_back({getDescriptorTypeWithJson(descriptorTypeShaderStageJson["descriptorType"]),
+                                              getShaderStageFlagsWithJson(descriptorTypeShaderStageJson["shaderStageFlags"])});
+    return descriptorTypeShaderStages;
+}
+
+vk::ShaderStageFlags JsonConfigReader::getShaderStageFlagsWithJson(const json &config)
+{
+    vk::ShaderStageFlags flags;
+    for (const json &shaderStageFlagBits : config)
+        flags |= getShaderStageFlagBitsWithJson(shaderStageFlagBits);
+    return flags;
+}
+
+vk::DescriptorType JsonConfigReader::getDescriptorTypeWithJson(const json &config)
+{
+    static const std::unordered_map<std::string, vk::DescriptorType> descriptorTypeMap = {
+        {"Sampler", vk::DescriptorType::eSampler},
+        {"CombinedImageSampler", vk::DescriptorType::eCombinedImageSampler},
+        {"SampledImage", vk::DescriptorType::eSampledImage},
+        {"StorageImage", vk::DescriptorType::eStorageImage},
+        {"UniformTexelBuffer", vk::DescriptorType::eUniformTexelBuffer},
+        {"StorageTexelBuffer", vk::DescriptorType::eStorageTexelBuffer},
+        {"UniformBuffer", vk::DescriptorType::eUniformBuffer},
+        {"StorageBuffer", vk::DescriptorType::eStorageBuffer},
+        {"UniformBufferDynamic", vk::DescriptorType::eUniformBufferDynamic},
+        {"StorageBufferDynamic", vk::DescriptorType::eStorageBufferDynamic},
+        {"InputAttachment", vk::DescriptorType::eInputAttachment},
+        {"InlineUniformBlock", vk::DescriptorType::eInlineUniformBlock},
+        {"InlineUniformBlockEXT", vk::DescriptorType::eInlineUniformBlockEXT},
+        {"AccelerationStructureKHR", vk::DescriptorType::eAccelerationStructureKHR},
+        {"AccelerationStructureNV", vk::DescriptorType::eAccelerationStructureNV},
+        {"SampleWeightImageQCOM", vk::DescriptorType::eSampleWeightImageQCOM},
+        {"BlockMatchImageQCOM", vk::DescriptorType::eBlockMatchImageQCOM},
+        {"MutableEXT", vk::DescriptorType::eMutableEXT},
+        {"MutableVALVE", vk::DescriptorType::eMutableVALVE}};
+
+    auto it = descriptorTypeMap.find(config);
+    if (it != descriptorTypeMap.end())
+        return it->second;
+    else
+        throw std::invalid_argument("Unknown descriptorType: " + config);
+}
+
+vk::ShaderStageFlagBits JsonConfigReader::getShaderStageFlagBitsWithJson(const json &config)
+{
+    static const std::unordered_map<std::string, vk::ShaderStageFlagBits> shaderStageFlagBitsMap = {
+        {"Vertex", vk::ShaderStageFlagBits::eVertex},
+        {"TessellationControl", vk::ShaderStageFlagBits::eTessellationControl},
+        {"TessellationEvaluation", vk::ShaderStageFlagBits::eTessellationEvaluation},
+        {"Geometry", vk::ShaderStageFlagBits::eGeometry},
+        {"Fragment", vk::ShaderStageFlagBits::eFragment},
+        {"Compute", vk::ShaderStageFlagBits::eCompute},
+        {"AllGraphics", vk::ShaderStageFlagBits::eAllGraphics},
+        {"All", vk::ShaderStageFlagBits::eAll},
+        {"RaygenKHR", vk::ShaderStageFlagBits::eRaygenKHR},
+        {"RaygenNV", vk::ShaderStageFlagBits::eRaygenNV},
+        {"AnyHitKHR", vk::ShaderStageFlagBits::eAnyHitKHR},
+        {"AnyHitNV", vk::ShaderStageFlagBits::eAnyHitNV},
+        {"ClosestHitKHR", vk::ShaderStageFlagBits::eClosestHitKHR},
+        {"ClosestHitNV", vk::ShaderStageFlagBits::eClosestHitNV},
+        {"MissKHR", vk::ShaderStageFlagBits::eMissKHR},
+        {"MissNV", vk::ShaderStageFlagBits::eMissNV},
+        {"IntersectionKHR", vk::ShaderStageFlagBits::eIntersectionKHR},
+        {"IntersectionNV", vk::ShaderStageFlagBits::eIntersectionNV},
+        {"CallableKHR", vk::ShaderStageFlagBits::eCallableKHR},
+        {"CallableNV", vk::ShaderStageFlagBits::eCallableNV},
+        {"TaskEXT", vk::ShaderStageFlagBits::eTaskEXT},
+        {"TaskNV", vk::ShaderStageFlagBits::eTaskNV},
+        {"MeshEXT", vk::ShaderStageFlagBits::eMeshEXT},
+        {"MeshNV", vk::ShaderStageFlagBits::eMeshNV},
+        {"SubpassShadingHUAWEI", vk::ShaderStageFlagBits::eSubpassShadingHUAWEI},
+        {"ClusterCullingHUAWEI", vk::ShaderStageFlagBits::eClusterCullingHUAWEI}};
+
+    auto it = shaderStageFlagBitsMap.find(config);
+    if (it != shaderStageFlagBitsMap.end())
+        return it->second;
+    else
+        throw std::invalid_argument("Unknown shaderStageFlagBits: " + config);
 }
 
 bool JsonConfigReader::textInList(const std::string &text, const std::vector<std::string> &list)

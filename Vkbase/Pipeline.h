@@ -16,15 +16,14 @@ struct ShaderInfo
     ShaderInfo(std::string filename, std::string stageName, vk::ShaderStageFlagBits stageFlag) : filename(filename), stageName(stageName), stageFlag(stageFlag)
     {
     }
-    ShaderInfo() {}
 
-    std::vector<ShaderInfo> getShaderInfoWithJson(const json &config)
+    static std::vector<ShaderInfo> getShaderInfosWithJson(const json &config)
     {
         std::vector<ShaderInfo> shaderInfos;
         shaderInfos.reserve(config.size());
         for (const json &shaderInfoJson : config)
             shaderInfos.emplace_back(shaderInfoJson["filename"], shaderInfoJson["stageName"],
-                                     JsonConfigReader::getPipelineStageFlagBitsWithJson(shaderInfoJson["stage"]));
+                                     JsonConfigReader::getShaderStageFlagBitsWithJson(shaderInfoJson["shaderStageFlags"]));
         return shaderInfos;
     }
 };
@@ -98,31 +97,46 @@ struct PipelineRenderInfo
                                                                                        .setStencilTestEnable(vk::False),
                        vk::PipelineColorBlendStateCreateInfo colorBlendState = {}, vk::PipelineDynamicStateCreateInfo dynamicState = {}, uint32_t subpass = {},
                        vk::Pipeline basePipelineHandle = {}, int32_t basePipelineIndex = {})
-        : inputAssemblyStateInfo{inputAssemblyState}, tessellationStateInfo{tessellationState}, scissors(scissors), viewports(viewports),
-          rasterizationStateInfo{rasterizationState}, multisampleStateInfo{multisampleState}, depthStencilStateInfo{depthStencilState},
-          colorBlendStateInfo{colorBlendState}, dynamicStateInfo{dynamicState}, subpass{subpass}, basePipelineHandle{basePipelineHandle},
-          basePipelineIndex{basePipelineIndex}
+        : inputAssemblyStateInfo{inputAssemblyState}, tessellationStateInfo{tessellationState}, rasterizationStateInfo{rasterizationState},
+          multisampleStateInfo{multisampleState}, depthStencilStateInfo{depthStencilState}, colorBlendStateInfo{colorBlendState},
+          dynamicStateInfo{dynamicState}, subpass{subpass}, basePipelineHandle{basePipelineHandle}, basePipelineIndex{basePipelineIndex}, scissors(scissors),
+          viewports(viewports)
     {
     }
-    PipelineRenderInfo(const json &config)
+    PipelineRenderInfo(const json &config, const std::vector<vk::Rect2D> &replenishScissors = {}, const std::vector<vk::Viewport> &replenishViewports = {})
+        : scissors(replenishScissors), viewports(replenishViewports)
     {
-        static const std::unordered_map<std::string, std::function<void(const json &)>> attributeLoadMap = {
-            {"inputAssemblyState", [this](const json &config)
-             { inputAssemblyStateInfo = JsonConfigReader::getPipelineInputAssemblyStateCreateInfoWithJson(config["inputAssemblyState"]); }},
-            {"tessellationState", [this](const json &config)
-             { tessellationStateInfo = JsonConfigReader::getPipelineTessellationStateCreateInfoWithJson(config["tessellationState"]); }},
-            {"rasterizationState", [this](const json &config)
-             { rasterizationStateInfo = JsonConfigReader::getPipelineRasterizationStateCreateInfoWithJson(config["rasterizationState"]); }},
-            {"multisampleState",
-             [this](const json &config) { multisampleStateInfo = JsonConfigReader::getPipelineMultisampleStateCreateInfo(config["multisampleState"]); }},
-            {"depthStencilState", [this](const json &config)
-             { depthStencilStateInfo = JsonConfigReader::getPipelineDepthStencilStateCreateInfoWithJson(config["depthStencilState"]); }},
+        const std::unordered_map<std::string, std::function<void(const json &)>> attributeLoadMap = {
+            {"inputAssemblyState",
+             [this](const json &config) { inputAssemblyStateInfo = JsonConfigReader::getPipelineInputAssemblyStateCreateInfoWithJson(config); }},
+            {"tessellationState",
+             [this](const json &config) { tessellationStateInfo = JsonConfigReader::getPipelineTessellationStateCreateInfoWithJson(config); }},
+            {"rasterizationState",
+             [this](const json &config) { rasterizationStateInfo = JsonConfigReader::getPipelineRasterizationStateCreateInfoWithJson(config); }},
+            {"multisampleState", [this](const json &config) { multisampleStateInfo = JsonConfigReader::getPipelineMultisampleStateCreateInfo(config); }},
+            {"depthStencilState",
+             [this](const json &config) { depthStencilStateInfo = JsonConfigReader::getPipelineDepthStencilStateCreateInfoWithJson(config); }},
             {"colorBlendState",
-             [this](const json &config) {const json &colorBlendState = config["colorBlendState"]; colorBlendStateInfo = JsonConfigReader::getPipelineColorBlendStateCreateInfoWithJson(colorBlendState); if (colorBlendState.count("blendAttachments")) blendAttachments = JsonConfigReader::getPipelineColorBlendAttachmentStatesWithJson(colorBlendState["blendAttachments"]);}},
-            {"dynamicStatus", [this](const json &config) { dynamicStatus = JsonConfigReader::getDynamicStatusWithJson(config["dynamicStatus"]); }},
-            {"subpass", [this](const json &config) { subpass = config["subpass"]; }},
-            {"basePipelineIndex", [this](const json &config) { basePipelineIndex = config["basePipelineIndex"]; }},
-            {"viewportState", [this](const json &config) { const json &dynamicStatusJson = config["viewportState"]; if (dynamicStatusJson.count("scissors")) scissors = JsonConfigReader::getScissorsWithJson(dynamicStatusJson["scissors"]); if (dynamicStatusJson.count("viewports")) viewports = JsonConfigReader::getViewportsWithJson(dynamicStatusJson["viewports"]);}},
+             [this](const json &config)
+             {
+                 colorBlendStateInfo = JsonConfigReader::getPipelineColorBlendStateCreateInfoWithJson(config);
+                 if (config.count("blendAttachments"))
+                 {
+                     auto tempAttachments = JsonConfigReader::getPipelineColorBlendAttachmentStatesWithJson(config["blendAttachments"]);
+                     blendAttachments = tempAttachments;
+                 }
+             }},
+            {"dynamicStatus", [this](const json &config) { dynamicStatus = JsonConfigReader::getDynamicStatusWithJson(config); }},
+            {"subpass", [this](const json &config) { subpass = config; }},
+            {"basePipelineIndex", [this](const json &config) { basePipelineIndex = config; }},
+            {"viewportState",
+             [this](const json &config)
+             {
+                 if (config.count("scissors"))
+                     scissors = JsonConfigReader::getScissorsWithJson(config["scissors"]);
+                 if (config.count("viewports"))
+                     viewports = JsonConfigReader::getViewportsWithJson(config["viewports"]);
+             }},
         };
 
         for (auto it = config.begin(); it != config.end(); ++it)
@@ -142,10 +156,10 @@ struct PipelineCreateInfo
     const std::vector<ShaderInfo> &shaderInfos;
     const VertexInfo &vertexInfo;
     const std::vector<vk::DescriptorSetLayout> &descriptorSetLayouts;
-    PipelineRenderInfo *pRenderInfo;
-    PipelineCreateInfo(const std::vector<ShaderInfo> &shaderInfos = {}, const VertexInfo &vertexInfo = {},
-                       const std::vector<vk::DescriptorSetLayout> &descriptorSetLayouts = {}, PipelineRenderInfo *renderInfo = nullptr)
-        : shaderInfos(shaderInfos), vertexInfo(vertexInfo), descriptorSetLayouts(descriptorSetLayouts), pRenderInfo(renderInfo)
+    PipelineRenderInfo &renderInfo;
+    PipelineCreateInfo(const std::vector<ShaderInfo> &shaderInfos, const VertexInfo &vertexInfo,
+                       const std::vector<vk::DescriptorSetLayout> &descriptorSetLayouts, PipelineRenderInfo &renderInfo)
+        : shaderInfos(shaderInfos), vertexInfo(vertexInfo), descriptorSetLayouts(descriptorSetLayouts), renderInfo(renderInfo)
     {
     }
 };
@@ -167,7 +181,7 @@ class Pipeline : public ResourceBase
     vk::PipelineLayout _pipelineLayout;
     vk::DescriptorSetLayout _descriptorSetLayout;
     std::vector<vk::ShaderModule> _shaderModules;
-    vk::SampleMask _sampleMask;
+    vk::SampleMask _sampleMask[2] = {0xFFFFFFFF, 0xFFFFFFFF};
     const Device &_device;
     Pipeline(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const PipelineCreateInfo &createInfo,
              bool computePipeline = false);

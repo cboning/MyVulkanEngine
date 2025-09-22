@@ -1,20 +1,21 @@
 #include "RenderPass.h"
+#include "DescriptorSets.h"
 #include "Swapchain.h"
 
 #include <iostream>
 
+#include "../JsonConfigReader/JsonConfigReader.h"
 #include "Device.h"
 #include "Framebuffer.h"
-#include "Pipeline.h"
-#include "../JsonConfigReader/JsonConfigReader.h"
 #include "Image.h"
-
+#include "Pipeline.h"
 
 namespace Vkbase
 {
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
     : ResourceBase(Vkbase::ResourceType::RenderPass, resourceName),
-      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))))
+      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
+      _descriptorSets(*resourceManager().create<DescriptorSets>(resourceName, deviceName))
 {
     _attachmentCount = createInfo.attachmentCount;
     _attachmentFormats.reserve(_attachmentCount);
@@ -23,13 +24,20 @@ RenderPass::RenderPass(const std::string &resourceName, const std::string &devic
     _renderPass = _device.device().createRenderPass(createInfo);
 }
 
-RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config, const std::string &swapchainName = "", vk::Format depthFormat = vk::Format::eUndefined)
-    : RenderPass(resourceName, deviceName, JsonConfigReader::getRenderPassCreateInfo(JsonConfigReader::getAttachmentsWithJson(config, swapchainName, depthFormat), JsonConfigReader::getSubpassesWithJson(config, JsonConfigReader::getAttachmentRefsWithJson(config)), JsonConfigReader::getSubpassDependenciesWithJson(config)))
+RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config, const std::string &swapchainName = "",
+                       vk::Format depthFormat = vk::Format::eUndefined)
+    : RenderPass(resourceName, deviceName,
+                 JsonConfigReader::getRenderPassCreateInfo(JsonConfigReader::getAttachmentsWithJson(config, swapchainName, depthFormat),
+                                                           JsonConfigReader::getSubpassesWithJson(config, JsonConfigReader::getAttachmentRefsWithJson(config)),
+                                                           JsonConfigReader::getSubpassDependenciesWithJson(config)))
 {
-
 }
 
-RenderPass::~RenderPass() { _device.device().destroy(_renderPass); }
+RenderPass::~RenderPass()
+{
+    _descriptorSets.destroy();
+    _device.device().destroy(_renderPass);
+}
 
 const vk::RenderPass &RenderPass::renderPass() const { return _renderPass; }
 
@@ -43,7 +51,8 @@ const Framebuffer &RenderPass::createFramebuffer(const std::string &resourceName
     return *resourceManager().create<Framebuffer>(resourceName, _device.name(), name(), attachmentNames, width, height);
 }
 
-std::vector<std::string> RenderPass::createFramebuffer(const std::string &resourceName, const json &config, uint32_t width, uint32_t height, const std::string &swapchainName, vk::Format depthFormat) const
+std::vector<std::string> RenderPass::createFramebuffer(const std::string &resourceName, const json &config, uint32_t width, uint32_t height,
+                                                       const std::string &swapchainName, vk::Format depthFormat) const
 {
     std::vector<std::string> framebufferNames;
     for (uint32_t i = 0; i < config["count"]; ++i)
@@ -58,7 +67,10 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
                 imageConfig["width"] = width;
                 imageConfig["height"] = height;
                 imageConfig["depth"] = 1;
-                attachmentNames.push_back(resourceManager().create<Vkbase::Image>("Framebuffer_Image_" + std::string(attachment["name"]) + "_" + std::to_string(i), _device.name(), imageConfig, nullptr, swapchainName, depthFormat)->name());
+                attachmentNames.push_back(resourceManager()
+                                              .create<Vkbase::Image>("Framebuffer_Image_" + std::string(attachment["name"]) + "_" + std::to_string(i),
+                                                                     _device.name(), imageConfig, nullptr, swapchainName, depthFormat)
+                                              ->name());
             }
             else if (type == "use")
                 attachmentNames.push_back(std::string(attachment["name"]) + "_" + std::to_string(i));
@@ -71,6 +83,22 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
 const Pipeline &RenderPass::createPipeline(const std::string &resourceName, const PipelineCreateInfo &createInfo) const
 {
     return *resourceManager().create<Pipeline>(resourceName, _device.name(), name(), createInfo);
+}
+
+void RenderPass::createPipelines(const json &config, const std::unordered_map<std::string, VertexInfo> &vertexInfos,
+                                 const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> &descriptorSetLayouts,
+                                 const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> &viewportInfos)
+{
+    for (const json &pipelineCreateInfoJson : config)
+    {
+        const std::string &pipelineName = pipelineCreateInfoJson["name"];
+        const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> &viewportInfo = viewportInfos.at(pipelineName);
+        PipelineRenderInfo renderInfo = PipelineRenderInfo(pipelineCreateInfoJson["renderInfo"], viewportInfo.first, viewportInfo.second);
+        createPipeline(pipelineCreateInfoJson["name"],
+                       PipelineCreateInfo{ShaderInfo::getShaderInfosWithJson(pipelineCreateInfoJson["shaderInfos"]), vertexInfos.at(pipelineName),
+                                          descriptorSetLayouts.at(pipelineName),
+                                          renderInfo});
+    }
 }
 
 void RenderPass::begin(const vk::CommandBuffer &commandBuffer, const Framebuffer &framebuffer, std::vector<vk::ClearValue> &clearValues,
@@ -97,5 +125,6 @@ void RenderPass::begin(const vk::CommandBuffer &commandBuffer, const Framebuffer
 
 void RenderPass::end(const vk::CommandBuffer &commandBuffer) const { commandBuffer.endRenderPass(); }
 
+DescriptorSets &RenderPass::descriptorSets() { return _descriptorSets; }
 
 } // namespace Vkbase

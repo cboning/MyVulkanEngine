@@ -298,7 +298,7 @@
         },
         "framebuffers": {
             "count": 3,
-            "images":[
+            "images": [
                 {
                     "type": "create",
                     "name": "Position",
@@ -307,7 +307,10 @@
                         "format": "R16G16B16A16Sfloat",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["ColorAttachment", "InputAttachment"]
+                        "usage": [
+                            "ColorAttachment",
+                            "InputAttachment"
+                        ]
                     }
                 },
                 {
@@ -318,7 +321,10 @@
                         "format": "R16G16B16A16Sfloat",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["ColorAttachment", "InputAttachment"]
+                        "usage": [
+                            "ColorAttachment",
+                            "InputAttachment"
+                        ]
                     }
                 },
                 {
@@ -329,7 +335,10 @@
                         "format": "R16G16B16A16Sfloat",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["ColorAttachment", "InputAttachment"]
+                        "usage": [
+                            "ColorAttachment",
+                            "InputAttachment"
+                        ]
                     }
                 },
                 {
@@ -340,7 +349,10 @@
                         "format": "R16G16B16A16Sfloat",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["ColorAttachment", "InputAttachment"]
+                        "usage": [
+                            "ColorAttachment",
+                            "InputAttachment"
+                        ]
                     }
                 },
                 {
@@ -351,7 +363,11 @@
                         "format": "R16G16B16A16Sfloat",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["ColorAttachment", "Sampled", "InputAttachment"]
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled",
+                            "InputAttachment"
+                        ]
                     }
                 },
                 {
@@ -362,7 +378,11 @@
                         "format": "R16G16B16A16Sfloat",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["ColorAttachment", "Sampled", "InputAttachment"]
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled",
+                            "InputAttachment"
+                        ]
                     }
                 },
                 {
@@ -377,14 +397,460 @@
                         "format": "DEPTH_FORMAT",
                         "imageType": "2D",
                         "viewType": "2D",
-                        "usage": ["DepthStencilAttachment"]
+                        "usage": [
+                            "DepthStencilAttachment"
+                        ]
+                    }
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [
+                {
+                    "name": "G_BufferInputAttachments",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": 3
+                },
+                {
+                    "name": "BlurSampler1",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": 3
+                },
+                {
+                    "name": "BlurSampler2",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": 3
+                },
+                {
+                    "name": "BlendInputAttachments",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": 3
+                }
+            ],
+            "write": [
+                {
+                    "name": "BlurSampler1",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "BlurColor1",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        }
+                    }
+                },
+                {
+                    "name": "BlurSampler2",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "BlurColor2",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        }
+                    }
+                },
+                {
+                    "name": "G_BufferInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Position",
+                            "imageLayout": "ShaderReadOnlyOptimal"
+                        }
+                    }
+                },
+                {
+                    "name": "G_BufferInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 1,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Normal",
+                            "imageLayout": "ShaderReadOnlyOptimal"
+                        }
+                    }
+                },
+                {
+                    "name": "G_BufferInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 2,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "AlbedoSpec",
+                            "imageLayout": "ShaderReadOnlyOptimal"
+                        }
+                    }
+                },
+                {
+                    "name": "BlendInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "OriginalColor",
+                            "imageLayout": "ShaderReadOnlyOptimal"
+                        }
+                    }
+                },
+                {
+                    "name": "BlendInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 1,
+                    "count": 3,
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "BlurColor1",
+                            "imageLayout": "ShaderReadOnlyOptimal"
+                        }
                     }
                 }
             ]
         },
         "pipelines": [
             {
-                "name": "g_buffer"
+                "name": "blend",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None"
+                    },
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 4,
+                    "colorBlendState": {
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/blendVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/blendFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "blur_h",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "Front"
+                    },
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 2,
+                    "colorBlendState": {
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/blur_hVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/blur_hFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "blur_v",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "Front"
+                    },
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 3,
+                    "colorBlendState": {
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/blur_vVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/blur_vFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "text",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None"
+                    },
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 4,
+                    "colorBlendState": {
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ],
+                                "blendEnable": true,
+                                "srcColorBlendFactor": "SrcAlpha",
+                                "dstColorBlendFactor": "OneMinusSrcAlpha",
+                                "colorBlendOp": "Add",
+                                "srcAlphaBlendFactor": "One",
+                                "dstAlphaBlendFactor": "Zero",
+                                "alphaBlendOp": "Add"
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/textVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/textFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "light",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None"
+                    },
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 1,
+                    "colorBlendState": {
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/baseShaderVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/baseShaderFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "g_buffer",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None"
+                    },
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/g_bufferVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/g_bufferFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
             }
         ]
     }

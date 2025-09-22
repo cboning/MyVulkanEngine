@@ -4,6 +4,9 @@
 #include <utility>
 #include <vector>
 #include <vulkan/vulkan.hpp>
+#include <json.hpp>
+
+using json = nlohmann::json;
 
 namespace Vkbase
 {
@@ -34,6 +37,8 @@ class DescriptorSets : public ResourceBase
                                                    uint32_t count, const std::pair<const DescriptorSets *, std::string> &layout = {nullptr, ""});
     void writeSets(const std::string &name, uint32_t binding, const std::vector<vk::DescriptorBufferInfo> &bufferInfos,
                    const std::vector<vk::DescriptorImageInfo> &imageInfos, uint32_t count) const;
+    void addDescriptorSetCreateConfigWithJson(const json &config);
+    void writeSetsWithJson(const json &config);
     const std::vector<vk::DescriptorSet> &sets(const std::string &name) const;
     const vk::DescriptorSetLayout &layout(const std::string &name) const;
     void init();

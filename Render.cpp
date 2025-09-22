@@ -82,166 +82,121 @@ void Render::createRenderPass()
 
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
 
-    const Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>(
+    Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>(
         "mainWindow", "Device", JsonConfigReader::load("config/render.json")[0]["renderPass"], "mainWindow", depthFormat));
 
     // -------------------------------- Framebuffer --------------------------------
     vk::Extent2D extent = swapchain.extent();
-    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"],extent.width, extent.height, "", depthFormat);
+    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"], extent.width, extent.height, "", depthFormat);
 
-    const Vkbase::DescriptorSets &descriptorSets =
-        *dynamic_cast<const Vkbase::DescriptorSets *>(_resourceManager.resource(Vkbase::ResourceType::DescriptorSets, "MainDescriptorSets"));
-    Vkbase::Sampler &sampler = *dynamic_cast<Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"));
+    Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
 
-    vk::DescriptorImageInfo imageInfo;
-    imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal).setSampler(sampler.sampler());
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_BlurColor1_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("BlurSampler1", 0, {}, imageInfos, swapchain.imageNames().size());
-    }
-    // {
-    //     std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-    //     for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-    //         imageInfos[i].setImageView(dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Cloud"))->view());
-    //     descriptorSets.writeSets("BlurSampler1", 0, {}, imageInfos, swapchain.imageNames().size());
-    // }
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_BlurColor2_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("BlurSampler2", 0, {}, imageInfos, swapchain.imageNames().size());
-    }
-
-    imageInfo.setSampler(nullptr);
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_Position_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("G_BufferInputAttachments", 0, {}, imageInfos, swapchain.imageNames().size());
-    }
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_Normal_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("G_BufferInputAttachments", 1, {}, imageInfos, swapchain.imageNames().size());
-    }
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_AlbedoSpec_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("G_BufferInputAttachments", 2, {}, imageInfos, swapchain.imageNames().size());
-    }
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_OriginalColor_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("BlendInputAttachments", 0, {}, imageInfos, swapchain.imageNames().size());
-    }
-    {
-        std::vector<vk::DescriptorImageInfo> imageInfos(swapchain.imageNames().size(), imageInfo);
-        for (uint32_t i = 0; i < swapchain.imageNames().size(); ++i)
-            imageInfos[i].setImageView(
-                dynamic_cast<const Vkbase::Image *>(_resourceManager.resource(Vkbase::ResourceType::Image, "Framebuffer_Image_BlurColor1_" + std::to_string(i)))->view());
-        descriptorSets.writeSets("BlendInputAttachments", 1, {}, imageInfos, swapchain.imageNames().size());
-    }
+    descriptorSets.addDescriptorSetCreateConfigWithJson(JsonConfigReader::load("config/render.json")[0]["descriptorSets"]["sets"]);
+    descriptorSets.init();
+    descriptorSets.writeSetsWithJson(JsonConfigReader::load("config/render.json")[0]["descriptorSets"]["write"]);
 
     // --------------------------------
-    std::vector<Vkbase::ShaderInfo> shaderInfos = {Vkbase::ShaderInfo("", "main", vk::ShaderStageFlagBits::eVertex),
-                                                   Vkbase::ShaderInfo("", "main", vk::ShaderStageFlagBits::eFragment)};
-
     Vkbase::VertexInfo modelVertexInfo(ModelData::Vertex::attributeDescriptions(), {ModelData::Vertex::bindingDescription()});
     Vkbase::VertexInfo screenVertexInfo(VertexData::attributeDescriptions(), {VertexData::bindingDescription()});
     Vkbase::VertexInfo textVertexInfo(Text::Vertex::attributeDescriptions(), {Text::Vertex::bindingDescription()});
 
-    std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
+    const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {{"blend", screenVertexInfo},  {"blur_h", screenVertexInfo},
+                                                                             {"blur_v", screenVertexInfo}, {"light", screenVertexInfo},
+                                                                             {"text", textVertexInfo},     {"g_buffer", modelVertexInfo}};
+    const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> descriptorSetLayouts = {
+        {"blend", {descriptorSets.layout("BlendInputAttachments")}},
+        {"blur_h", {descriptorSets.layout("BlurSampler1")}},
+        {"blur_v", {descriptorSets.layout("BlurSampler2")}},
+        {"light", {descriptorSets.layout("G_BufferInputAttachments")}},
+        {"text", {_pFont->layout(), Font::projectiveLayout("MainDescriptorSets")}},
+        {"g_buffer", (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")}};
 
-    vk::PipelineColorBlendAttachmentState colorBlendAttachment;
-    colorBlendAttachment.setBlendEnable(vk::False).setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
-                                                                     vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
+    const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> viewportInfo = {{vk::Rect2D().setExtent(swapchain.extent())},
+                                                                                        {vk::Viewport().setWidth(extent.width).setHeight(extent.height)}};
+    const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> viewportInfos = {
+        {"blend", viewportInfo}, {"blur_h", viewportInfo}, {"blur_v", viewportInfo},
+        {"light", viewportInfo}, {"text", viewportInfo},   {"g_buffer", viewportInfo}};
 
-    Vkbase::PipelineRenderInfo renderInfo = Vkbase::Pipeline::getDefaultRenderInfo();
-    renderInfo.blendAttachments.push_back(colorBlendAttachment);
+    renderPass.createPipelines(JsonConfigReader::load("config/render.json")[0]["pipelines"], vertexInfos, descriptorSetLayouts, viewportInfos);
+    // std::vector<Vkbase::ShaderInfo> shaderInfos = {Vkbase::ShaderInfo("", "main", vk::ShaderStageFlagBits::eVertex),
+    //                                                Vkbase::ShaderInfo("", "main", vk::ShaderStageFlagBits::eFragment)};
 
-    descriptorSetLayouts = {descriptorSets.layout("BlendInputAttachments")};
-    shaderInfos[0].filename = "shader/bin/blendVert.spv";
-    shaderInfos[1].filename = "shader/bin/blendFrag.spv";
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
-    renderInfo.subpass = 4;
-    renderPass.createPipeline("blend", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
+    // std::vector<vk::DescriptorSetLayout> descriptorSetLayouts;
 
-    descriptorSetLayouts = {descriptorSets.layout("BlurSampler1")};
-    shaderInfos[0].filename = "shader/bin/blur_hVert.spv";
-    shaderInfos[1].filename = "shader/bin/blur_hFrag.spv";
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront);
-    renderInfo.subpass = 2;
-    renderPass.createPipeline("blur_h", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
+    // vk::PipelineColorBlendAttachmentState colorBlendAttachment;
+    // colorBlendAttachment.setBlendEnable(vk::False).setColorWriteMask(vk::ColorComponentFlagBits::eR | vk::ColorComponentFlagBits::eG |
+    //                                                                  vk::ColorComponentFlagBits::eB | vk::ColorComponentFlagBits::eA);
 
-    descriptorSetLayouts = {descriptorSets.layout("BlurSampler2")};
-    shaderInfos[0].filename = "shader/bin/blur_vVert.spv";
-    shaderInfos[1].filename = "shader/bin/blur_vFrag.spv";
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront);
-    renderInfo.subpass = 3;
-    renderPass.createPipeline("blur_v", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
+    // Vkbase::PipelineRenderInfo renderInfo = Vkbase::Pipeline::getDefaultRenderInfo();
+    // renderInfo.blendAttachments.push_back(colorBlendAttachment);
 
-    renderInfo.blendAttachments[0]
-        .setBlendEnable(vk::True)
-        .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
-        .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
-        .setColorBlendOp(vk::BlendOp::eAdd)
-        .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
-        .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
-        .setAlphaBlendOp(vk::BlendOp::eAdd);
+    // descriptorSetLayouts = {descriptorSets.layout("BlendInputAttachments")};
+    // shaderInfos[0].filename = "shader/bin/blendVert.spv";
+    // shaderInfos[1].filename = "shader/bin/blendFrag.spv";
+    // renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
+    // renderInfo.subpass = 4;
+    // renderInfo.scissors.push_back(vk::Rect2D().setExtent(swapchain.extent()));
+    // renderInfo.viewports.push_back(vk::Viewport().setWidth(extent.width).setHeight(extent.height));
+    // renderPass.createPipeline("blend", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
-    descriptorSetLayouts = {_pFont->layout(), Font::projectiveLayout("MainDescriptorSets")};
-    shaderInfos[0].filename = "shader/bin/textVert.spv";
-    shaderInfos[1].filename = "shader/bin/textFrag.spv";
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
-    renderInfo.subpass = 4;
-    renderPass.createPipeline("text", Vkbase::PipelineCreateInfo(shaderInfos, textVertexInfo, descriptorSetLayouts, &renderInfo));
+    // descriptorSetLayouts = {descriptorSets.layout("BlurSampler1")};
+    // shaderInfos[0].filename = "shader/bin/blur_hVert.spv";
+    // shaderInfos[1].filename = "shader/bin/blur_hFrag.spv";
+    // renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront);
+    // renderInfo.subpass = 2;
+    // renderPass.createPipeline("blur_h", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
-    renderInfo.blendAttachments[0] = colorBlendAttachment;
+    // descriptorSetLayouts = {descriptorSets.layout("BlurSampler2")};
+    // shaderInfos[0].filename = "shader/bin/blur_vVert.spv";
+    // shaderInfos[1].filename = "shader/bin/blur_vFrag.spv";
+    // renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eFront);
+    // renderInfo.subpass = 3;
+    // renderPass.createPipeline("blur_v", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
-    renderInfo.blendAttachments.push_back(colorBlendAttachment);
-    descriptorSetLayouts = {descriptorSets.layout("G_BufferInputAttachments")};
-    shaderInfos[0].filename = "shader/bin/baseShaderVert.spv";
-    shaderInfos[1].filename = "shader/bin/baseShaderFrag.spv";
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
-    renderInfo.subpass = 1;
-    renderPass.createPipeline("light", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
+    // renderInfo.blendAttachments[0]
+    //     .setBlendEnable(vk::True)
+    //     .setSrcColorBlendFactor(vk::BlendFactor::eSrcAlpha)
+    //     .setDstColorBlendFactor(vk::BlendFactor::eOneMinusSrcAlpha)
+    //     .setColorBlendOp(vk::BlendOp::eAdd)
+    //     .setSrcAlphaBlendFactor(vk::BlendFactor::eOne)
+    //     .setDstAlphaBlendFactor(vk::BlendFactor::eZero)
+    //     .setAlphaBlendOp(vk::BlendOp::eAdd);
 
-    std::vector<vk::DescriptorSetLayout> layout = (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer");
-    descriptorSetLayouts.clear();
-    descriptorSetLayouts.insert(descriptorSetLayouts.end(), layout.begin(), layout.end());
+    // descriptorSetLayouts = {_pFont->layout(), Font::projectiveLayout("MainDescriptorSets")};
+    // shaderInfos[0].filename = "shader/bin/textVert.spv";
+    // shaderInfos[1].filename = "shader/bin/textFrag.spv";
+    // renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
+    // renderInfo.subpass = 4;
+    // renderPass.createPipeline("text", Vkbase::PipelineCreateInfo(shaderInfos, textVertexInfo, descriptorSetLayouts, &renderInfo));
 
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
-    renderInfo.blendAttachments.push_back(colorBlendAttachment);
-    renderInfo.depthStencilStateInfo.setDepthTestEnable(vk::True)
-        .setDepthWriteEnable(vk::True)
-        .setDepthCompareOp(vk::CompareOp::eLess)
-        .setDepthBoundsTestEnable(vk::False)
-        .setMinDepthBounds(0.0f)
-        .setMaxDepthBounds(1.0f)
-        .setStencilTestEnable(vk::False);
+    // renderInfo.blendAttachments[0] = colorBlendAttachment;
 
-    shaderInfos[0].filename = "shader/bin/g_bufferVert.spv";
-    shaderInfos[1].filename = "shader/bin/g_bufferFrag.spv";
-    renderInfo.subpass = 0;
-    renderPass.createPipeline("g_buffer", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, &renderInfo));
+    // renderInfo.blendAttachments.push_back(colorBlendAttachment);
+    // descriptorSetLayouts = {descriptorSets.layout("G_BufferInputAttachments")};
+    // shaderInfos[0].filename = "shader/bin/baseShaderVert.spv";
+    // shaderInfos[1].filename = "shader/bin/baseShaderFrag.spv";
+    // renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
+    // renderInfo.subpass = 1;
+    // renderPass.createPipeline("light", Vkbase::PipelineCreateInfo(shaderInfos, screenVertexInfo, descriptorSetLayouts, &renderInfo));
 
-    shaderInfos[0].filename = "shader/bin/inverstedHullVert.spv";
-    shaderInfos[1].filename = "shader/bin/inverstedHullFrag.spv";
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eBack);
-    renderInfo.subpass = 0;
-    renderPass.createPipeline("Inversted_Hull", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, &renderInfo));
+    // std::vector<vk::DescriptorSetLayout> layout = (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer");
+    // descriptorSetLayouts.clear();
+    // descriptorSetLayouts.insert(descriptorSetLayouts.end(), layout.begin(), layout.end());
 
+    // renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone);
+    // renderInfo.blendAttachments.push_back(colorBlendAttachment);
+    // renderInfo.depthStencilStateInfo.setDepthTestEnable(vk::True)
+    //     .setDepthWriteEnable(vk::True)
+    //     .setDepthCompareOp(vk::CompareOp::eLess)
+    //     .setDepthBoundsTestEnable(vk::False)
+    //     .setMinDepthBounds(0.0f)
+    //     .setMaxDepthBounds(1.0f)
+    //     .setStencilTestEnable(vk::False);
+
+    // shaderInfos[0].filename = "shader/bin/g_bufferVert.spv";
+    // shaderInfos[1].filename = "shader/bin/g_bufferFrag.spv";
+    // renderInfo.subpass = 0;
+    // renderPass.createPipeline("g_buffer", Vkbase::PipelineCreateInfo(shaderInfos, modelVertexInfo, descriptorSetLayouts, &renderInfo));
     createRenderDelegator();
 }
 
@@ -251,24 +206,11 @@ void Render::createDescriptorSets()
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
     pDescriptorSets->addDescriptorSetCreateConfig("Camera", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}},
                                                   Vkbase::RenderDelegator::maxFlightCount());
-    pDescriptorSets->addDescriptorSetCreateConfig("G_BufferInputAttachments",
-                                                  {{vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment},
-                                                   {vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment},
-                                                   {vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment}},
-                                                  swapchain.images().size());
-    pDescriptorSets->addDescriptorSetCreateConfig("BlurSampler1", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}},
-                                                  swapchain.images().size());
-    pDescriptorSets->addDescriptorSetCreateConfig("BlurSampler2", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}},
-                                                  swapchain.images().size());
-    pDescriptorSets->addDescriptorSetCreateConfig("BlendInputAttachments",
-                                                  {{vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment},
-                                                   {vk::DescriptorType::eInputAttachment, vk::ShaderStageFlagBits::eFragment}},
-                                                  swapchain.images().size());
 
-    Font::addProjectiveDescriptorSet("MainDescriptorSets");
+    Font::addProjectiveDescriptorSet(pDescriptorSets->name());
     pDescriptorSets->init();
 
-    Font::writeProjectiveDescriptorSet("MainDescriptorSets", "Device");
+    Font::writeProjectiveDescriptorSet(pDescriptorSets->name(), "Device");
     Font::setScreenSize({800, 600});
 
     vk::DescriptorBufferInfo bufferInfo;
@@ -320,12 +262,10 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     updateUniformBuffer(_resourceManager, currentFrame);
     _pText->setText(std::to_string(1 / _deltaTime));
 
-    const Vkbase::RenderPass &renderPass = *dynamic_cast<const Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
+    Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
     const Vkbase::Pipeline &g_bufferPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "g_buffer"));
-    // const Vkbase::Pipeline &pipeline1 = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "Inversted_Hull"));
-    const Vkbase::DescriptorSets &descriptorSets =
-        *dynamic_cast<const Vkbase::DescriptorSets *>(_resourceManager.resource(Vkbase::ResourceType::DescriptorSets, "MainDescriptorSets"));
+    const Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
 
     std::vector<vk::ClearValue> clearValues = {vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
                                                vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}),
@@ -359,6 +299,7 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(commandBuffer, "blend", descriptorSets.sets("BlendInputAttachments")[imageIndex]);
+
     Vkbase::Pipeline &textPipeline = *dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "text"));
     commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, textPipeline.pipeline());
     _pText->draw(commandBuffer, textPipeline, {Font::projectiveSet("MainDescriptorSets")});
