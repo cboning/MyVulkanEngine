@@ -127,7 +127,7 @@ namespace Vkbase
             if (type == "Image")
             {
                 std::vector<vk::DescriptorImageInfo> imageInfos(writeConfig["count"]);
-                for (int i = 0; i < imageInfos.size(); ++i)
+                for (uint32_t i = 0; i < imageInfos.size(); ++i)
                 {
                     const json &imageInfoJson = writeConfig["detail"]["imageInfos"][i];
                     imageInfos[i].setImageView(dynamic_cast<Vkbase::Image *>(resourceManager().resource(Vkbase::ResourceType::Image, imageInfoJson["imageName"]))->view()).setImageLayout(JsonConfigReader::getImageLayoutWithJson(imageInfoJson["imageLayout"]));
@@ -140,7 +140,7 @@ namespace Vkbase
             else if (type == "Buffer")
             {
                 std::vector<vk::DescriptorBufferInfo> bufferInfos(writeConfig["count"]);
-                for (int i = 0; i < bufferInfos.size(); ++i)
+                for (uint32_t i = 0; i < bufferInfos.size(); ++i)
                 {
                     const json &bufferInfoJson = writeConfig["detail"]["bufferInfos"][i];
                     bufferInfos[i].setBuffer(dynamic_cast<Vkbase::Buffer *>(resourceManager().resource(Vkbase::ResourceType::Buffer, bufferInfoJson["bufferName"]))->buffer()).setOffset(bufferInfoJson["offset"]).setRange(bufferInfoJson["range"]);
@@ -151,7 +151,7 @@ namespace Vkbase
             else if (type == "Framebuffer")
             {
                 std::vector<vk::DescriptorImageInfo> imageInfos(writeConfig["count"]);
-                for (int i = 0; i < imageInfos.size(); ++i)
+                for (uint32_t i = 0; i < imageInfos.size(); ++i)
                 {
                     const json &imageInfoJson = writeConfig["detail"]["imageInfo"];
                     imageInfos[i].setImageView(dynamic_cast<Vkbase::Image *>(resourceManager().resource(Vkbase::ResourceType::Image, "Framebuffer_Image_" + std::string(imageInfoJson["imageName"]) + std::string("_") + std::to_string(i)))->view()).setImageLayout(JsonConfigReader::getImageLayoutWithJson(imageInfoJson["imageLayout"]));

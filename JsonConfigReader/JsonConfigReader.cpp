@@ -721,7 +721,7 @@ vk::ImageUsageFlagBits JsonConfigReader::getImageUsageFlagBitsWithJson(const std
 vk::ImageUsageFlags JsonConfigReader::getImageUsageFlagsWithJson(const json &imageUsageFlags)
 {
     vk::ImageUsageFlags flags;
-    for (const std::string &imageUsageFlagBits : imageUsageFlags)
+    for (const json &imageUsageFlagBits : imageUsageFlags)
         flags |= getImageUsageFlagBitsWithJson(imageUsageFlagBits);
     return flags;
 }
@@ -793,6 +793,7 @@ vk::Rect2D JsonConfigReader::getScissorWithJson(const json &config)
 
         attributeLoadMap.at(it.key())(scissor, it.value());
     }
+    return scissor;
 }
 
 vk::Extent2D JsonConfigReader::getExtent2DWithJson(const json &config) { return vk::Extent2D().setWidth(config["width"]).setHeight(config["height"]); }
@@ -901,7 +902,7 @@ vk::PipelineMultisampleStateCreateInfo JsonConfigReader::getPipelineMultisampleS
 vk::CullModeFlags JsonConfigReader::getCullModeFlagsWithJson(const json &config)
 {
     vk::CullModeFlags flags;
-    for (const std::string &cullModeFlagBits : config)
+    for (const json &cullModeFlagBits : config)
         flags |= getCullModeFlagBitsWithJson(cullModeFlagBits);
     return flags;
 }
@@ -916,7 +917,7 @@ vk::CullModeFlagBits JsonConfigReader::getCullModeFlagBitsWithJson(const json &c
     if (it != cullModeFlagBitsMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown cullModeFlagBits: " + config);
+        throw std::invalid_argument("Unknown cullModeFlagBits: " + std::string(config));
 }
 
 vk::FrontFace JsonConfigReader::getFrontFaceWithJson(const json &config)
@@ -928,7 +929,7 @@ vk::FrontFace JsonConfigReader::getFrontFaceWithJson(const json &config)
     if (it != frontFaceMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown frontFace: " + config);
+        throw std::invalid_argument("Unknown frontFace: " + std::string(config));
 }
 
 vk::Bool32 JsonConfigReader::getBooleanWithJson(const json &config)
@@ -957,7 +958,7 @@ vk::PrimitiveTopology JsonConfigReader::getPrimitiveTopologyWithJson(const json 
     if (it != primitiveTopologyMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown primitiveTopology: " + primitiveTopology);
+        throw std::invalid_argument("Unknown primitiveTopology: " + std::string(primitiveTopology));
 }
 
 vk::PolygonMode JsonConfigReader::getPolygonModeWithJson(const json &config)
@@ -971,7 +972,7 @@ vk::PolygonMode JsonConfigReader::getPolygonModeWithJson(const json &config)
     if (it != polygonModeMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown polygonMode: " + config);
+        throw std::invalid_argument("Unknown polygonMode: " + std::string(config));
 }
 
 vk::PipelineDepthStencilStateCreateInfo JsonConfigReader::getPipelineDepthStencilStateCreateInfoWithJson(const json &config)
@@ -1051,7 +1052,7 @@ vk::CompareOp JsonConfigReader::getCompareOpWithJson(const json &config)
     if (it != compareOpMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown compareOp: " + config);
+        throw std::invalid_argument("Unknown compareOp: " + std::string(config));
 }
 
 vk::StencilOp JsonConfigReader::getStencilOpWithJson(const json &config)
@@ -1069,13 +1070,13 @@ vk::StencilOp JsonConfigReader::getStencilOpWithJson(const json &config)
     if (it != stencilOpMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown stencilOp: " + config);
+        throw std::invalid_argument("Unknown stencilOp: " + std::string(config));
 }
 
 vk::PipelineDepthStencilStateCreateFlags JsonConfigReader::getPipelineDepthStencilStateCreateInfoFlagsWithJson(const json &config)
 {
     vk::PipelineDepthStencilStateCreateFlags flags;
-    for (const std::string &pipelineDepthStencilStateCreateInfoFlagBits : config)
+    for (const json &pipelineDepthStencilStateCreateInfoFlagBits : config)
         flags |= getPipelineDepthStencilStateCreateInfoFlagBitsWithJson(pipelineDepthStencilStateCreateInfoFlagBits);
     return flags;
 }
@@ -1092,7 +1093,7 @@ vk::PipelineDepthStencilStateCreateFlagBits JsonConfigReader::getPipelineDepthSt
     if (it != pipelineDepthStencilStateCreateFlagBitsMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown pipelineDepthStencilStateCreateFlagBits: " + config);
+        throw std::invalid_argument("Unknown pipelineDepthStencilStateCreateFlagBits: " + std::string(config));
 }
 
 vk::PipelineColorBlendStateCreateInfo JsonConfigReader::getPipelineColorBlendStateCreateInfoWithJson(const json &config)
@@ -1123,7 +1124,7 @@ vk::PipelineColorBlendStateCreateInfo JsonConfigReader::getPipelineColorBlendSta
 vk::PipelineColorBlendStateCreateFlags JsonConfigReader::getPipelineColorBlendStateCreateFlagsWithJson(const json &config)
 {
     vk::PipelineColorBlendStateCreateFlags flags;
-    for (const std::string &PipelineColorBlendStateCreateFlagBits : config)
+    for (const json &PipelineColorBlendStateCreateFlagBits : config)
         flags |= getPipelineColorBlendStateCreateFlagBitsWithJson(PipelineColorBlendStateCreateFlagBits);
     return flags;
 }
@@ -1138,7 +1139,7 @@ vk::PipelineColorBlendStateCreateFlagBits JsonConfigReader::getPipelineColorBlen
     if (it != pipelineColorBlendStateCreateFlagBitsMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown pipelineColorBlendStateCreateFlagBits: " + config);
+        throw std::invalid_argument("Unknown pipelineColorBlendStateCreateFlagBits: " + std::string(config));
 }
 
 vk::LogicOp JsonConfigReader::getLogicOp(const json &config)
@@ -1164,7 +1165,7 @@ vk::LogicOp JsonConfigReader::getLogicOp(const json &config)
     if (it != logicOpMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown logicOp: " + config);
+        throw std::invalid_argument("Unknown logicOp: " + std::string(config));
 }
 
 std::vector<vk::PipelineColorBlendAttachmentState> JsonConfigReader::getPipelineColorBlendAttachmentStatesWithJson(const json &config)
@@ -1270,13 +1271,13 @@ vk::BlendOp JsonConfigReader::getBlendOpWithJson(const json &config)
     if (it != blendOpMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown blendOp: " + config);
+        throw std::invalid_argument("Unknown blendOp: " + std::string(config));
 }
 
 vk::ColorComponentFlags JsonConfigReader::getColorComponentFlagsWithJson(const json &config)
 {
     vk::ColorComponentFlags flags;
-    for (const std::string &colorComponentFlagBits : config)
+    for (const json &colorComponentFlagBits : config)
         flags |= getColorComponentFlagBitsWithJson(colorComponentFlagBits);
     return flags;
 }
@@ -1292,7 +1293,7 @@ vk::ColorComponentFlagBits JsonConfigReader::getColorComponentFlagBitsWithJson(c
     if (it != colorComponentFlagBitsMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown colorComponentFlagBits: " + config);
+        throw std::invalid_argument("Unknown colorComponentFlagBits: " + std::string(config));
 }
 
 vk::BlendFactor JsonConfigReader::getBlendFactorWithJson(const json &config)
@@ -1321,7 +1322,7 @@ vk::BlendFactor JsonConfigReader::getBlendFactorWithJson(const json &config)
     if (it != blendFactorMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown blendFactor: " + config);
+        throw std::invalid_argument("Unknown blendFactor: " + std::string(config));
 }
 
 std::vector<vk::DynamicState> JsonConfigReader::getDynamicStatusWithJson(const json &config)
@@ -1331,6 +1332,7 @@ std::vector<vk::DynamicState> JsonConfigReader::getDynamicStatusWithJson(const j
 
     for (const json &dynamicStateJson : config)
         dynamicStatus.push_back(getDynamicStateWithJson(dynamicStateJson));
+    return dynamicStatus;
 }
 
 vk::DynamicState JsonConfigReader::getDynamicStateWithJson(const json &config)
@@ -1430,7 +1432,7 @@ vk::DynamicState JsonConfigReader::getDynamicStateWithJson(const json &config)
     if (it != dynamicStateMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown dynamicState: " + config);
+        throw std::invalid_argument("Unknown dynamicState: " + std::string(config));
 }
 
 std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> JsonConfigReader::getDescriptorTypeShaderStageWithJson(const json &config)
@@ -1478,7 +1480,7 @@ vk::DescriptorType JsonConfigReader::getDescriptorTypeWithJson(const json &confi
     if (it != descriptorTypeMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown descriptorType: " + config);
+        throw std::invalid_argument("Unknown descriptorType: " + std::string(config));
 }
 
 vk::ShaderStageFlagBits JsonConfigReader::getShaderStageFlagBitsWithJson(const json &config)
@@ -1515,7 +1517,7 @@ vk::ShaderStageFlagBits JsonConfigReader::getShaderStageFlagBitsWithJson(const j
     if (it != shaderStageFlagBitsMap.end())
         return it->second;
     else
-        throw std::invalid_argument("Unknown shaderStageFlagBits: " + config);
+        throw std::invalid_argument("Unknown shaderStageFlagBits: " + std::string(config));
 }
 
 bool JsonConfigReader::textInList(const std::string &text, const std::vector<std::string> &list)
