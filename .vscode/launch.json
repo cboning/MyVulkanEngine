@@ -2,7 +2,7 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug",
+            "name": "Debug(Windows)",
             "type": "cppdbg",
             "request": "launch",
             "program": "${workspaceFolder}/main.exe",
@@ -33,10 +33,10 @@
             ]
         },
         {
-            "name": "Debug (Shaders Only)",
+            "name": "Debug (MacOS)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/main.exe",
+            "program": "${workspaceFolder}/main",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -47,21 +47,8 @@
                 "engineLogging": false,
                 "exceptions": false
             },
-            "MIMode": "gdb",
-            "miDebuggerPath": "gdb.exe",
-            "preLaunchTask": "compile_shaders",
-            "setupCommands": [
-                {
-                    "description": "Enable break on C++ throw",
-                    "text": "catch throw",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Enable break on C++ catch",
-                    "text": "catch catch",
-                    "ignoreFailures": true
-                }
-            ]
+            "MIMode": "lldb",
+            "preLaunchTask": "CMake: Build with Shaders"
         }
     ]
 }
