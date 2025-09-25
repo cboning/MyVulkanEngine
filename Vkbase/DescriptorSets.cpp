@@ -43,7 +43,7 @@ namespace Vkbase
     void DescriptorSets::allocateSets()
     {
         if (!_descriptorPool)
-            return ;
+            return;
         for (const std::pair<const std::string, vk::DescriptorSetLayout> &descriptorSetLayout : _descriptorSetLayouts)
         {
             uint32_t count = _descriptorSetsCounts[descriptorSetLayout.first];
@@ -60,7 +60,7 @@ namespace Vkbase
         }
     }
 
-    const std::string DescriptorSets::addDescriptorSetCreateConfig(std::string name, std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> descriptorTypes, uint32_t count, const std::pair<const DescriptorSets*, std::string> &layout)
+    const std::string DescriptorSets::addDescriptorSetCreateConfig(std::string name, std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> descriptorTypes, uint32_t count, const std::pair<const DescriptorSets *, std::string> &layout)
     {
         if (_descriptorSetLayoutInfos.count(name))
         {
@@ -108,7 +108,13 @@ namespace Vkbase
     {
         std::vector<vk::WriteDescriptorSet> writeDescriptorSets(count);
         for (uint32_t i = 0; i < count; ++i)
-            writeDescriptorSets[i].setDstBinding(binding).setBufferInfo(bufferInfos[i]).setImageInfo(imageInfos[i]).setDstSet(_descriptorSets.at(name)[i]).setDescriptorType(_descriptorSetLayoutInfos.at(name)[binding].first);
+        {
+            writeDescriptorSets[i].setDstBinding(binding).setDstSet(_descriptorSets.at(name)[i]).setDescriptorType(_descriptorSetLayoutInfos.at(name)[binding].first);
+            if (bufferInfos.size())
+                writeDescriptorSets[i].setBufferInfo(bufferInfos.at(i));
+            if (imageInfos.size())
+                writeDescriptorSets[i].setImageInfo(imageInfos.at(i));
+        }
 
         _device.device().updateDescriptorSets(writeDescriptorSets, nullptr);
     }
@@ -134,7 +140,7 @@ namespace Vkbase
                     if (imageInfoJson.count("samplerName") && imageInfoJson["samplerName"].is_string())
                         imageInfos[i].setSampler(dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::ResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
                 }
-                
+
                 writeSets(writeConfig["name"], writeConfig["binding"], {}, imageInfos, imageInfos.size());
             }
             else if (type == "Buffer")
@@ -146,7 +152,6 @@ namespace Vkbase
                     bufferInfos[i].setBuffer(dynamic_cast<Vkbase::Buffer *>(resourceManager().resource(Vkbase::ResourceType::Buffer, bufferInfoJson["bufferName"]))->buffer()).setOffset(bufferInfoJson["offset"]).setRange(bufferInfoJson["range"]);
                 }
                 writeSets(writeConfig["name"], writeConfig["binding"], bufferInfos, {}, bufferInfos.size());
-
             }
             else if (type == "Framebuffer")
             {
@@ -158,7 +163,7 @@ namespace Vkbase
                     if (imageInfoJson.count("samplerName") && imageInfoJson["samplerName"].is_string())
                         imageInfos[i].setSampler(dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::ResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
                 }
-                
+
                 writeSets(writeConfig["name"], writeConfig["binding"], {}, imageInfos, imageInfos.size());
             }
         }
