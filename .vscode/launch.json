@@ -1,5 +1,3 @@
-
-
 {
     "version": "0.2.0",
     "configurations": [
@@ -7,7 +5,7 @@
             "name": "Debug",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/main",
+            "program": "${workspaceFolder}/main.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -18,14 +16,27 @@
                 "engineLogging": false,
                 "exceptions": false
             },
-            "MIMode": "lldb",
-            "preLaunchTask": "CMake: Build with Shaders"
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb.exe",
+            "preLaunchTask": "CMake: Build with Shaders",
+            "setupCommands": [
+                {
+                    "description": "Enable break on C++ throw",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Enable break on C++ catch",
+                    "text": "catch catch",
+                    "ignoreFailures": true
+                }
+            ]
         },
         {
             "name": "Debug (Shaders Only)",
             "type": "cppdbg",
             "request": "launch",
-            "program": "${workspaceFolder}/main",
+            "program": "${workspaceFolder}/main.exe",
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
@@ -36,9 +47,21 @@
                 "engineLogging": false,
                 "exceptions": false
             },
-            "MIMode": "lldb",
-            "miDebuggerPath": "lldb",
-            "preLaunchTask": "compile_shaders"
+            "MIMode": "gdb",
+            "miDebuggerPath": "gdb.exe",
+            "preLaunchTask": "compile_shaders",
+            "setupCommands": [
+                {
+                    "description": "Enable break on C++ throw",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Enable break on C++ catch",
+                    "text": "catch catch",
+                    "ignoreFailures": true
+                }
+            ]
         }
     ]
 }

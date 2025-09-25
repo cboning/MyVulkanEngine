@@ -57,7 +57,7 @@ Image::Image(const std::string &resourceName, const std::string &deviceName, jso
     else if (config["type"] == "file")
         loadImage(config["filename"], usage);
     else
-        throw std::runtime_error("Unknown type: " + config["type"]);
+        throw std::runtime_error("Unknown type: " + std::string(config["type"]));
     
 }
 

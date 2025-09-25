@@ -297,7 +297,7 @@
             ]
         },
         "framebuffers": {
-            "count": 3,
+            "count": 5,
             "images": [
                 {
                     "type": "create",
@@ -428,7 +428,7 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": 5
                 },
                 {
                     "name": "BlurSampler1",
@@ -440,7 +440,7 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": 5
                 },
                 {
                     "name": "BlurSampler2",
@@ -452,7 +452,7 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": 5
                 },
                 {
                     "name": "BlendInputAttachments",
@@ -470,7 +470,7 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": 5
                 }
             ],
             "write": [
@@ -478,7 +478,7 @@
                     "name": "BlurSampler1",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "BlurColor1",
@@ -491,7 +491,7 @@
                     "name": "BlurSampler2",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "BlurColor2",
@@ -504,7 +504,7 @@
                     "name": "G_BufferInputAttachments",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "Position",
@@ -516,7 +516,7 @@
                     "name": "G_BufferInputAttachments",
                     "type": "Framebuffer",
                     "binding": 1,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "Normal",
@@ -528,7 +528,7 @@
                     "name": "G_BufferInputAttachments",
                     "type": "Framebuffer",
                     "binding": 2,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "AlbedoSpec",
@@ -540,7 +540,7 @@
                     "name": "BlendInputAttachments",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "OriginalColor",
@@ -552,7 +552,7 @@
                     "name": "BlendInputAttachments",
                     "type": "Framebuffer",
                     "binding": 1,
-                    "count": 3,
+                    "count": 5,
                     "detail": {
                         "imageInfo": {
                             "imageName": "BlurColor1",

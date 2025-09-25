@@ -53,7 +53,7 @@ class Device : public ResourceBase
     vk::Queue _graphicsQueue;
     vk::Queue _presentQueue;
     vk::Queue _computeQueue;
-    inline static std::vector<const char *> _extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
+    inline static std::vector<const char *> _extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     inline static std::vector<const char *> _layers;
     QueueFamilyIndices _queueFamilyIndices;
     std::unordered_set<Device *> _pDevice;

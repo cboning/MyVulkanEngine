@@ -1,4 +1,5 @@
 #include "KeyInputEvent.h"
+#include <algorithm>
 
 namespace Event
 {
