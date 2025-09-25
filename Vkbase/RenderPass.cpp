@@ -15,7 +15,7 @@ namespace Vkbase
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
     : ResourceBase(Vkbase::ResourceType::RenderPass, resourceName),
       _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
-      _descriptorSets(*resourceManager().create<DescriptorSets>(resourceName, deviceName))
+      _descriptorSets(*connectTo(resourceManager().create<DescriptorSets>(resourceName, deviceName)))
 {
     _attachmentCount = createInfo.attachmentCount;
     _attachmentFormats.reserve(_attachmentCount);
