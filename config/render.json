@@ -586,9 +586,9 @@
                     },
                     "subpass": 4,
                     "colorBlendState": {
+                                "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -635,9 +635,9 @@
                     },
                     "subpass": 2,
                     "colorBlendState": {
+                                "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -684,9 +684,9 @@
                     },
                     "subpass": 3,
                     "colorBlendState": {
+                                "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -733,9 +733,9 @@
                     },
                     "subpass": 4,
                     "colorBlendState": {
+                                "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -789,9 +789,9 @@
                     },
                     "subpass": 1,
                     "colorBlendState": {
+                                "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -800,7 +800,6 @@
                                 ]
                             },
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -848,9 +847,9 @@
                     },
                     "subpass": 0,
                     "colorBlendState": {
+                                "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -859,7 +858,6 @@
                                 ]
                             },
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -868,7 +866,6 @@
                                 ]
                             },
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
