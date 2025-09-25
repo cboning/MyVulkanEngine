@@ -74,7 +74,7 @@ namespace Vkbase
                                 VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME,
                                 VK_KHR_SURFACE_EXTENSION_NAME,
 #ifdef __APPLE__
-                                VK_EXT_METAL_SURFACE_EXTENSION_NAME
+                                "VK_EXT_metal_surface"
 #endif
                             },
                             std::string appName = "Vulkan");
