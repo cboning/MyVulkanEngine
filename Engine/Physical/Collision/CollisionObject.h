@@ -3,10 +3,11 @@
 
 class CollisionObject
 {
-  private:
-    glm::vec3 _size;
-    glm::vec3 _centerPosition;
+  protected:
+    glm::vec3 _boundBox;
+    glm::vec3 _position;
+    glm::vec3 _positionInBoundBox;
 
   public:
-    bool performCollisionDetection(CollisionObject target);
+    virtual bool performCollisionDetection(const CollisionObject &target) = 0;
 };
