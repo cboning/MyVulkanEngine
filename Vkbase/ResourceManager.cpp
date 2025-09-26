@@ -15,7 +15,11 @@ ResourceManager::ResourceManager()
     }
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    createInstance({"VK_LAYER_KHRONOS_validation"}, {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, "VK_MVK_macos_surface"});
+    createInstance({"VK_LAYER_KHRONOS_validation"}, {
+#ifdef __APPLE__
+                                                        VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, "VK_MVK_macos_surface"
+#endif
+                                                    });
 }
 
 ResourceManager::~ResourceManager()
