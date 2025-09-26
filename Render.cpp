@@ -85,7 +85,7 @@ void Render::createRenderPass()
     Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>(
         "mainWindow", "Device", JsonConfigReader::load("config/render.json")[0]["renderPass"], "mainWindow", depthFormat));
     vk::Extent2D extent = swapchain.extent();
-    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"], extent.width, extent.height, "", depthFormat);
+    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"], extent.width, extent.height, "mainWindow", depthFormat);
     Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
     descriptorSets.addDescriptorSetCreateConfigWithJson(JsonConfigReader::load("config/render.json")[0]["descriptorSets"]["sets"]);
     descriptorSets.init();
@@ -147,7 +147,7 @@ void Render::createRenderDelegator()
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
 
     _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("MainRender", "Device",
-                                                                                                std::vector<std::string>{swapchain.name()}, "GraphicsDevice");
+                                                                                                swapchain.name(), "GraphicsDevice");
     _pRenderDelegator->setCommandRecordFunc([this](const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
                                             { this->recordCommand(commandBuffer, imageIndex, currentFrame); });
     _pRenderDelegator->setRenderPassCreateFunc([this]() { this->createRenderPass(); });

@@ -31,6 +31,7 @@ class DescriptorSets : public ResourceBase
     ~DescriptorSets();
     void createPool();
     void allocateSets();
+    uint32_t getCount(const json &config);
 
   public:
     const std::string addDescriptorSetCreateConfig(std::string name, std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> descriptorTypes,
