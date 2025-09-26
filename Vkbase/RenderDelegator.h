@@ -1,7 +1,7 @@
 #pragma once
 #include "ResourceBase.h"
 #include <functional>
-#define MAX_FLIGHT_COUNT 3
+#define MAX_FLIGHT_COUNT 5
 
 namespace Vkbase
 {
@@ -20,19 +20,19 @@ class RenderDelegator : public ResourceBase
     static uint32_t maxFlightCount();
 
   private:
-    RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::vector<std::string> &swapchainNames,
+    RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::string &swapchainName,
                     const std::string &commandPoolName);
     ~RenderDelegator() override;
     void init();
     void createSyncObjects();
-    void recreateSwapchain(int32_t swapchainIndex);
+    void recreateSwapchain();
     const Device &_device;
     inline static uint32_t _maxFlightCount = MAX_FLIGHT_COUNT;
-    std::vector<Swapchain *> _pSwapchains;
+    Swapchain *_pSwapchain;
     const CommandPool &_commandPool;
     std::vector<vk::CommandBuffer> _commandBuffers;
-    std::vector<std::vector<vk::Semaphore>> _imageAvailableSemaphores;
-    std::vector<std::vector<vk::Semaphore>> _renderFinishSemaphores;
+    std::vector<vk::Semaphore> _imageAvailableSemaphores;
+    std::vector<vk::Semaphore> _renderFinishSemaphores;
     std::vector<vk::Fence> _inFlightFences;
     uint32_t _currentFrame = 0;
     bool _isSizeChanged = false;

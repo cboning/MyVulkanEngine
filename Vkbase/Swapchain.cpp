@@ -4,6 +4,7 @@
 #include "Image.h"
 #include <cmath>
 #include <array>
+#include <iostream>
 
 
 namespace Vkbase
@@ -85,7 +86,7 @@ namespace Vkbase
         _swapchain = _device.device().createSwapchainKHR(createInfo);
 
         _images = _device.device().getSwapchainImagesKHR(_swapchain);
-
+        std::cout << "Swapchain image count: " << _images.size() << std::endl;
         // Create image views for each image
         for (const auto& image : _images) {
             vk::ImageViewCreateInfo viewInfo;

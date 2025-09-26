@@ -68,13 +68,14 @@
         "functional": "cpp",
         "version": "cpp",
         "any": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "ranges": "cpp"
     },
-    // "cmake.configureSettings": {
-    //     "CMAKE_C_COMPILER": "clang",
-    //     "CMAKE_CXX_COMPILER": "clang++",
-    //     "CMAKE_C_COMPILER_TARGET": "x86_64-w64-mingw32",
-    //     "CMAKE_CXX_COMPILER_TARGET": "x86_64-w64-mingw32"
-    // },
+    "cmake.configureSettings": {
+        "CMAKE_C_COMPILER": "clang",
+        "CMAKE_CXX_COMPILER": "clang++",
+        "CMAKE_C_COMPILER_TARGET": "x86_64-w64-mingw32",
+        "CMAKE_CXX_COMPILER_TARGET": "x86_64-w64-mingw32"
+    },
     "cmake.ignoreCMakeListsMissing": true
 }

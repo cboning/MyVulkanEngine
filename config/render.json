@@ -297,7 +297,7 @@
             ]
         },
         "framebuffers": {
-            "count": 3,
+            "count": "auto",
             "images": [
                 {
                     "type": "create",
@@ -428,7 +428,8 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
                 },
                 {
                     "name": "BlurSampler1",
@@ -440,7 +441,8 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
                 },
                 {
                     "name": "BlurSampler2",
@@ -452,7 +454,8 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
                 },
                 {
                     "name": "BlendInputAttachments",
@@ -470,7 +473,8 @@
                             ]
                         }
                     ],
-                    "count": 3
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
                 }
             ],
             "write": [
@@ -478,86 +482,93 @@
                     "name": "BlurSampler1",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "BlurColor1",
                             "imageLayout": "ShaderReadOnlyOptimal",
                             "samplerName": "Sampler"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 },
                 {
                     "name": "BlurSampler2",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "BlurColor2",
                             "imageLayout": "ShaderReadOnlyOptimal",
                             "samplerName": "Sampler"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 },
                 {
                     "name": "G_BufferInputAttachments",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "Position",
                             "imageLayout": "ShaderReadOnlyOptimal"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 },
                 {
                     "name": "G_BufferInputAttachments",
                     "type": "Framebuffer",
                     "binding": 1,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "Normal",
                             "imageLayout": "ShaderReadOnlyOptimal"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 },
                 {
                     "name": "G_BufferInputAttachments",
                     "type": "Framebuffer",
                     "binding": 2,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "AlbedoSpec",
                             "imageLayout": "ShaderReadOnlyOptimal"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 },
                 {
                     "name": "BlendInputAttachments",
                     "type": "Framebuffer",
                     "binding": 0,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "OriginalColor",
                             "imageLayout": "ShaderReadOnlyOptimal"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 },
                 {
                     "name": "BlendInputAttachments",
                     "type": "Framebuffer",
                     "binding": 1,
-                    "count": 3,
+                    "count": "auto",
                     "detail": {
                         "imageInfo": {
                             "imageName": "BlurColor1",
                             "imageLayout": "ShaderReadOnlyOptimal"
-                        }
+                        },
+                        "swapchainName": "mainWindow"
                     }
                 }
             ]
@@ -586,9 +597,9 @@
                     },
                     "subpass": 4,
                     "colorBlendState": {
+                        "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -635,9 +646,9 @@
                     },
                     "subpass": 2,
                     "colorBlendState": {
+                        "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -684,9 +695,9 @@
                     },
                     "subpass": 3,
                     "colorBlendState": {
+                        "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -733,9 +744,9 @@
                     },
                     "subpass": 4,
                     "colorBlendState": {
+                        "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -789,9 +800,9 @@
                     },
                     "subpass": 1,
                     "colorBlendState": {
+                        "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -800,7 +811,6 @@
                                 ]
                             },
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -848,9 +858,9 @@
                     },
                     "subpass": 0,
                     "colorBlendState": {
+                        "logicOp": "Copy",
                         "blendAttachments": [
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -859,7 +869,6 @@
                                 ]
                             },
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",
@@ -868,7 +877,6 @@
                                 ]
                             },
                             {
-                                "logicOp": "Copy",
                                 "colorWriteMask": [
                                     "R",
                                     "G",

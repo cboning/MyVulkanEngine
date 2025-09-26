@@ -2,6 +2,7 @@
 
 #include "../Object/Object.h"
 #include <vector>
+#include <string>
 
 namespace Vkbase
 {

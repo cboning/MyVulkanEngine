@@ -32,7 +32,7 @@ Font::Font(const std::string &deviceName, const std::string &filename)
     for (GLubyte i = 0; i < 128; ++i)
     {
         Character character(deviceName, face, i);
-        _characters.insert(std::pair<GLchar, Character>(i, character));
+        _characters.insert(std::pair<char, Character>(i, character));
 
         imageInfos[i].setImageView(character.image().view());
     }

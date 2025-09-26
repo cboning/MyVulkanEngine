@@ -1,6 +1,7 @@
 #include "RenderPass.h"
 #include "DescriptorSets.h"
 #include "Swapchain.h"
+#include "Window.h"
 
 #include <iostream>
 
@@ -15,7 +16,7 @@ namespace Vkbase
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
     : ResourceBase(Vkbase::ResourceType::RenderPass, resourceName),
       _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
-      _descriptorSets(*connectTo(resourceManager().create<DescriptorSets>(resourceName, deviceName)))
+      _descriptorSets(*resourceManager().create<DescriptorSets>(resourceName, deviceName))
 {
     _attachmentCount = createInfo.attachmentCount;
     _attachmentFormats.reserve(_attachmentCount);
@@ -55,7 +56,18 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
                                                        const std::string &swapchainName, vk::Format depthFormat) const
 {
     std::vector<std::string> framebufferNames;
-    for (uint32_t i = 0; i < config["count"]; ++i)
+    int count;
+    {
+        const json &countJson = config["count"];
+        if (countJson.is_string() && std::string(countJson) == "auto")
+            count = dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::ResourceType::Swapchain, swapchainName))->imageNames().size();
+        else if (countJson.is_number_integer())
+            count = countJson;
+        else
+            throw std::runtime_error("Config Error: The count of framebuffer must be setting.");
+    }
+
+    for (uint32_t i = 0; i < count; ++i)
     {
         std::vector<std::string> attachmentNames;
         for (const json &attachment : config["images"])
@@ -94,10 +106,8 @@ void RenderPass::createPipelines(const json &config, const std::unordered_map<st
         const std::string &pipelineName = pipelineCreateInfoJson["name"];
         const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> &viewportInfo = viewportInfos.at(pipelineName);
         PipelineRenderInfo renderInfo = PipelineRenderInfo(pipelineCreateInfoJson["renderInfo"], viewportInfo.first, viewportInfo.second);
-        createPipeline(pipelineCreateInfoJson["name"],
-                       PipelineCreateInfo{ShaderInfo::getShaderInfosWithJson(pipelineCreateInfoJson["shaderInfos"]), vertexInfos.at(pipelineName),
-                                          descriptorSetLayouts.at(pipelineName),
-                                          renderInfo});
+        createPipeline(pipelineCreateInfoJson["name"], PipelineCreateInfo{ShaderInfo::getShaderInfosWithJson(pipelineCreateInfoJson["shaderInfos"]),
+                                                                          vertexInfos.at(pipelineName), descriptorSetLayouts.at(pipelineName), renderInfo});
     }
 }
 

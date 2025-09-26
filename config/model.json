@@ -1,6 +1,6 @@
 [
     {
-        "filename": "src/model/house-by-the-lake-sketchfab5.fbx",
+        "filename": "src/model/Angel's Share Genshin Impact Diarama/Angel's Share Genshin Impact Diarama.obj",
         "pipelines": [
             {
                 "name": "g_buffer",
