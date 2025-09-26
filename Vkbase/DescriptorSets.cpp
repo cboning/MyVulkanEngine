@@ -152,6 +152,8 @@ uint32_t DescriptorSets::getCount(const json &config)
     }
     else if (countJson.is_number_integer())
         return countJson;
+
+    throw std::runtime_error("Config Error: There is a error in DescriptorSets Config.");
 }
 
 void DescriptorSets::writeSetsWithJson(const json &config)
@@ -190,16 +192,16 @@ void DescriptorSets::writeSetsWithJson(const json &config)
         }
         else if (type == "Framebuffer")
         {
-            int count;
+            int count = 0;
             {
                 const json &countJson = writeConfig["count"];
                 if (countJson.is_string())
                 {
                     if (std::string(countJson) == "auto")
-                        count =
-                            dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::ResourceType::Swapchain, writeConfig["detail"]["swapchainName"]))
-                                ->imageNames()
-                                .size();
+                        count = dynamic_cast<Vkbase::Swapchain *>(
+                                    resourceManager().resource(Vkbase::ResourceType::Swapchain, writeConfig["detail"]["swapchainName"]))
+                                    ->imageNames()
+                                    .size();
                 }
                 else if (countJson.is_number_integer())
                     count = countJson;
