@@ -16,7 +16,7 @@ namespace Vkbase
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
     : ResourceBase(Vkbase::ResourceType::RenderPass, resourceName),
       _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
-      _descriptorSets(*resourceManager().create<DescriptorSets>(resourceName, deviceName))
+      _descriptorSets(*connectTo(resourceManager().create<DescriptorSets>(resourceName, deviceName)))
 {
     _attachmentCount = createInfo.attachmentCount;
     _attachmentFormats.reserve(_attachmentCount);
@@ -36,7 +36,6 @@ RenderPass::RenderPass(const std::string &resourceName, const std::string &devic
 
 RenderPass::~RenderPass()
 {
-    _descriptorSets.destroy();
     _device.device().destroy(_renderPass);
 }
 
@@ -56,7 +55,7 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
                                                        const std::string &swapchainName, vk::Format depthFormat) const
 {
     std::vector<std::string> framebufferNames;
-    int count;
+    uint32_t count;
     {
         const json &countJson = config["count"];
         if (countJson.is_string() && std::string(countJson) == "auto")

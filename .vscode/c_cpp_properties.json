@@ -10,8 +10,7 @@
             "compilerPath": "clang++",
             "cStandard": "c17",
             "cppStandard": "c++17",
-            "intelliSenseMode": "macos-clang-arm64",
-            "configurationProvider": "ms-vscode.cmake-tools"
+            "intelliSenseMode": "macos-clang-arm64"
         }
     ],
     "version": 4

@@ -1,6 +1,13 @@
 #pragma once
 #include "CollisionObject.h"
+class BoxCollisionObject;
 
-class SphereCollisionObject : CollisionObject
+class EllipsoidCollisionObject : public CollisionObject
 {
+private:
+    bool performSphereCollisionDetection(const EllipsoidCollisionObject &target) const;
+    bool performBoxCollisionDetection(const BoxCollisionObject &target) const;
+
+public:
+    bool performCollisionDetection(const CollisionObject &target) const override;
 };

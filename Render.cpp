@@ -15,7 +15,6 @@ void Render::init()
 
 void Render::resourceInit()
 {
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow1", "Vulkan Window", 800, 600);
     Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
 
@@ -27,13 +26,10 @@ void Render::resourceInit()
                                   {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)}};
     _pFrameVerticesBuffer = Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6,
                                                                                            vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
-    for (uint32_t i = 0; i < MAX_FLIGHT_COUNT; ++i)
-        Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("UBO" + std::to_string(i), "Device", sizeof(UniformBufferData),
-                                                                       vk::BufferUsageFlagBits::eUniformBuffer);
 
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
 
-    delete new Cloud();
+    // delete new Cloud();
 
     Modelbase::Model *pModel =
         new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
@@ -61,17 +57,6 @@ void Render::initWindowEvents()
     event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, []() { _camera.moveDown(_speed * (_deltaTime)); });
     event.addDownKeyEvent(GLFW_KEY_ESCAPE,
                           []() { dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->switchCursorState(); });
-}
-
-void Render::updateUniformBuffer(Vkbase::ResourceManager &resourceManager, uint32_t index)
-{
-    _camera.updatePerspective();
-    UniformBufferData cameraData;
-    cameraData.view = _camera.view();
-    cameraData.proj = _camera.perspective();
-    cameraData.model = glm::scale(glm::rotate(glm::mat4(1.0f), glm::radians(0.0f), glm::vec3(0.0f, 0.0f, 1.0f)), glm::vec3(1.0f, 1.0f, 1.0f));
-
-    dynamic_cast<Vkbase::Buffer *>(resourceManager.resource(Vkbase::ResourceType::Buffer, "UBO" + std::to_string(index)))->updateBufferData(&cameraData);
 }
 
 void Render::createRenderPass()
@@ -122,24 +107,11 @@ void Render::createRenderPass()
 void Render::createDescriptorSets()
 {
     Vkbase::DescriptorSets *pDescriptorSets = Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>("MainDescriptorSets", "Device");
-    pDescriptorSets->addDescriptorSetCreateConfig("Camera", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}},
-                                                  Vkbase::RenderDelegator::maxFlightCount());
     Font::addProjectiveDescriptorSet(pDescriptorSets->name());
     pDescriptorSets->init();
 
     Font::writeProjectiveDescriptorSet(pDescriptorSets->name(), "Device");
     Font::setScreenSize({800, 600});
-
-    vk::DescriptorBufferInfo bufferInfo;
-    bufferInfo.setOffset(0).setRange(sizeof(UniformBufferData));
-
-    {
-        std::vector<vk::DescriptorBufferInfo> bufferInfos(Vkbase::RenderDelegator::maxFlightCount(), bufferInfo);
-        for (uint32_t i = 0; i < Vkbase::RenderDelegator::maxFlightCount(); ++i)
-            bufferInfos[i].setBuffer(
-                dynamic_cast<Vkbase::Buffer *>(_resourceManager.resource(Vkbase::ResourceType::Buffer, "UBO" + std::to_string(i)))->buffer());
-        pDescriptorSets->writeSets("Camera", 0, bufferInfos, {}, Vkbase::RenderDelegator::maxFlightCount());
-    }
 }
 
 void Render::createRenderDelegator()
@@ -158,6 +130,8 @@ void Render::draw()
     glfwPollEvents();
     clacDeltaTime();
     Event::KeyInputEvent::processing();
+    _camera.updatePerspective();
+
     if (_resourceManager.resources().count(Vkbase::ResourceType::RenderDelegator))
     {
         const std::unordered_map<std::string, Vkbase::ResourceBase *> resources = _resourceManager.resources().at(Vkbase::ResourceType::RenderDelegator);
@@ -175,7 +149,6 @@ void Render::cleanup()
 
 void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
-    updateUniformBuffer(_resourceManager, currentFrame);
     _pText->setText(std::to_string(1 / _deltaTime));
 
     Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));

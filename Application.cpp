@@ -22,6 +22,7 @@ void Application::run()
 
 void Application::mainLoop()
 {
+
     while (Render::shouldEndApplication())
     {
         _renderer.draw();

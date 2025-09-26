@@ -78,19 +78,6 @@ struct ScreenVertex
     }
 };
 
-// struct UniformBufferData {
-//     glm::vec3 cameraPosition; // 12 bytes
-//     float time;               // 4 bytes
-
-//     glm::vec3 front;          // 12 bytes
-//     float padding2;           // 4 bytes 填充，保证16字节对齐
-
-//     glm::vec2 screenSize;     // 8 bytes
-//     float near;               // 4 bytes
-//     float fov;                // 4 bytes
-//     // 总大小：48字节，无额外浪费
-// };
-
 struct UniformBufferData
 {
     glm::mat4 model;

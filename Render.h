@@ -6,7 +6,7 @@
 
 class Render
 {
-  private:
+private:
     inline static Camera _camera = Camera({800, 600});
     inline static Vkbase::ResourceManager &_resourceManager = Vkbase::ResourceBase::resourceManager();
     Vkbase::RenderDelegator *_pRenderDelegator;
@@ -22,7 +22,6 @@ class Render
     void createDescriptorSets();
     void createRenderDelegator();
     void resourceInit();
-    void updateUniformBuffer(Vkbase::ResourceManager &resourceManager, uint32_t index);
     void recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame);
     void cleanup();
     void renderFrame(const vk::CommandBuffer &commandBuffer, const std::string &pipelineName, const vk::DescriptorSet &descriptorSet);
@@ -30,7 +29,7 @@ class Render
 
     static void clacDeltaTime();
 
-  public:
+public:
     void init();
     static void draw();
     static bool shouldEndApplication();

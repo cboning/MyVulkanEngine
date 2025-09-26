@@ -1,6 +1,6 @@
+#include "Render.h"
 #include <iostream>
 #include <vector>
-#include "Render.h"
 
 class Application
 {
