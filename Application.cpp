@@ -1,19 +1,17 @@
 #include "Application.h"
 #include "Modelbase/Modelbase.h"
 #include "Data.h"
+#include "Engine/EngineLogic.h"
 
 Application::Application()
 {
-#ifdef DEBUG
     init();
-#endif
 }
 
 void Application::init()
 {
     _renderer.init();
 }
-
 
 void Application::run()
 {
@@ -22,9 +20,12 @@ void Application::run()
 
 void Application::mainLoop()
 {
+    EngineLogic engine;
+    engine.run();
 
     while (Render::shouldEndApplication())
     {
         _renderer.draw();
     }
+    engine.stop();
 }

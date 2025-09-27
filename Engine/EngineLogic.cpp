@@ -1,9 +1,10 @@
 #include "EngineLogic.h"
+#include "../Vkbase/Window.h"
 #include <thread>
 
 void EngineLogic::run() {
     std::thread mainLoopThread(&EngineLogic::mainLoop, this);
-    mainLoopThread.join();
+    mainLoopThread.detach();
 }
 
 void EngineLogic::mainLoop()
@@ -11,7 +12,7 @@ void EngineLogic::mainLoop()
     std::unique_lock<std::mutex> lock(_stopSignalMutex, std::defer_lock);
     while (!_stop)
     {
-
+        
         ++_tick;
     }
 }

@@ -89,4 +89,9 @@ namespace Vkbase
     {
         return _buffer;
     }
+
+    vk::DeviceSize Buffer::size() const
+    {
+        return _size;
+    }
 }

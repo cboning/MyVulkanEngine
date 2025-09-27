@@ -8,6 +8,8 @@ enum class CollisionObjectType
     Sphere
 };
 
+class Object;
+
 class CollisionObject
 {
 private:
@@ -27,4 +29,5 @@ public:
     glm::vec3 positionInBoundBox() const;
     glm::mat3 axes() const;
     CollisionObjectType type() const;
+    void updateWithObject(const Object &object);
 };

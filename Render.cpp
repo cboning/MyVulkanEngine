@@ -1,6 +1,7 @@
 #include "Render.h"
 #include "Cloud.h"
 #include "Data.h"
+#include "Entity/Cube.h"
 #include "Event/KeyInputEvent.h"
 #include "JsonConfigReader/JsonConfigReader.h"
 #include "Modelbase/Modelbase.h"
@@ -28,6 +29,7 @@ void Render::resourceInit()
                                                                                            vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
 
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
+    new Cube("1");
 
     // delete new Cloud();
 
@@ -70,7 +72,8 @@ void Render::createRenderPass()
     Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>(
         "mainWindow", "Device", JsonConfigReader::load("config/render.json")[0]["renderPass"], "mainWindow", depthFormat));
     vk::Extent2D extent = swapchain.extent();
-    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"], extent.width, extent.height, "mainWindow", depthFormat);
+    renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"], extent.width, extent.height, "mainWindow",
+                                 depthFormat);
     Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
     descriptorSets.addDescriptorSetCreateConfigWithJson(JsonConfigReader::load("config/render.json")[0]["descriptorSets"]["sets"]);
     descriptorSets.init();
@@ -79,10 +82,11 @@ void Render::createRenderPass()
     Vkbase::VertexInfo modelVertexInfo(ModelData::Vertex::attributeDescriptions(), {ModelData::Vertex::bindingDescription()});
     Vkbase::VertexInfo screenVertexInfo(VertexData::attributeDescriptions(), {VertexData::bindingDescription()});
     Vkbase::VertexInfo textVertexInfo(Text::Vertex::attributeDescriptions(), {Text::Vertex::bindingDescription()});
+    Vkbase::VertexInfo cubeVertexInfo(GeometryVertexData::attributeDescriptions(), {GeometryVertexData::bindingDescription()});
 
-    const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {{"blend", screenVertexInfo},  {"blur_h", screenVertexInfo},
-                                                                             {"blur_v", screenVertexInfo}, {"light", screenVertexInfo},
-                                                                             {"text", textVertexInfo},     {"g_buffer", modelVertexInfo}};
+    const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {
+        {"blend", screenVertexInfo}, {"blur_h", screenVertexInfo},  {"blur_v", screenVertexInfo}, {"light", screenVertexInfo},
+        {"text", textVertexInfo},    {"g_buffer", modelVertexInfo}, {"GeometryPipeline", cubeVertexInfo}};
 
     const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> descriptorSetLayouts = {
         {"blend", {descriptorSets.layout("BlendInputAttachments")}},
@@ -90,14 +94,15 @@ void Render::createRenderPass()
         {"blur_v", {descriptorSets.layout("BlurSampler2")}},
         {"light", {descriptorSets.layout("G_BufferInputAttachments")}},
         {"text", {_pFont->layout(), Font::projectiveLayout("MainDescriptorSets")}},
-        {"g_buffer", (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")}};
+        {"g_buffer", (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")},
+        {"GeometryPipeline", Entity::entity("1").descriptorSetLayouts()}};
 
     const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> viewportInfo = {{vk::Rect2D().setExtent(swapchain.extent())},
                                                                                         {vk::Viewport().setWidth(extent.width).setHeight(extent.height)}};
 
     const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> viewportInfos = {
-        {"blend", viewportInfo}, {"blur_h", viewportInfo}, {"blur_v", viewportInfo},
-        {"light", viewportInfo}, {"text", viewportInfo},   {"g_buffer", viewportInfo}};
+        {"blend", viewportInfo}, {"blur_h", viewportInfo},   {"blur_v", viewportInfo},  {"light", viewportInfo},
+        {"text", viewportInfo},  {"g_buffer", viewportInfo}, {"GeometryPipeline", viewportInfo}};
 
     renderPass.createPipelines(JsonConfigReader::load("config/render.json")[0]["pipelines"], vertexInfos, descriptorSetLayouts, viewportInfos);
 
@@ -118,8 +123,7 @@ void Render::createRenderDelegator()
 {
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
 
-    _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("MainRender", "Device",
-                                                                                                swapchain.name(), "GraphicsDevice");
+    _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("MainRender", "Device", swapchain.name(), "GraphicsDevice");
     _pRenderDelegator->setCommandRecordFunc([this](const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
                                             { this->recordCommand(commandBuffer, imageIndex, currentFrame); });
     _pRenderDelegator->setRenderPassCreateFunc([this]() { this->createRenderPass(); });
@@ -152,8 +156,6 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     _pText->setText(std::to_string(1 / _deltaTime));
 
     Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
-    const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
-    const Vkbase::Pipeline &g_bufferPipeline = *dynamic_cast<const Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "g_buffer"));
     const Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
 
     std::vector<vk::ClearValue> clearValues = {vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
@@ -161,21 +163,25 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
                                                vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
                                                vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}), vk::ClearValue().setDepthStencil({1.0f, 0})};
 
-    vk::Extent2D extent = swapchain.extent();
+    vk::Extent2D extent = dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"))->extent();
     renderPass.begin(
         commandBuffer,
         *dynamic_cast<const Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
         clearValues, extent);
 
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, g_bufferPipeline.pipeline());
-    for (Modelbase::Model *pModel : Modelbase::Model::models())
-    {
-        Modelbase::ModelInstance &instance = pModel->instance("1");
+    // for (Modelbase::Model *pModel : Modelbase::Model::models())
+    // {
+    //     Modelbase::ModelInstance &instance = pModel->instance("1");
 
-        pModel->updateAnimation(_deltaTime);
-        instance.updateUniformBuffers(currentFrame, _camera);
-        pModel->draw(currentFrame, commandBuffer, 0);
-    }
+    //     pModel->updateAnimation(_deltaTime);
+    //     instance.updateUniformBuffers(currentFrame, _camera);
+    //     pModel->draw(currentFrame, commandBuffer, 0);
+    // }
+
+    Cube &cube = *dynamic_cast<Cube *>(&Entity::entity("1"));
+
+    cube.updateUBO(_camera, currentFrame);
+    cube.draw(commandBuffer, imageIndex);
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(commandBuffer, "light", descriptorSets.sets("G_BufferInputAttachments")[imageIndex]);

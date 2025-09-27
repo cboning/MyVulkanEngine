@@ -44,6 +44,42 @@ struct VertexData
 
 };
 
+
+struct GeometryVertexData
+{
+    glm::vec3 position;
+    glm::vec3 normal;
+
+    static std::vector<vk::VertexInputAttributeDescription> attributeDescriptions()
+    {
+        std::vector<vk::VertexInputAttributeDescription> descriptions;
+        descriptions.resize(2);
+        uint32_t index = 0;
+        descriptions[index].setBinding(0)
+            .setLocation(index++)
+            .setFormat(vk::Format::eR32G32B32Sfloat)
+            .setOffset(offsetof(GeometryVertexData, position));
+
+        descriptions[index].setBinding(0)
+            .setLocation(index++)
+            .setFormat(vk::Format::eR32G32B32Sfloat)
+            .setOffset(offsetof(GeometryVertexData, normal));
+        
+        return descriptions;
+    }
+
+    static vk::VertexInputBindingDescription bindingDescription()
+    {
+        vk::VertexInputBindingDescription description;
+        description.setBinding(0)
+            .setStride(sizeof(GeometryVertexData))
+            .setInputRate(vk::VertexInputRate::eVertex);
+        
+        return description;
+    }
+
+};
+
 struct ScreenVertex
 {
     glm::vec3 position;

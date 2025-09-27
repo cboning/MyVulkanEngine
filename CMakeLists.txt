@@ -52,6 +52,9 @@ file(GLOB SRC_FILES
     "Camera/*.cpp"
     "JsonConfigReader/JsonConfigReader.cpp"
     "Event/*.cpp"
+    "Engine/*.cpp"
+    "Engine/Physical/Collision/*.cpp"
+    "Entity/*.cpp"
 )
 
 # 创建可执行文件

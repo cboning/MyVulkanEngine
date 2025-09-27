@@ -161,9 +161,25 @@ void DescriptorSets::writeSetsWithJson(const json &config)
     for (const json &writeConfig : config)
     {
         const std::string &type = writeConfig["type"];
+
+        int count = 0;
+        {
+            const json &countJson = writeConfig["count"];
+            if (countJson.is_string())
+            {
+                if (std::string(countJson) == "auto")
+                    count = dynamic_cast<Vkbase::Swapchain *>(
+                                resourceManager().resource(Vkbase::ResourceType::Swapchain, writeConfig["detail"]["swapchainName"]))
+                                ->imageNames()
+                                .size();
+            }
+            else if (countJson.is_number_integer())
+                count = countJson;
+        }
+
         if (type == "Image")
         {
-            std::vector<vk::DescriptorImageInfo> imageInfos(writeConfig["count"]);
+            std::vector<vk::DescriptorImageInfo> imageInfos(count);
             for (uint32_t i = 0; i < imageInfos.size(); ++i)
             {
                 const json &imageInfoJson = writeConfig["detail"]["imageInfos"][i];
@@ -179,33 +195,26 @@ void DescriptorSets::writeSetsWithJson(const json &config)
         }
         else if (type == "Buffer")
         {
-            std::vector<vk::DescriptorBufferInfo> bufferInfos(writeConfig["count"]);
+            std::vector<vk::DescriptorBufferInfo> bufferInfos(count);
             for (uint32_t i = 0; i < bufferInfos.size(); ++i)
             {
-                const json &bufferInfoJson = writeConfig["detail"]["bufferInfos"][i];
+                const json *pBufferInfoJson;
+                if (writeConfig["count"] == "auto")
+                    pBufferInfoJson = &writeConfig["detail"]["bufferInfo"];
+                else
+                    pBufferInfoJson = &writeConfig["detail"]["bufferInfos"][i];
+                const json &bufferInfoJson = *pBufferInfoJson;
+                
+                Vkbase::Buffer &buffer = *dynamic_cast<Vkbase::Buffer *>(resourceManager().resource(Vkbase::ResourceType::Buffer, writeConfig["count"] == "auto" ? std::string(bufferInfoJson["bufferName"]) + "_" + std::to_string(i) : std::string(bufferInfoJson["bufferName"])));
                 bufferInfos[i]
-                    .setBuffer(dynamic_cast<Vkbase::Buffer *>(resourceManager().resource(Vkbase::ResourceType::Buffer, bufferInfoJson["bufferName"]))->buffer())
+                    .setBuffer(buffer.buffer())
                     .setOffset(bufferInfoJson["offset"])
-                    .setRange(bufferInfoJson["range"]);
+                    .setRange(buffer.size());
             }
             writeSets(writeConfig["name"], writeConfig["binding"], bufferInfos, {}, bufferInfos.size());
         }
         else if (type == "Framebuffer")
         {
-            int count = 0;
-            {
-                const json &countJson = writeConfig["count"];
-                if (countJson.is_string())
-                {
-                    if (std::string(countJson) == "auto")
-                        count = dynamic_cast<Vkbase::Swapchain *>(
-                                    resourceManager().resource(Vkbase::ResourceType::Swapchain, writeConfig["detail"]["swapchainName"]))
-                                    ->imageNames()
-                                    .size();
-                }
-                else if (countJson.is_number_integer())
-                    count = countJson;
-            }
 
             std::vector<vk::DescriptorImageInfo> imageInfos(count);
             for (uint32_t i = 0; i < imageInfos.size(); ++i)

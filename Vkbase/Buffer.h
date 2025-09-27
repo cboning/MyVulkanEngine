@@ -23,5 +23,6 @@ class Buffer : public ResourceBase
   public:
     const vk::Buffer &buffer() const;
     void updateBufferData(const void *pData) const;
+    vk::DeviceSize size() const;
 };
 } // namespace Vkbase

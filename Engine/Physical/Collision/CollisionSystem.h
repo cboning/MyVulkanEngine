@@ -2,6 +2,5 @@
 
 class CollisionSystem
 {
-    private:
-        
+private:
 };

@@ -899,6 +899,72 @@
                         "shaderStageFlags": "Fragment"
                     }
                 ]
+            },
+            {
+                "name": "GeometryPipeline",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "frontFace": "Clockwise",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/geometryVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/geometryFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
             }
         ]
     }
