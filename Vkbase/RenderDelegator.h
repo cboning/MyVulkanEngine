@@ -1,7 +1,7 @@
 #pragma once
 #include "ResourceBase.h"
 #include <functional>
-#define MAX_FLIGHT_COUNT 3
+#define MAX_FLIGHT_COUNT 5
 
 namespace Vkbase
 {

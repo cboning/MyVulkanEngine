@@ -17,7 +17,7 @@ Cube::Cube(const std::string &name, bool enableGravity) : Entity(name)
 
 Cube::~Cube()
 {
-    for (uint32_t i = 0; i < 3; ++i)
+    for (uint32_t i = 0; i < 5; ++i)
         Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, name() + "_Cube_UBO_" + std::to_string(i));
     Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::DescriptorSets, name() + "_Cube");
 
@@ -28,7 +28,7 @@ Cube::~Cube()
 void Cube::init()
 {
     collisionObject().setPositionInBoundBox(glm::vec3(0.5f));
-    for (uint32_t i = 0; i < 3; ++i)
+    for (uint32_t i = 0; i < 5; ++i)
         Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(name() + "_Cube_UBO_" + std::to_string(i), "Device", sizeof(CubeUniformBufferData),
                                                                        vk::BufferUsageFlagBits::eUniformBuffer);
     Vkbase::DescriptorSets &descriptorSets = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>(name() + "_Cube", "Device"));

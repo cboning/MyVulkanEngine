@@ -134,7 +134,7 @@ CollisionResult BoxCollisionObject::performEllipsoidCollisionDetection(const Ell
     for (int i = 0; i < 3; i++)
     {
         float dist = glm::dot(d, transformedBoxAxis[i]);
-        float clamped = std::clamp(dist, -transformedBoxHalfSize[i], transformedBoxHalfSize[i]);
+        float clamped = glm::clamp(dist, -transformedBoxHalfSize[i], transformedBoxHalfSize[i]);
         closest += transformedBoxAxis[i] * clamped;
     }
     return {glm::length(closest) <= 1.0f};

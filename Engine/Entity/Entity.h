@@ -25,8 +25,8 @@ class Entity
 private:
     Object _object;
     BoxCollisionObject _collisionObject;
-    glm::vec3 _velocity;
-    glm::vec3 _acceleration;
+    glm::vec3 _velocity = glm::vec3(0.0f);
+    glm::vec3 _acceleration = glm::vec3(0.0f);
     const std::string _name;
     std::unordered_set<Motion *> _pMotions;
     std::vector<CollisionResult> _collisionResults;

@@ -18,19 +18,7 @@
             },
             "MIMode": "gdb",
             "miDebuggerPath": "gdb.exe",
-            "preLaunchTask": "CMake: Build with Shaders",
-            "setupCommands": [
-                {
-                    "description": "Enable break on C++ throw",
-                    "text": "catch throw",
-                    "ignoreFailures": true
-                },
-                {
-                    "description": "Enable break on C++ catch",
-                    "text": "catch catch",
-                    "ignoreFailures": true
-                }
-            ]
+            "preLaunchTask": "CMake: Build with Shaders"
         },
         {
             "name": "Debug (MacOS)",

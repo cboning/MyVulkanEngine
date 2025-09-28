@@ -2,8 +2,8 @@
 class PhysicalSystem
 {
 private:
-    float _deltaTime;
-    float _lastTime = 0.0f;
+    double _deltaTime;
+    double _lastTime = 0.0f;
 
     void calcTime();
 public:
