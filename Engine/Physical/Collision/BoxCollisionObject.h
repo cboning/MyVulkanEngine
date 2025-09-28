@@ -6,9 +6,10 @@ class EllipsoidCollisionObject;
 class BoxCollisionObject : public CollisionObject
 {
 private:
-    bool performEllipsoidCollisionDetection(const EllipsoidCollisionObject &target) const;
-    bool performBoxCollisionDetection(const BoxCollisionObject &target) const;
+    CollisionResult performEllipsoidCollisionDetection(const EllipsoidCollisionObject &target) const;
+    CollisionResult performBoxCollisionDetection(const BoxCollisionObject &target) const;
 
 public:
-    bool performCollisionDetection(const CollisionObject &target) const override;
+    BoxCollisionObject();
+    CollisionResult performCollisionDetection(const CollisionObject &target) const override;
 };

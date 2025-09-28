@@ -14,7 +14,7 @@ struct PointLight {
 
 const float gamma = 2.2f;
 const float exposure = 1.0f;
-PointLight light = {vec3(50, 50, 10), vec3(1.0, 0.996, 0.871) * 0.5};
+PointLight light = {vec3(3, 1, 0), vec3(1.0, 0.996, 0.871) * 0.5};
 
 void main() {
     vec3 color = (subpassLoad(albedoSpec).rgb + 1) * 0.5;
@@ -25,11 +25,11 @@ void main() {
     if (fragNormal != vec3(0.0f))
         weight = max(dot(normalize(light.position - fragPos), fragNormal), 0.0f);
 
-    vec3 lightColor;
-    if (weight < 0.4)
-        lightColor = vec3(0.3f);
-    else
-        lightColor = light.color;
+    vec3 lightColor = light.color * weight;
+    // if (weight < 0.4)
+    //     lightColor = vec3(0.3f);
+    // else
+    //     lightColor = light.color;
     
     color *= vec3(0.1) + lightColor;
     originColor = vec4(color, 1.0f);

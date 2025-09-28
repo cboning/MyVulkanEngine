@@ -9,5 +9,5 @@ private:
     bool performBoxCollisionDetection(const BoxCollisionObject &target) const;
 
 public:
-    bool performCollisionDetection(const CollisionObject &target) const override;
+    CollisionResult performCollisionDetection(const CollisionObject &target) const override;
 };

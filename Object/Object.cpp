@@ -3,39 +3,22 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 
-Object::Object(const glm::vec3 &position, const glm::quat &rotation, const glm::vec3 &scale)
-    : _position(position), _rotation(rotation), _scale(scale)
+Object::Object(const glm::vec3 &position, const glm::quat &rotation, const glm::vec3 &scale) : _position(position), _rotation(rotation), _scale(scale)
 {
     updateMatModel();
 }
 
-Object::Object()
-    : Object(glm::vec3(), glm::quat(), glm::vec3(1.0f))
-{
+Object::Object() : Object(glm::vec3(), glm::quat(1.0f, 0.0f, 0.0f, 0.0f), glm::vec3(1.0f)) {}
 
-}
+const glm::vec3 &Object::position() const { return _position; }
 
-const glm::vec3 &Object::position() const
-{
-    return _position;
-}
+const glm::vec3 &Object::scale() const { return _scale; }
 
-const glm::vec3 &Object::scale() const
-{
-    return _scale;
-}
+const glm::quat &Object::rotation() const { return _rotation; }
 
-const glm::quat &Object::rotation() const
-{
-    return _rotation;
-}
+const glm::mat4 &Object::matModel() const { return _model; }
 
-const glm::mat4 &Object::matModel() const
-{
-    return _model;
-}
-
-void Object::setPositon(const glm::vec3 &position)
+void Object::setPosition(const glm::vec3 &position)
 {
     _position = position;
     updateMatModel();
@@ -53,7 +36,4 @@ void Object::setScale(const glm::vec3 &scale)
     updateMatModel();
 }
 
-void Object::updateMatModel()
-{
-    _model = glm::translate(glm::scale(glm::toMat4(_rotation), _scale), _position);
-}
+void Object::updateMatModel() { _model = glm::translate(glm::mat4(1.0f), _position) * glm::toMat4(_rotation) * glm::scale(glm::mat4(1.0f), _scale); }

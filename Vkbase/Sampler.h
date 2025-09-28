@@ -8,14 +8,14 @@ class Sampler : public ResourceBase
 {
     friend class ResourceManager;
 
-  private:
+private:
     vk::Sampler _sampler;
     const Device &_device;
     void createSampler(vk::SamplerCreateInfo createInfo);
     Sampler(const std::string &resourceName, const std::string &deviceName, const vk::SamplerCreateInfo &createInfo = getDefaultCreateInfo());
     ~Sampler();
 
-  public:
+public:
     const vk::Sampler &sampler() const;
     static vk::SamplerCreateInfo getDefaultCreateInfo();
 };

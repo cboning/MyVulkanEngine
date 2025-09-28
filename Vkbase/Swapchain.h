@@ -12,7 +12,7 @@ class Swapchain : public ResourceBase
 {
     friend class ResourceManager;
 
-  private:
+private:
     vk::SwapchainKHR _swapchain;
     vk::SurfaceFormatKHR _format;
     vk::Extent2D _extent;
@@ -33,7 +33,7 @@ class Swapchain : public ResourceBase
     Swapchain(const std::string &resourceName, const std::string &deviceName, const std::string &windowName);
     ~Swapchain() override;
 
-  public:
+public:
     vk::Format format() const;
     vk::Extent2D extent() const;
     Swapchain *recreate();

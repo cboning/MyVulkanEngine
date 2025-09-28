@@ -1,6 +1,6 @@
 #include "SphereCollisionObject.h"
 
-bool EllipsoidCollisionObject::performCollisionDetection(const CollisionObject &target) const {}
+CollisionResult EllipsoidCollisionObject::performCollisionDetection(const CollisionObject &target) const {}
 
 bool EllipsoidCollisionObject::performSphereCollisionDetection(const EllipsoidCollisionObject &target) const {}
 

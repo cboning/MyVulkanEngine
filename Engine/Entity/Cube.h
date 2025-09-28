@@ -1,6 +1,5 @@
 #pragma once
-#include "../Engine/Physical/Collision/BoxCollisionObject.h"
-#include "../Object/Object.h"
+#include "../../Object/Object.h"
 #include <glm/glm.hpp>
 #include <json.hpp>
 #include <string>
@@ -37,10 +36,11 @@ private:
     void init() override;
 
 public:
-    Cube(const std::string &name);
+    Cube(const std::string &name, bool enableGravity = false);
     ~Cube();
     void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex) const override;
     bool checkCollisionWithObject(const CollisionObject &target);
+    bool checkCollisionWithObject(Cube &target);
     void updateUBO(const Camera &_camera, uint32_t index) const;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
 };

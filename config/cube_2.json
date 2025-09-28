@@ -1,0 +1,34 @@
+{
+    "descriptorSets": {
+        "sets": [
+            {
+                "name": "UBO",
+                "layoutConfig": [
+                    {
+                        "descriptorType": "UniformBuffer",
+                        "shaderStageFlags": [
+                            "Vertex"
+                        ]
+                    }
+                ],
+                "count": "swapchainImageCount",
+                "swapchainName": "mainWindow"
+            }
+        ],
+        "write": [
+            {
+                "name": "UBO",
+                "type": "Buffer",
+                "binding": 0,
+                "count": "auto",
+                "detail": {
+                    "bufferInfo": {
+                        "bufferName": "2_Cube_UBO",
+                        "offset": 0
+                    },
+                    "swapchainName": "mainWindow"
+                }
+            }
+        ]
+    }
+}

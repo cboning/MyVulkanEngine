@@ -7,9 +7,8 @@
 
 namespace Event
 {
-    class KeyInputEvent;
+class KeyInputEvent;
 }
-
 
 namespace Vkbase
 {
@@ -19,7 +18,7 @@ class Window : public ResourceBase
 {
     friend class ResourceManager;
 
-  private:
+private:
     GLFWwindow *_pWindow;
     vk::SurfaceKHR _surface;
     uint32_t _width, _height;
@@ -30,21 +29,24 @@ class Window : public ResourceBase
     int _cursorState = GLFW_CURSOR_NORMAL;
     Event::KeyInputEvent *_pKeyInputEvent;
     std::function<void(double, double)> _mouseMoveCallback;
+    std::function<void(double, double)> _mouseScrollCallback;
     inline static std::unordered_set<Window *> _delayDestroyWindows;
 
     void init();
     static void windowClosedCallback(GLFWwindow *pWindow);
     static void mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos);
+    static void mouseScrollCallback(GLFWwindow *pWindow, double xOffset, double yOffset);
     Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height);
     ~Window() override;
 
-  public:
+public:
     const vk::SurfaceKHR &surface() const;
     static void delayDestroy();
     uint32_t width() const;
     uint32_t height() const;
     GLFWwindow *window() const;
     void setMouseMoveCallback(const std::function<void(double, double)> &func);
+    void setMouseScrollCallback(const std::function<void(double, double)> &func);
     void cursorCapture(int value);
     void switchCursorState();
 

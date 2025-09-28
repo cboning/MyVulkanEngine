@@ -69,7 +69,8 @@
         "version": "cpp",
         "any": "cpp",
         "valarray": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "__availability": "cpp"
     },
     "cmake.configureSettings": {
         "CMAKE_C_COMPILER": "clang",

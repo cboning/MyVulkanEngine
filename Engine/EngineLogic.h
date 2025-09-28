@@ -1,5 +1,6 @@
 #pragma once
 #include <mutex>
+#include "PhysicalSystem.h"
 
 class EngineLogic
 {
@@ -7,6 +8,7 @@ class EngineLogic
     int _tick = 0;
     bool _stop = false;
     std::mutex _stopSignalMutex;
+    PhysicalSystem _physicalSystem;
 
     void mainLoop();
   public:

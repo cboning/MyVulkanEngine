@@ -54,7 +54,8 @@ file(GLOB SRC_FILES
     "Event/*.cpp"
     "Engine/*.cpp"
     "Engine/Physical/Collision/*.cpp"
-    "Entity/*.cpp"
+    "Engine/Physical/Motion/*.cpp"
+    "Engine/Entity/*.cpp"
 )
 
 # 创建可执行文件

@@ -2,27 +2,25 @@
 #include "SphereCollisionObject.h"
 
 constexpr float EPSILON = 1e-6f;
-bool BoxCollisionObject::performCollisionDetection(const CollisionObject &target) const
+
+BoxCollisionObject::BoxCollisionObject() : CollisionObject(CollisionObjectType::Box) {}
+
+CollisionResult BoxCollisionObject::performCollisionDetection(const CollisionObject &target) const
 {
     if (target.type() == CollisionObjectType::Box)
         return performBoxCollisionDetection(static_cast<const BoxCollisionObject &>(target));
     else if (target.type() == CollisionObjectType::Sphere)
         return performEllipsoidCollisionDetection(static_cast<const EllipsoidCollisionObject &>(target));
-    return false;
+    return {};
 }
 
-bool BoxCollisionObject::performBoxCollisionDetection(const BoxCollisionObject &target) const
+CollisionResult BoxCollisionObject::performBoxCollisionDetection(const BoxCollisionObject &target) const
 {
+    CollisionResult result;
+
     glm::vec3 halfSizeA = halfSize();
     glm::vec3 halfSizeB = target.halfSize();
     glm::vec3 translation = target.center() - center();
-    
-    if (std::abs(translation.x) > (halfSizeA.x + halfSizeB.x))
-        return false;
-    if (std::abs(translation.y) > (halfSizeA.y + halfSizeB.y))
-        return false;
-    if (std::abs(translation.z) > (halfSizeA.z + halfSizeB.z))
-        return false;
 
     glm::mat3 axesA = axes();
     glm::mat3 axesB = target.axes();
@@ -37,20 +35,42 @@ bool BoxCollisionObject::performBoxCollisionDetection(const BoxCollisionObject &
             absRotation[i][j] = std::abs(rotation[i][j]) + EPSILON;
         }
 
+    glm::vec3 t;
+    for (int i = 0; i < 3; i++)
+        t[i] = glm::dot(translation, axesA[i]);
+
+    float minOverlap = std::numeric_limits<float>::max();
+    glm::vec3 bestAxis(0);
+
+    auto updateMTV = [&](float overlap, const glm::vec3 &axis)
+    {
+        if (overlap < minOverlap)
+        {
+            minOverlap = overlap;
+            bestAxis = axis;
+        }
+    };
+
     for (int i = 0; i < 3; ++i)
     {
         float ra = halfSizeA[i];
         float rb = halfSizeB[0] * absRotation[i][0] + halfSizeB[1] * absRotation[i][1] + halfSizeB[2] * absRotation[i][2];
-        if (std::abs(glm::dot(translation, axesA[i])) > ra + rb)
-            return false;
+        float dist = std::abs(glm::dot(translation, axesA[i]));
+        float overlap = ra + rb - dist;
+        if (overlap < 0)
+            return result;
+        updateMTV(overlap, axesA[i]);
     }
 
     for (int i = 0; i < 3; ++i)
     {
         float ra = halfSizeA[0] * absRotation[0][i] + halfSizeA[1] * absRotation[1][i] + halfSizeA[2] * absRotation[2][i];
         float rb = halfSizeB[i];
-        if (std::abs(glm::dot(translation, axesB[i])) > ra + rb)
-            return false;
+        float dist = std::abs(glm::dot(translation, axesB[i]));
+        float overlap = ra + rb - dist;
+        if (overlap < 0)
+            return result;
+        updateMTV(overlap, axesB[i]);
     }
 
     for (int i = 0; i < 3; ++i)
@@ -58,20 +78,35 @@ bool BoxCollisionObject::performBoxCollisionDetection(const BoxCollisionObject &
         {
             float ra = halfSizeA[(i + 1) % 3] * absRotation[(i + 2) % 3][j] + halfSizeA[(i + 2) % 3] * absRotation[(i + 1) % 3][j];
             float rb = halfSizeB[(j + 1) % 3] * absRotation[i][(j + 2) % 3] + halfSizeB[(j + 2) % 3] * absRotation[i][(j + 1) % 3];
-            if (std::abs(translation[(i + 2) % 3] * rotation[(i + 1) % 3][j] - translation[(i + 1) % 3] * rotation[(i + 2) % 3][j]) > ra + rb)
-                return false;
+            float dist = std::abs(t[(i + 2) % 3] * rotation[(i + 1) % 3][j] - t[(i + 1) % 3] * rotation[(i + 2) % 3][j]);
+            float overlap = ra + rb - dist;
+            if (overlap < 0)
+                return result;
+            glm::vec3 axis = glm::cross(axesA[i], axesB[j]);
+            if (glm::length(axis) > 1e-6f){
+                axis = glm::normalize(axis);
+            updateMTV(overlap, axis);}
         }
-    return true;
+
+    result.intersect = true;
+
+    if (glm::dot(target.center() - center(), bestAxis) < 0)
+        bestAxis = -bestAxis;
+
+    result.axis = bestAxis;
+    result.depth = minOverlap;
+
+    return result;
 }
 
-bool BoxCollisionObject::performEllipsoidCollisionDetection(const EllipsoidCollisionObject &target) const 
+CollisionResult BoxCollisionObject::performEllipsoidCollisionDetection(const EllipsoidCollisionObject &target) const
 {
     glm::mat3 ReT = glm::transpose(target.axes());
 
     glm::mat3 S = glm::mat3(1.0f);
-    S[0][0] = 1.0f / target.boundBoxSize().x * 2.0f;
-    S[1][1] = 1.0f / target.boundBoxSize().y * 2.0f;
-    S[2][2] = 1.0f / target.boundBoxSize().z * 2.0f;
+    S[0][0] = 1.0f / target.boundBoxSize().x;
+    S[1][1] = 1.0f / target.boundBoxSize().y;
+    S[2][2] = 1.0f / target.boundBoxSize().z;
     glm::mat3 M = S * ReT;
 
     glm::vec3 transformedBoxCenter = M * (center() - target.center());
@@ -102,5 +137,5 @@ bool BoxCollisionObject::performEllipsoidCollisionDetection(const EllipsoidColli
         float clamped = std::clamp(dist, -transformedBoxHalfSize[i], transformedBoxHalfSize[i]);
         closest += transformedBoxAxis[i] * clamped;
     }
-    return glm::length(closest) <= 1.0f;
+    return {glm::length(closest) <= 1.0f};
 }

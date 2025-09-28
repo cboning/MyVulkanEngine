@@ -13,7 +13,7 @@ public:
     const glm::vec3 &position() const;
     const glm::quat &rotation() const;
     const glm::vec3 &scale() const;
-    void setPositon(const glm::vec3 &position);
+    void setPosition(const glm::vec3 &position);
     void setRotation(const glm::quat &rotation);
     void setScale(const glm::vec3 &scale);
 

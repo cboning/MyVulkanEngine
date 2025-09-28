@@ -1,7 +1,7 @@
 #include "Render.h"
 #include "Cloud.h"
 #include "Data.h"
-#include "Entity/Cube.h"
+#include "Engine/Entity/Cube.h"
 #include "Event/KeyInputEvent.h"
 #include "JsonConfigReader/JsonConfigReader.h"
 #include "Modelbase/Modelbase.h"
@@ -18,6 +18,7 @@ void Render::resourceInit()
 {
     Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
+    pWindow->setMouseScrollCallback([this](double x, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
 
     VertexData frameVertices[] = {{glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
@@ -29,7 +30,12 @@ void Render::resourceInit()
                                                                                            vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
 
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
-    new Cube("1");
+    Cube *pCube1 = new Cube("1", true);
+    Cube *pCube2 = new Cube("2");
+
+    Object &cubeObject2 = pCube2->object();
+    cubeObject2.setScale(glm::vec3(100.0f, 0.5f, 100.0f));
+    cubeObject2.setPosition(glm::vec3(0.0f, -10.0f, 0.0f));
 
     // delete new Cloud();
 
@@ -50,11 +56,63 @@ void Render::resourceInit()
 
 void Render::initWindowEvents()
 {
+    static bool cameraMove = true;
     Event::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->keyInputEvent();
+    Object &Box1 = Entity::entity<Cube>("1").object();
     event.addPressedKeyEvent(GLFW_KEY_W, []() { _camera.moveFront(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_S, []() { _camera.moveBack(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_A, []() { _camera.moveLeft(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_D, []() { _camera.moveRight(_speed * (_deltaTime)); });
+    event.addDownKeyEvent(GLFW_KEY_C,
+                          [&]()
+                          {
+                              event.addPressedKeyEvent(GLFW_KEY_W, []() { _camera.moveFront(_speed * (_deltaTime)); });
+                              event.addPressedKeyEvent(GLFW_KEY_S, []() { _camera.moveBack(_speed * (_deltaTime)); });
+                              event.addPressedKeyEvent(GLFW_KEY_A, []() { _camera.moveLeft(_speed * (_deltaTime)); });
+                              event.addPressedKeyEvent(GLFW_KEY_D, []() { _camera.moveRight(_speed * (_deltaTime)); });
+                              event.addPressedKeyEvent(GLFW_KEY_SPACE, []() { _camera.moveUp(_speed * (_deltaTime)); });
+                              event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, []() { _camera.moveDown(_speed * (_deltaTime)); });
+                          });
+    event.addDownKeyEvent(
+        GLFW_KEY_R,
+        [&]()
+        {
+            event.addPressedKeyEvent(GLFW_KEY_W,
+                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(1.0f, 0.0f, 0.0f)) * Box1.rotation()); });
+            event.addPressedKeyEvent(GLFW_KEY_S,
+                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(-1.0f, 0.0f, 0.0f)) * Box1.rotation()); });
+            event.addPressedKeyEvent(GLFW_KEY_A,
+                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, -1.0f, 0.0f)) * Box1.rotation()); });
+            event.addPressedKeyEvent(GLFW_KEY_D,
+                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, 0.0f, 1.0f)) * Box1.rotation()); });
+            event.addPressedKeyEvent(GLFW_KEY_SPACE,
+                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, 1.0f, 0.0f)) * Box1.rotation()); });
+            event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT,
+                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, -1.0f, 0.0f)) * Box1.rotation()); });
+        });
+    event.addDownKeyEvent(
+        GLFW_KEY_P,
+        [&]()
+        {
+            event.addPressedKeyEvent(GLFW_KEY_W, [&]() { Box1.setPosition(Box1.position() + glm::vec3(1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_S, [&]() { Box1.setPosition(Box1.position() + glm::vec3(-1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_A, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 0.0f, -1.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_D, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 0.0f, 1.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
+        });
+    event.addDownKeyEvent(
+        GLFW_KEY_F,
+        [&]()
+        {
+            event.addPressedKeyEvent(GLFW_KEY_W, [&]() { Box1.setScale(Box1.scale() + glm::vec3(1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_S, [&]() { Box1.setScale(Box1.scale() + glm::vec3(-1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_A, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 0.0f, -1.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_D, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 0.0f, 1.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
+            event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
+        });
+
     event.addPressedKeyEvent(GLFW_KEY_SPACE, []() { _camera.moveUp(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, []() { _camera.moveDown(_speed * (_deltaTime)); });
     event.addDownKeyEvent(GLFW_KEY_ESCAPE,
@@ -85,7 +143,7 @@ void Render::createRenderPass()
     Vkbase::VertexInfo cubeVertexInfo(GeometryVertexData::attributeDescriptions(), {GeometryVertexData::bindingDescription()});
 
     const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {
-        {"blend", screenVertexInfo}, {"blur_h", screenVertexInfo},  {"blur_v", screenVertexInfo}, {"light", screenVertexInfo},
+        {"blend", screenVertexInfo}, {"blur_h", screenVertexInfo},  {"blur_v", screenVertexInfo},        {"light", screenVertexInfo},
         {"text", textVertexInfo},    {"g_buffer", modelVertexInfo}, {"GeometryPipeline", cubeVertexInfo}};
 
     const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> descriptorSetLayouts = {
@@ -95,13 +153,13 @@ void Render::createRenderPass()
         {"light", {descriptorSets.layout("G_BufferInputAttachments")}},
         {"text", {_pFont->layout(), Font::projectiveLayout("MainDescriptorSets")}},
         {"g_buffer", (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")},
-        {"GeometryPipeline", Entity::entity("1").descriptorSetLayouts()}};
+        {"GeometryPipeline", Entity::entity<Cube>("1").descriptorSetLayouts()}};
 
     const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> viewportInfo = {{vk::Rect2D().setExtent(swapchain.extent())},
                                                                                         {vk::Viewport().setWidth(extent.width).setHeight(extent.height)}};
 
     const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> viewportInfos = {
-        {"blend", viewportInfo}, {"blur_h", viewportInfo},   {"blur_v", viewportInfo},  {"light", viewportInfo},
+        {"blend", viewportInfo}, {"blur_h", viewportInfo},   {"blur_v", viewportInfo},          {"light", viewportInfo},
         {"text", viewportInfo},  {"g_buffer", viewportInfo}, {"GeometryPipeline", viewportInfo}};
 
     renderPass.createPipelines(JsonConfigReader::load("config/render.json")[0]["pipelines"], vertexInfos, descriptorSetLayouts, viewportInfos);
@@ -153,7 +211,7 @@ void Render::cleanup()
 
 void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
-    _pText->setText(std::to_string(1 / _deltaTime));
+    _pText->setText(std::to_string(_speed));
 
     Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
     const Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
@@ -178,10 +236,15 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     //     pModel->draw(currentFrame, commandBuffer, 0);
     // }
 
-    Cube &cube = *dynamic_cast<Cube *>(&Entity::entity("1"));
+    Cube &cube1 = Entity::entity<Cube>("1");
 
-    cube.updateUBO(_camera, currentFrame);
-    cube.draw(commandBuffer, imageIndex);
+    cube1.updateUBO(_camera, currentFrame);
+    cube1.draw(commandBuffer, imageIndex);
+
+    Cube &cube2 = Entity::entity<Cube>("2");
+
+    cube2.updateUBO(_camera, currentFrame);
+    cube2.draw(commandBuffer, imageIndex);
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(commandBuffer, "light", descriptorSets.sets("G_BufferInputAttachments")[imageIndex]);
