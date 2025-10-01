@@ -36,8 +36,9 @@ private:
     glm::vec3 _velocity = glm::vec3(0.0f);
     glm::vec3 _acceleration = glm::vec3(0.0f);
     const std::string _name;
+    const bool _dynamic;
     std::unordered_map<std::string, Motion *> _pMotions;
-    CollisionObjectDelegator *_pCollisionObjectDelegator;
+    CollisionObjectDelegator *_pCollisionObjectDelegator = nullptr;
 
     inline static std::unordered_map<std::string, std::unique_ptr<Entity, Deleter>> _pEntities = {};
     void updateCollisionObject();
@@ -48,16 +49,18 @@ private:
     virtual void init() = 0;
 
 protected:
-    Entity(const std::string &name);
+    Entity(const std::string &name, bool dynamic = true, const Object &object = Object());
     virtual ~Entity();
-    CollisionObjectDelegator &collisionObject();
+    CollisionObjectDelegator *collisionObject();
     std::unordered_map<std::string, Motion *> &motions();
+    void setCollisionObject(CollisionObjectDelegator *pCollisionObjectDelegator);
 
 public:
+    bool dynamic();
     virtual void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex) const = 0;
     Object &object();
     const Object &object() const;
-    const CollisionObjectDelegator &collisionObject() const;
+    const CollisionObjectDelegator *collisionObject() const;
 
     const std::string &name() const;
 

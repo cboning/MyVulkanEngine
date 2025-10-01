@@ -37,10 +37,9 @@ private:
     void init() override;
 
 public:
-    Cube(const std::string &name);
+    Cube(const std::string &name, bool dynamic = true, const Object &object = {});
     ~Cube();
     void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex) const override;
     void updateUBO(const Camera &camera, uint32_t index) const override;
-    void collisionCallback();
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
 };

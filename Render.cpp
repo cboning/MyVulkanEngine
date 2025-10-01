@@ -22,7 +22,7 @@ void Render::resourceInit()
 {
     Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
-    pWindow->setMouseScrollCallback([](double x, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
+    pWindow->setMouseScrollCallback([](double, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
 
     VertexData frameVertices[] = {{glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
@@ -41,15 +41,15 @@ void Render::resourceInit()
     _pPush = new Push();
     pCube1->addMotion("Push", (Motion *)_pPush);
 
-    Cube *pCube2 = new Cube("2");
-    Object &cubeObject2 = pCube2->object();
+    Object cubeObject2;
     cubeObject2.setScale(glm::vec3(100.0f, 0.5f, 100.0f));
     cubeObject2.setPosition(glm::vec3(0.0f, -10.0f, 0.0f));
+    Cube *pCube2 = new Cube("2", false, cubeObject2);
 
-    Cube *pCube3 = new Cube("3");
-    Object &cubeObject3 = pCube3->object();
+    Object cubeObject3;
     cubeObject3.setScale(glm::vec3(50.0f, 0.5f, 50.0f));
     cubeObject3.setPosition(glm::vec3(0.0f, -9.5f, 0.0f));
+    Cube *pCube3 = new Cube("3", false, cubeObject3);
 
     // delete new Cloud();
 

@@ -6,7 +6,7 @@ Gravity::Gravity() {}
 
 Gravity::~Gravity() {}
 
-void Gravity::update(float deltaTime)
+void Gravity::update(float)
 {
     glm::vec3 &acceleration = entity().acceleration();
     acceleration.y -= 9.8f;

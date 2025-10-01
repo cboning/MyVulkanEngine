@@ -11,7 +11,6 @@ Application::Application()
 
 void Application::init()
 {
-    Octree<Render>::createRoot([](const Octree<Render> &, const Render &)->MipResult{});
     _renderer.init();
 }
 

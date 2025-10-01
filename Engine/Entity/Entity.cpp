@@ -5,35 +5,42 @@
 #include "../Physical/Motion/Motion.h"
 #include <iostream>
 
-Entity::Entity(const std::string &name) : _name(name)
+Entity::Entity(const std::string &name, bool dynamic, const Object &object) : _name(name), _dynamic(dynamic), _object(object)
 {
     if (_pEntities.count(name))
         throw std::runtime_error("The Entity name " + name + " already exist.");
     _pEntities.insert({name, (std::unique_ptr<Entity, Deleter>(this))});
-
-    _pCollisionObjectDelegator = CollisionSystem::instance().createDynamicObject(CollisionObjectType::Box);
 }
 
 Entity::~Entity()
 {
-    CollisionSystem::instance().destoryDynamicObject(_pCollisionObjectDelegator);
+    CollisionSystem::instance().destroyDynamicObject(_pCollisionObjectDelegator);
     for (auto &motion : _pMotions)
         delete motion.second;
 }
 
-CollisionObjectDelegator &Entity::collisionObject() { return *_pCollisionObjectDelegator; }
+CollisionObjectDelegator *Entity::collisionObject() { return _pCollisionObjectDelegator; }
 
 std::unordered_map<std::string, Motion *> &Entity::motions() { return _pMotions; }
 
+void Entity::setCollisionObject(CollisionObjectDelegator *pCollisionObjectDelegator) { _pCollisionObjectDelegator = pCollisionObjectDelegator; }
+
 const std::string &Entity::name() const { return _name; }
+
+bool Entity::dynamic() { return _dynamic; }
 
 Object &Entity::object() { return _object; }
 
 const Object &Entity::object() const { return _object; }
 
-const CollisionObjectDelegator &Entity::collisionObject() const { return *_pCollisionObjectDelegator; }
+const CollisionObjectDelegator *Entity::collisionObject() const { return _pCollisionObjectDelegator; }
 
-void Entity::updateCollisionObject() { _pCollisionObjectDelegator->updateWithObject(_object); }
+void Entity::updateCollisionObject()
+{
+    if (!_pCollisionObjectDelegator)
+        return;
+    _pCollisionObjectDelegator->updateWithObject(_object);
+}
 
 void Entity::updateVelocity(float deltaTime) { _velocity += deltaTime * _acceleration; }
 

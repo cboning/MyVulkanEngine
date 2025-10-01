@@ -4,11 +4,12 @@
 #include "../../JsonConfigReader/JsonConfigReader.h"
 #include "../../Vkbase/Vkbase.h"
 #include "../Physical/Collision/CollisionObjectDelegator.h"
+#include "../Physical/Collision/CollisionSystem.h"
 #include "../Physical/Motion/Collision.h"
 #include "../Physical/Motion/Friction.h"
 #include "../Physical/Motion/Gravity.h"
 
-Cube::Cube(const std::string &name) : Entity(name) { init(); }
+Cube::Cube(const std::string &name, bool dynamic, const Object &object) : Entity(name, dynamic, object) { init(); }
 
 Cube::~Cube()
 {
@@ -23,7 +24,6 @@ Cube::~Cube()
 
 void Cube::init()
 {
-    collisionObject().setPositionInBoundBox(glm::vec3(0.5f));
     for (uint32_t i = 0;
          i < dynamic_cast<Vkbase::Swapchain *>(
                  Vkbase::ResourceBase::resourceManager().resource(
@@ -74,7 +74,15 @@ void Cube::init()
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("CubeIndices_" + name(), "Device", sizeof(uint32_t) * 36,
                                                                    vk::BufferUsageFlagBits::eIndexBuffer, cubeIndices);
 
-    collisionObject().updateWithObject(object());
+    if (dynamic())
+    {
+        CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createDynamicObject(CollisionObjectType::Box);
+        pCollisionObject->setPositionInBoundBox(glm::vec3(0.5f));
+        setCollisionObject(pCollisionObject);
+    }
+    else
+        setCollisionObject(CollisionSystem::instance().createStaticObject(CollisionObjectType::Box, object(), glm::vec3(0.5f)));
+    collisionObject()->updateWithObject(object());
 }
 
 void Cube::draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex) const

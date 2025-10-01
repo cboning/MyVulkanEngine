@@ -47,7 +47,7 @@ private:
     ~Octree();
 };
 
-template <typename T> inline Octree<T>::Ptr Octree<T>::createRoot(std::function<MipResult(const Octree<T> &, const T &)> mipFunc)
+template <typename T> inline typename Octree<T>::Ptr Octree<T>::createRoot(std::function<MipResult(const Octree<T> &, const T &)> mipFunc)
 {
     return Ptr(new Octree<T>(0, 0, 0, 0, mipFunc));
 }
@@ -88,9 +88,9 @@ template <typename T> inline uint32_t Octree<T>::z() const { return _z; }
 
 template <typename T> inline bool Octree<T>::hasSubTrees() const { return _mipped; }
 
-template <typename T> inline const Octree<T>::Ptr &Octree<T>::subTree(uint8_t pos) const { return _pSubTrees[pos]; }
+template <typename T> inline const typename Octree<T>::Ptr &Octree<T>::subTree(uint8_t pos) const { return _pSubTrees[pos]; }
 
-template <typename T> inline const Octree<T>::Ptr &Octree<T>::subTree(bool x, bool y, bool z) const { return subTree(x + (y << 1) + (z << 2)); }
+template <typename T> inline const typename Octree<T>::Ptr &Octree<T>::subTree(bool x, bool y, bool z) const { return subTree(x + (y << 1) + (z << 2)); }
 
 template <typename T> inline const std::vector<T> &Octree<T>::objects() const { return _objects; }
 

@@ -6,7 +6,7 @@ Friction::Friction() {}
 
 Friction::~Friction() {}
 
-void Friction::update(float deltaTime)
+void Friction::update(float)
 {
     glm::vec3 &acceleration = entity().acceleration();
     glm::vec3 &velocity = entity().velocity();

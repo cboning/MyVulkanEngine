@@ -8,8 +8,32 @@
 constexpr float EPSILON = 1e-6f;
 
 CollisionSystem::CollisionSystem()
-    : _staticCollisionObjects(
-          Octree<CollisionObjectDelegatorPtr>::createRoot([](const Octree<CollisionObjectDelegatorPtr> &, const CollisionObjectDelegatorPtr &) -> MipResult {}))
+    : _staticCollisionObjects(Octree<CollisionObjectDelegatorPtr>::createRoot(
+          [&](const Octree<CollisionObjectDelegatorPtr> &octree, const CollisionObjectDelegatorPtr &collisionObject) -> MipResult
+          {
+              MipResult result = {false, 0};
+              for (uint8_t pos = 0; pos < 8; ++pos)
+              {
+                  uint32_t level = octree.level() + 1;
+                  uint32_t x, y, z;
+                  x = octree.x() * 2 + ((pos >> 0) & 1);
+                  y = octree.y() * 2 + ((pos >> 1) & 1);
+                  z = octree.z() * 2 + ((pos >> 2) & 1);
+
+                  float powLevel2 = 1u << level;
+                  CollisionObject octreeBoundary(CollisionObjectType::Box);
+                  octreeBoundary.setAxes(glm::toMat3(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)));
+                  octreeBoundary.setBoundBoxSize(_size / (float)powLevel2);
+                  octreeBoundary.setPosition(_pos + _size * glm::vec3(x, y, z) / (float)powLevel2);
+                  octreeBoundary.setPositionInBoundBox(glm::vec3(0.0f));
+                  bool collisionResult = performCollisionDetection(*collisionObject, octreeBoundary).intersect;
+                  if (collisionResult && result.mip)
+                      return {false, 0};
+                  result.mip = collisionResult;
+                  result.pos = pos;
+              }
+              return result;
+          }))
 {
 }
 CollisionSystem::~CollisionSystem() {}
@@ -20,6 +44,8 @@ CollisionResult CollisionSystem::performCollisionDetection(const CollisionObject
         return performBoxVBoxCollisionDetection(src, dst);
     else if (src.type() == CollisionObjectType::Box && dst.type() == CollisionObjectType::Ellipsoid)
         return performBoxVEllipsoidCollisionDetection(src, dst);
+
+    throw std::runtime_error("Unknown collision.");
 }
 
 CollisionResult CollisionSystem::performBoxVBoxCollisionDetection(const CollisionObject &src, const CollisionObject &dst) const
@@ -169,19 +195,22 @@ void CollisionSystem::updateWithStaticCollisionObjects(CollisionObjectDelegator 
         for (uint8_t pos = 0; pos < 8; ++pos)
         {
             const Octree<CollisionObjectDelegatorPtr>::Ptr &pSubCollisionOctree = pCollisionOctree->subTree(pos);
-            float powLevel2 = std::pow(2, pSubCollisionOctree->level());
-
-            CollisionObject octreeBoundary(CollisionObjectType::Box);
-            octreeBoundary.setAxes(glm::toMat3(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)));
-            octreeBoundary.setBoundBoxSize(_size / powLevel2);
-            octreeBoundary.setPosition(_pos + _size * glm::vec3(pSubCollisionOctree->x() / powLevel2));
-            octreeBoundary.setPositionInBoundBox(glm::vec3(0.0f));
-
-            CollisionResult result = performCollisionDetection(object, octreeBoundary);
-            if (result.intersect)
+            if (collisionObjectWithOctree(object, *pSubCollisionOctree))
                 pPCollisionOctrees.push_back(&pSubCollisionOctree);
         }
     }
+}
+
+bool CollisionSystem::collisionObjectWithOctree(const CollisionObjectDelegator &object, const Octree<CollisionObjectDelegatorPtr> &octree)
+{
+
+    float powLevel2 = 1u << octree.level();
+    CollisionObject octreeBoundary(CollisionObjectType::Box);
+    octreeBoundary.setAxes(glm::toMat3(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)));
+    octreeBoundary.setBoundBoxSize(_size / powLevel2);
+    octreeBoundary.setPosition(_pos + _size * glm::vec3(octree.x(), octree.y(), octree.z()) / powLevel2);
+    octreeBoundary.setPositionInBoundBox(glm::vec3(0.0f));
+    return performCollisionDetection(object, octreeBoundary).intersect;
 }
 
 void CollisionSystem::updateWithDynamicCollisionObjects(CollisionObjectDelegator &object)
@@ -197,11 +226,12 @@ CollisionSystem &CollisionSystem::instance()
     return instance;
 }
 
-CollisionObjectDelegator *CollisionSystem::createStaticObject(CollisionObjectType type, const Object &object)
+CollisionObjectDelegator *CollisionSystem::createStaticObject(CollisionObjectType type, const Object &object, const glm::vec3 &positionInBoundBox)
 {
     CollisionObjectDelegator *pCollisionObject = new CollisionObjectDelegator(type);
     std::unique_ptr<CollisionObjectDelegator, Deleter> collisionObject(pCollisionObject);
     collisionObject->updateWithObject(object);
+    collisionObject->setPositionInBoundBox(positionInBoundBox);
     _staticCollisionObjects->addObject(std::move(collisionObject));
     return pCollisionObject;
 }
@@ -214,7 +244,7 @@ CollisionObjectDelegator *CollisionSystem::createDynamicObject(CollisionObjectTy
     return pCollisionObject;
 }
 
-void CollisionSystem::destoryDynamicObject(CollisionObjectDelegator *pCollisionObject)
+void CollisionSystem::destroyDynamicObject(CollisionObjectDelegator *pCollisionObject)
 {
     for (auto it = _dynamicCollisionObjects.begin(); it != _dynamicCollisionObjects.end(); ++it)
     {
@@ -235,3 +265,5 @@ void CollisionSystem::update()
         updateWithDynamicCollisionObjects(*dynamicCollisionObject);
     }
 }
+
+void CollisionSystem::Deleter::operator()(CollisionObjectDelegator *pCollisionObjectDelegator) { delete pCollisionObjectDelegator; }

@@ -15,7 +15,7 @@ void Collision::update(float deltaTime)
 
     const Entity &cEntity = entity();
     // 当前 tick 的碰撞记录
-    const auto &collisions = cEntity.collisionObject().collisionResults();
+    const auto &collisions = cEntity.collisionObject()->collisionResults();
     if (collisions.empty())
         return;
 
