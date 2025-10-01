@@ -1,15 +1,17 @@
 #pragma once
+#include "CollisionObject.h"
 #include <functional>
 #include <glm/glm.hpp>
 #include <string>
 #include <vector>
-#include "CollisionObject.h"
+class Entity;
 
 struct CollisionResult
 {
     bool intersect = false;
     glm::vec3 axis = {0, 0, 0};
     float depth = 0.0f;
+    const CollisionObject *pTarget;
 };
 
 class CollisionObjectDelegator : public CollisionObject
@@ -21,6 +23,8 @@ public:
     const std::vector<CollisionResult> &collisionResults() const;
     void setSrcLayer(const std::string &layer);
     void setDstLayer(const std::string &layer);
+    void setEntity(Entity *pEntity);
+    const Entity *entity() const;
 
 private:
     std::function<void()> _collisionCallback;
@@ -28,6 +32,8 @@ private:
 
     std::string _srcLayer = "";
     std::string _dstLayer = "";
+
+    Entity *_pEntity = nullptr;
 
     CollisionObjectDelegator(CollisionObjectType type);
     ~CollisionObjectDelegator();

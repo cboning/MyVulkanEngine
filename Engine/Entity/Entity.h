@@ -34,6 +34,7 @@ private:
 
     Object _object;
     glm::vec3 _velocity = glm::vec3(0.0f);
+    glm::vec3 _tempVelocity = glm::vec3(0.0f);
     glm::vec3 _acceleration = glm::vec3(0.0f);
     const std::string _name;
     const bool _dynamic;
@@ -74,6 +75,8 @@ public:
     const glm::vec3 &acceleration() const;
     glm::vec3 &velocity();
     const glm::vec3 &velocity() const;
+    glm::vec3 &tempVelocity();
+    const glm::vec3 &tempVelocity() const;
 
     Motion *addMotion(const std::string &name, Motion *pMotion);
     Motion *motion(const std::string &name);

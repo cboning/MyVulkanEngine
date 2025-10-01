@@ -23,7 +23,7 @@ private:
 
 protected:
     CollisionObject(CollisionObjectType type);
-    ~CollisionObject();
+    virtual ~CollisionObject();
 
 public:
     glm::vec3 boundBoxSize() const;

@@ -1,7 +1,7 @@
 #include "Collision.h"
 #include "../../Entity/Entity.h"
+#include "../Collision/CollisionObject.h"
 #include "../Collision/CollisionObjectDelegator.h"
-
 
 Collision::Collision() {}
 
@@ -24,9 +24,9 @@ void Collision::update(float deltaTime)
         if (!c.intersect)
             continue;
 
-        // --- 法线修正 ---
         if (c.axis == glm::vec3())
             continue;
+            
         glm::vec3 n = -glm::normalize(c.axis);
         float an = glm::dot(velocity, n);
 
@@ -34,7 +34,12 @@ void Collision::update(float deltaTime)
         if (an < 0.0f)
         {
             velocity -= 1.5f * an * n;
-            // velocity -= c.depth * an * n / deltaTime;
+        }
+
+        an = glm::dot(dynamic_cast<const CollisionObjectDelegator *>(c.pTarget)->entity()->velocity(), n);
+        if (an > 0.0f)
+        {
+            velocity += 0.5f * an * n;
         }
     }
 }

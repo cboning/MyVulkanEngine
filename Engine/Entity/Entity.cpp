@@ -5,7 +5,7 @@
 #include "../Physical/Motion/Motion.h"
 #include <iostream>
 
-Entity::Entity(const std::string &name, bool dynamic, const Object &object) : _name(name), _dynamic(dynamic), _object(object)
+Entity::Entity(const std::string &name, bool dynamic, const Object &object) : _name(name), _object(object), _dynamic(dynamic)
 {
     if (_pEntities.count(name))
         throw std::runtime_error("The Entity name " + name + " already exist.");
@@ -50,6 +50,7 @@ void Entity::update(float deltaTime)
 {
     updatePosition(deltaTime);
     updateVelocity(deltaTime);
+    _tempVelocity = _velocity;
 }
 
 void Entity::updateCollisionObjects()
@@ -63,6 +64,9 @@ void Entity::updateAll(float deltaTime)
     for (auto &pEntity : _pEntities)
     {
         pEntity.second->update(deltaTime);
+    }
+    for (auto &pEntity : _pEntities)
+    {
         pEntity.second->_acceleration = glm::vec3(0.0f);
         for (auto motion : pEntity.second->motions())
             motion.second->update(deltaTime);
@@ -76,6 +80,10 @@ const glm::vec3 &Entity::acceleration() const { return _acceleration; }
 glm::vec3 &Entity::velocity() { return _velocity; }
 
 const glm::vec3 &Entity::velocity() const { return _velocity; }
+
+glm::vec3 &Entity::tempVelocity() { return _tempVelocity; }
+
+const glm::vec3 &Entity::tempVelocity() const { return _tempVelocity; }
 
 Motion *Entity::addMotion(const std::string &name, Motion *pMotion)
 {

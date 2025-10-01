@@ -10,6 +10,10 @@ void CollisionObjectDelegator::setSrcLayer(const std::string &layer) { _srcLayer
 
 void CollisionObjectDelegator::setDstLayer(const std::string &layer) { _dstLayer = layer; }
 
+void CollisionObjectDelegator::setEntity(Entity *pEntity) { _pEntity = pEntity; }
+
+const Entity *CollisionObjectDelegator::entity() const { return _pEntity; }
+
 CollisionObjectDelegator::~CollisionObjectDelegator() {}
 
 void CollisionObjectDelegator::recordCollisionResult(const CollisionResult &result)

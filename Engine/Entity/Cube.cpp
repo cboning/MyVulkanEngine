@@ -24,19 +24,19 @@ Cube::~Cube()
 
 void Cube::init()
 {
-    for (uint32_t i = 0;
-         i < dynamic_cast<Vkbase::Swapchain *>(
-                 Vkbase::ResourceBase::resourceManager().resource(
-                     Vkbase::ResourceType::Swapchain, JsonConfigReader::load("config/cube.json")[name()]["descriptorSets"]["sets"][0]["swapchainName"]))
-                 ->imageNames()
-                 .size();
+    json config = JsonConfigReader::load("config/cube.json");
+    for (uint32_t i = 0; i < dynamic_cast<Vkbase::Swapchain *>(Vkbase::ResourceBase::resourceManager().resource(
+                                                                   Vkbase::ResourceType::Swapchain, config["descriptorSets"]["sets"][0]["swapchainName"]))
+                                 ->imageNames()
+                                 .size();
          ++i)
         _ubos.push_back(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(name() + "_Cube_UBO_" + std::to_string(i), "Device",
                                                                                        sizeof(CubeUniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer));
     Vkbase::DescriptorSets &descriptorSets = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>(name() + "_Cube", "Device"));
-    descriptorSets.addDescriptorSetCreateConfigWithJson(JsonConfigReader::load("config/cube.json")[name()]["descriptorSets"]["sets"]);
+    config["descriptorSets"]["write"][0]["detail"]["bufferInfo"]["bufferName"] = name() + "_Cube_UBO";
+    descriptorSets.addDescriptorSetCreateConfigWithJson(config["descriptorSets"]["sets"]);
     descriptorSets.init();
-    descriptorSets.writeSetsWithJson(JsonConfigReader::load("config/cube.json")[name()]["descriptorSets"]["write"]);
+    descriptorSets.writeSetsWithJson(config["descriptorSets"]["write"]);
 
     GeometryVertexData cubeVertices[] = {{{-0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},   {{0.5f, -0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
                                          {{0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},     {{-0.5f, 0.5f, 0.5f}, {0.0f, 0.0f, 1.0f}},
@@ -77,11 +77,16 @@ void Cube::init()
     if (dynamic())
     {
         CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createDynamicObject(CollisionObjectType::Box);
+        pCollisionObject->setEntity(this);
         pCollisionObject->setPositionInBoundBox(glm::vec3(0.5f));
         setCollisionObject(pCollisionObject);
     }
     else
-        setCollisionObject(CollisionSystem::instance().createStaticObject(CollisionObjectType::Box, object(), glm::vec3(0.5f)));
+    {
+        CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createStaticObject(CollisionObjectType::Box, object(), glm::vec3(0.5f));
+        pCollisionObject->setEntity(this);
+        setCollisionObject(pCollisionObject);
+    }
     collisionObject()->updateWithObject(object());
 }
 

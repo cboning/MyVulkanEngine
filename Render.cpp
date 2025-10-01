@@ -41,6 +41,12 @@ void Render::resourceInit()
     _pPush = new Push();
     pCube1->addMotion("Push", (Motion *)_pPush);
 
+    Cube *pCube4 = new Cube("4");
+    pCube4->addMotion("Gravity", (Motion *)(new Gravity()));
+    pCube4->addMotion("Collision", (Motion *)(new Collision()));
+    pCube4->addMotion("Friction", (Motion *)(new Friction()));
+    pCube4->object().setPosition(glm::vec3(5.0f, 3.0f, 0.0f));
+
     Object cubeObject2;
     cubeObject2.setScale(glm::vec3(100.0f, 0.5f, 100.0f));
     cubeObject2.setPosition(glm::vec3(0.0f, -10.0f, 0.0f));
@@ -136,8 +142,8 @@ void Render::initWindowEvents()
             event.addDownKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
 
             event.addUpKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
-            event.addUpKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(-1.0f, 0.0f, 0.0f));});
-            event.addUpKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, -1.0f));});
+            event.addUpKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(-1.0f, 0.0f, 0.0f)); });
+            event.addUpKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, -1.0f)); });
             event.addUpKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
 
             event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
@@ -254,9 +260,7 @@ void Render::draw()
     Vkbase::Window::delayDestroy();
 }
 
-void Render::cleanup()
-{
-}
+void Render::cleanup() {}
 
 void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
@@ -276,14 +280,14 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
         *dynamic_cast<const Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
         clearValues, extent);
 
-    for (Modelbase::Model *pModel : Modelbase::Model::models())
-    {
-        Modelbase::ModelInstance &instance = pModel->instance("1");
+    // for (Modelbase::Model *pModel : Modelbase::Model::models())
+    // {
+    //     Modelbase::ModelInstance &instance = pModel->instance("1");
 
-        pModel->updateAnimation(_deltaTime);
-        instance.updateUniformBuffers(currentFrame, _camera);
-        pModel->draw(currentFrame, commandBuffer, 0);
-    }
+    //     pModel->updateAnimation(_deltaTime);
+    //     instance.updateUniformBuffers(currentFrame, _camera);
+    //     pModel->draw(currentFrame, commandBuffer, 0);
+    // }
 
     Entity::drawEntities(commandBuffer, _camera, currentFrame);
 

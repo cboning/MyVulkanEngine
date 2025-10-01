@@ -131,6 +131,7 @@ CollisionResult CollisionSystem::performBoxVBoxCollisionDetection(const Collisio
 
     result.axis = bestAxis;
     result.depth = minOverlap;
+    result.pTarget = &dst;
 
     return result;
 }
