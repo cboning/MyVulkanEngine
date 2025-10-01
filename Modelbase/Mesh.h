@@ -43,6 +43,7 @@ Mesh<T>::Mesh(const std::string &name, const std::string &deviceName, const std:
 template <typename T>
 void Mesh<T>::draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const std::vector<vk::DescriptorSet> &descriptorSets) const
 {
+    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
     commandBuffer.bindVertexBuffers(0, _vertexBuffer.buffer(), {0});
     commandBuffer.bindIndexBuffer(_indexBuffer.buffer(), 0, vk::IndexType::eUint16);
     commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0, descriptorSets, {});

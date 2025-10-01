@@ -2,6 +2,7 @@
 #include "Modelbase/Modelbase.h"
 #include "Data.h"
 #include "Engine/EngineLogic.h"
+#include "Data/Octree.h"
 
 Application::Application()
 {
@@ -10,6 +11,7 @@ Application::Application()
 
 void Application::init()
 {
+    Octree<Render>::createRoot([](const Octree<Render> &, const Render &)->MipResult{});
     _renderer.init();
 }
 

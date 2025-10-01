@@ -26,23 +26,19 @@ Window::~Window()
 {
     if (_pWindow)
     {
-        glfwDestroyWindow(_pWindow);
         delete _pKeyInputEvent;
+        glfwDestroyWindow(_pWindow);
     }
 
     if (_surface)
-        resourceManager().instance().destroySurfaceKHR(_surface);
+        resourceManager().vkInstance().destroySurfaceKHR(_surface);
 }
 
 void Window::init()
 {
     _pWindow = glfwCreateWindow(_width, _height, _title.c_str(), nullptr, nullptr);
     if (!_pWindow)
-    {
-        std::cerr << "[Error] Failed to create GLFW window" << std::endl;
-        resourceManager().remove(_resourceType, _name);
-        return;
-    }
+        throw std::runtime_error("[Error] Failed to create GLFW window");
 
     _pKeyInputEvent = new Event::KeyInputEvent(_pWindow);
 
@@ -55,13 +51,10 @@ void Window::init()
     glfwSetScrollCallback(_pWindow, mouseScrollCallback);
 
     // Create Vulkan surface
-    glfwCreateWindowSurface(resourceManager().instance(), _pWindow, nullptr, reinterpret_cast<VkSurfaceKHR *>(&_surface));
+    glfwCreateWindowSurface(resourceManager().vkInstance(), _pWindow, nullptr, reinterpret_cast<VkSurfaceKHR *>(&_surface));
+
     if (!_surface)
-    {
-        std::cerr << "[Error] Failed to create Vulkan surface" << std::endl;
-        resourceManager().remove(_resourceType, _name);
-        return;
-    }
+        throw std::runtime_error("[Error] Failed to create Vulkan surface");
 }
 
 void Window::windowClosedCallback(GLFWwindow *pWindow) { _delayDestroyWindows.insert(static_cast<Window *>(glfwGetWindowUserPointer(pWindow))); }

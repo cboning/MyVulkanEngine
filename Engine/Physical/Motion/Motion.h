@@ -4,11 +4,14 @@ class Entity;
 
 class Motion
 {
+    friend Entity;
 private:
-    Entity &_entity;
+    Entity *_pEntity = nullptr;
+
+    void setEntity(Entity &entity);
 
 protected:
-    Motion(Entity &entity);
+    Motion();
     Entity &entity();
 
 public:

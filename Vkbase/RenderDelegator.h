@@ -1,7 +1,7 @@
 #pragma once
 #include "ResourceBase.h"
 #include <functional>
-#define MAX_FLIGHT_COUNT 5
+#define MAX_FLIGHT_COUNT 3
 
 namespace Vkbase
 {
@@ -12,16 +12,15 @@ class RenderDelegator : public ResourceBase
 {
     friend class ResourceManager;
 
-  public:
+public:
     void draw();
     void sizeChanged();
     void setCommandRecordFunc(const std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
     void setRenderPassCreateFunc(const std::function<void()> &func);
     static uint32_t maxFlightCount();
 
-  private:
-    RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::string &swapchainName,
-                    const std::string &commandPoolName);
+private:
+    RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::string &swapchainName, const std::string &commandPoolName);
     ~RenderDelegator() override;
     void init();
     void createSyncObjects();

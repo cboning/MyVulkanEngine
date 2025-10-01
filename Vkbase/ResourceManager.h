@@ -85,8 +85,8 @@ public:
     const ResourceSet &resources() const;
     ResourceBase *resource(ResourceType type, std::string name) const;
     void remove(ResourceType type, const std::string &name);
-    const vk::Instance &instance() const;
-    void renameResource(const ResourceBase *pResource, const std::string &newName);
+    const vk::Instance &vkInstance() const;
+    static ResourceManager &instance();
 };
 
 template <typename T, typename... Args> T *ResourceManager::create(Args &&...args) { return new T(args...); }

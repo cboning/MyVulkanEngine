@@ -6,7 +6,7 @@ class Gravity : Motion
 {
 private:
 public:
-    Gravity(Entity &entity);
+    Gravity();
     ~Gravity() override;
     void update(float deltaTime) override;
 };

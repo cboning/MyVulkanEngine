@@ -70,12 +70,6 @@ const ResourceType &ResourceBase::type() const { return _resourceType; }
 
 void ResourceBase::destroy() const { _resourceManager.remove(_resourceType, _name); }
 
-void ResourceBase::rename(const std::string &name)
-{
-    _name = name;
-    _resourceManager.addResource(this);
-}
-
 void ResourceBase::setLock() { _locked = true; }
 
 void ResourceBase::setUnlock() { _locked = false; }

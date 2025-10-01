@@ -32,15 +32,15 @@ class Cube : public Entity
 {
 private:
     glm::vec3 _color = glm::vec3(0.0f, 1.0f, 0.0f);
+    std::vector<Vkbase::Buffer *> _ubos;
 
     void init() override;
 
 public:
-    Cube(const std::string &name, bool enableGravity = false);
+    Cube(const std::string &name);
     ~Cube();
     void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex) const override;
-    bool checkCollisionWithObject(const CollisionObject &target);
-    bool checkCollisionWithObject(Cube &target);
-    void updateUBO(const Camera &_camera, uint32_t index) const;
+    void updateUBO(const Camera &camera, uint32_t index) const override;
+    void collisionCallback();
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
 };

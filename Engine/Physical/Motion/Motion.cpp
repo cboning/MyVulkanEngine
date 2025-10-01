@@ -1,9 +1,13 @@
 #include "Motion.h"
 
-Motion::Motion(Entity &entity) : _entity(entity) {}
+
+Motion::Motion() {}
 
 Motion::~Motion() {}
 
-Entity &Motion::entity() {
-    return _entity;
+void Motion::setEntity(Entity &entity)
+{
+    _pEntity = &entity;
 }
+
+Entity &Motion::entity() { return *_pEntity; }

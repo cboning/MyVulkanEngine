@@ -1,17 +1,18 @@
 #pragma once
-#include <mutex>
 #include "PhysicalSystem.h"
+#include <mutex>
 
 class EngineLogic
 {
-  private:
+private:
     int _tick = 0;
     bool _stop = false;
     std::mutex _stopSignalMutex;
     PhysicalSystem _physicalSystem;
 
     void mainLoop();
-  public:
+
+public:
     void run();
     int tick();
     void stop();

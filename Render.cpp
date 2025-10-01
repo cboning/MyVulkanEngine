@@ -2,6 +2,10 @@
 #include "Cloud.h"
 #include "Data.h"
 #include "Engine/Entity/Cube.h"
+#include "Engine/Physical/Motion/Collision.h"
+#include "Engine/Physical/Motion/Friction.h"
+#include "Engine/Physical/Motion/Gravity.h"
+#include "Engine/Physical/Motion/Push.h"
 #include "Event/KeyInputEvent.h"
 #include "JsonConfigReader/JsonConfigReader.h"
 #include "Modelbase/Modelbase.h"
@@ -18,7 +22,7 @@ void Render::resourceInit()
 {
     Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
-    pWindow->setMouseScrollCallback([this](double x, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
+    pWindow->setMouseScrollCallback([](double x, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
 
     VertexData frameVertices[] = {{glm::vec3(-1.0f, -1.0f, 0.0f), glm::vec2(0.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
@@ -30,12 +34,22 @@ void Render::resourceInit()
                                                                                            vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
 
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
-    Cube *pCube1 = new Cube("1", true);
-    Cube *pCube2 = new Cube("2");
+    Cube *pCube1 = new Cube("1");
+    pCube1->addMotion("Gravity", (Motion *)(new Gravity()));
+    pCube1->addMotion("Collision", (Motion *)(new Collision()));
+    pCube1->addMotion("Friction", (Motion *)(new Friction()));
+    _pPush = new Push();
+    pCube1->addMotion("Push", (Motion *)_pPush);
 
+    Cube *pCube2 = new Cube("2");
     Object &cubeObject2 = pCube2->object();
     cubeObject2.setScale(glm::vec3(100.0f, 0.5f, 100.0f));
     cubeObject2.setPosition(glm::vec3(0.0f, -10.0f, 0.0f));
+
+    Cube *pCube3 = new Cube("3");
+    Object &cubeObject3 = pCube3->object();
+    cubeObject3.setScale(glm::vec3(50.0f, 0.5f, 50.0f));
+    cubeObject3.setPosition(glm::vec3(0.0f, -9.5f, 0.0f));
 
     // delete new Cloud();
 
@@ -43,8 +57,8 @@ void Render::resourceInit()
         new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
                              JsonConfigReader::load("config/model.json")[0]);
 
-    _pFont = new Font("Device", "./src/fonts/Minecraft.ttf");
-    _pText = new Text(*_pFont, "Hello Vulkan!", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(10.0f, 50.0f), 1.0f);
+    _pFont = std::make_unique<Font>("Device", "./src/fonts/Minecraft.ttf");
+    _pText = std::make_unique<Text>(*_pFont, "Hello Vulkan!", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(10.0f, 50.0f), 1.0f);
 
     Modelbase::ModelInstance &instance = pModel->createNewInstance("1", {0, 0.0f});
     Object &modelObject = instance.object();
@@ -56,7 +70,6 @@ void Render::resourceInit()
 
 void Render::initWindowEvents()
 {
-    static bool cameraMove = true;
     Event::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->keyInputEvent();
     Object &Box1 = Entity::entity<Cube>("1").object();
     event.addPressedKeyEvent(GLFW_KEY_W, []() { _camera.moveFront(_speed * (_deltaTime)); });
@@ -66,6 +79,15 @@ void Render::initWindowEvents()
     event.addDownKeyEvent(GLFW_KEY_C,
                           [&]()
                           {
+                              event.removeUpKeyEvent(GLFW_KEY_W);
+                              event.removeUpKeyEvent(GLFW_KEY_S);
+                              event.removeUpKeyEvent(GLFW_KEY_A);
+                              event.removeUpKeyEvent(GLFW_KEY_D);
+                              event.removeDownKeyEvent(GLFW_KEY_W);
+                              event.removeDownKeyEvent(GLFW_KEY_S);
+                              event.removeDownKeyEvent(GLFW_KEY_A);
+                              event.removeDownKeyEvent(GLFW_KEY_D);
+
                               event.addPressedKeyEvent(GLFW_KEY_W, []() { _camera.moveFront(_speed * (_deltaTime)); });
                               event.addPressedKeyEvent(GLFW_KEY_S, []() { _camera.moveBack(_speed * (_deltaTime)); });
                               event.addPressedKeyEvent(GLFW_KEY_A, []() { _camera.moveLeft(_speed * (_deltaTime)); });
@@ -77,6 +99,15 @@ void Render::initWindowEvents()
         GLFW_KEY_R,
         [&]()
         {
+            event.removeUpKeyEvent(GLFW_KEY_W);
+            event.removeUpKeyEvent(GLFW_KEY_S);
+            event.removeUpKeyEvent(GLFW_KEY_A);
+            event.removeUpKeyEvent(GLFW_KEY_D);
+            event.removeDownKeyEvent(GLFW_KEY_W);
+            event.removeDownKeyEvent(GLFW_KEY_S);
+            event.removeDownKeyEvent(GLFW_KEY_A);
+            event.removeDownKeyEvent(GLFW_KEY_D);
+
             event.addPressedKeyEvent(GLFW_KEY_W,
                                      [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(1.0f, 0.0f, 0.0f)) * Box1.rotation()); });
             event.addPressedKeyEvent(GLFW_KEY_S,
@@ -94,10 +125,21 @@ void Render::initWindowEvents()
         GLFW_KEY_P,
         [&]()
         {
-            event.addPressedKeyEvent(GLFW_KEY_W, [&]() { Box1.setPosition(Box1.position() + glm::vec3(1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_S, [&]() { Box1.setPosition(Box1.position() + glm::vec3(-1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_A, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 0.0f, -1.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_D, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 0.0f, 1.0f) * _speed * (_deltaTime)); });
+            event.removePressedKeyEvent(GLFW_KEY_W);
+            event.removePressedKeyEvent(GLFW_KEY_S);
+            event.removePressedKeyEvent(GLFW_KEY_A);
+            event.removePressedKeyEvent(GLFW_KEY_D);
+
+            event.addDownKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
+            event.addDownKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(-1.0f, 0.0f, 0.0f)); });
+            event.addDownKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, -1.0f)); });
+            event.addDownKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
+
+            event.addUpKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
+            event.addUpKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(-1.0f, 0.0f, 0.0f));});
+            event.addUpKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, -1.0f));});
+            event.addUpKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
+
             event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
             event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
         });
@@ -105,6 +147,15 @@ void Render::initWindowEvents()
         GLFW_KEY_F,
         [&]()
         {
+            event.removeUpKeyEvent(GLFW_KEY_W);
+            event.removeUpKeyEvent(GLFW_KEY_S);
+            event.removeUpKeyEvent(GLFW_KEY_A);
+            event.removeUpKeyEvent(GLFW_KEY_D);
+            event.removeDownKeyEvent(GLFW_KEY_W);
+            event.removeDownKeyEvent(GLFW_KEY_S);
+            event.removeDownKeyEvent(GLFW_KEY_A);
+            event.removeDownKeyEvent(GLFW_KEY_D);
+
             event.addPressedKeyEvent(GLFW_KEY_W, [&]() { Box1.setScale(Box1.scale() + glm::vec3(1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
             event.addPressedKeyEvent(GLFW_KEY_S, [&]() { Box1.setScale(Box1.scale() + glm::vec3(-1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
             event.addPressedKeyEvent(GLFW_KEY_A, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 0.0f, -1.0f) * _speed * (_deltaTime)); });
@@ -205,8 +256,6 @@ void Render::draw()
 
 void Render::cleanup()
 {
-    delete _pText;
-    delete _pFont;
 }
 
 void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
@@ -227,24 +276,16 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
         *dynamic_cast<const Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
         clearValues, extent);
 
-    // for (Modelbase::Model *pModel : Modelbase::Model::models())
-    // {
-    //     Modelbase::ModelInstance &instance = pModel->instance("1");
+    for (Modelbase::Model *pModel : Modelbase::Model::models())
+    {
+        Modelbase::ModelInstance &instance = pModel->instance("1");
 
-    //     pModel->updateAnimation(_deltaTime);
-    //     instance.updateUniformBuffers(currentFrame, _camera);
-    //     pModel->draw(currentFrame, commandBuffer, 0);
-    // }
+        pModel->updateAnimation(_deltaTime);
+        instance.updateUniformBuffers(currentFrame, _camera);
+        pModel->draw(currentFrame, commandBuffer, 0);
+    }
 
-    Cube &cube1 = Entity::entity<Cube>("1");
-
-    cube1.updateUBO(_camera, currentFrame);
-    cube1.draw(commandBuffer, imageIndex);
-
-    Cube &cube2 = Entity::entity<Cube>("2");
-
-    cube2.updateUBO(_camera, currentFrame);
-    cube2.draw(commandBuffer, imageIndex);
+    Entity::drawEntities(commandBuffer, _camera, currentFrame);
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(commandBuffer, "light", descriptorSets.sets("G_BufferInputAttachments")[imageIndex]);

@@ -1,13 +1,16 @@
 #include "PhysicalSystem.h"
 #include "Entity/Entity.h"
+#include "Physical/Collision/CollisionSystem.h"
 #include <chrono>
 #include <thread>
 
 void PhysicalSystem::nextTick()
 {
     calcTime();
+
+    Entity::updateCollisionObjects();
+    CollisionSystem::instance().update();
     Entity::updateAll(_deltaTime);
-    Entity::cleanAllCollisionResults();
 }
 
 void PhysicalSystem::calcTime()

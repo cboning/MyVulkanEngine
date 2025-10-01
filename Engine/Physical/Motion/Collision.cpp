@@ -1,7 +1,9 @@
 #include "Collision.h"
 #include "../../Entity/Entity.h"
+#include "../Collision/CollisionObjectDelegator.h"
 
-Collision::Collision(Entity &entity) : Motion(entity) {}
+
+Collision::Collision() {}
 
 Collision::~Collision() {}
 
@@ -13,7 +15,7 @@ void Collision::update(float deltaTime)
 
     const Entity &cEntity = entity();
     // 当前 tick 的碰撞记录
-    const auto &collisions = cEntity.collisionResults();
+    const auto &collisions = cEntity.collisionObject().collisionResults();
     if (collisions.empty())
         return;
 

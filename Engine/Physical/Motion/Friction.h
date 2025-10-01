@@ -1,13 +1,12 @@
 #pragma once
-
 #include "Motion.h"
 class Entity;
 
-class Collision : Motion
+class Friction : Motion
 {
 private:
 public:
-    Collision();
-    ~Collision() override;
+    Friction();
+    ~Friction() override;
     void update(float deltaTime) override;
 };

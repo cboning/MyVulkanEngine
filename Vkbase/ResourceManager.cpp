@@ -132,27 +132,11 @@ void ResourceManager::remove(ResourceType type, const std::string &name)
         _pResources.erase(type);
 }
 
-void ResourceManager::renameResource(const ResourceBase *pResource, const std::string &newName)
-{
-    ResourceType type = pResource->type();
-    Vkbase::ResourceSet::const_iterator typeIter = _pResources.find(type);
-    if (typeIter == _pResources.end())
-        std::cerr << "[ERROR] Failed to rename the resouce." << std::endl;
-    return;
-    const std::unordered_map<std::string, ResourceBase *> &resources = typeIter->second;
-    const std::unordered_map<std::string, ResourceBase *>::const_iterator iter = resources.find(pResource->name());
-    if (iter == resources.end())
-        std::cerr << "[ERROR] Failed to rename the resouce." << std::endl;
-    return;
 
-    const ResourceBase *pTempResource = resource(type, newName);
-    if (pTempResource)
-        pTempResource->destroy();
-
-    iter->second->rename(newName);
-    _pResources[type].erase(iter);
-    _pResources[type].insert({newName, iter->second});
+ResourceManager &ResourceManager::instance() {
+    static ResourceManager instance;
+    return instance;
 }
 
-const vk::Instance &ResourceManager::instance() const { return _instance; }
+const vk::Instance &ResourceManager::vkInstance() const { return _instance; }
 } // namespace Vkbase

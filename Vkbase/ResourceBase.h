@@ -11,7 +11,7 @@ class ResourceBase
     friend class ResourceManager;
 
 private:
-    inline static ResourceManager _resourceManager{};
+    inline static ResourceManager &_resourceManager = ResourceManager::instance();
     bool _locked = false;
 
     void useSuperresource(ResourceBase *pResource);
@@ -47,7 +47,6 @@ public:
     const ResourceType &type() const;
     void destroy() const;
     void preDestroy();
-    void rename(const std::string &name);
     void setLock();
     void setUnlock();
 };

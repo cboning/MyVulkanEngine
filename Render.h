@@ -4,6 +4,8 @@
 #include "VkGUI/Text.h"
 #include "Vkbase/Vkbase.h"
 
+class Push;
+
 class Render
 {
 private:
@@ -14,9 +16,10 @@ private:
     inline static float _currentTime = glfwGetTime();
     inline static float _deltaTime = 0.1f;
     Vkbase::Buffer *_pFrameVerticesBuffer;
-    Font *_pFont;
-    Text *_pText;
+    std::unique_ptr<Font> _pFont;
+    std::unique_ptr<Text> _pText;
     inline static float _speed = 10.f;
+    Push *_pPush;
 
     void createRenderPass();
     void createDescriptorSets();

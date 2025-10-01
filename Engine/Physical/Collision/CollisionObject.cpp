@@ -5,14 +5,23 @@
 
 CollisionObject::CollisionObject(CollisionObjectType type) : _type(type) {}
 
+CollisionObject::~CollisionObject() {}
+
 glm::vec3 CollisionObject::boundBoxSize() const { return _boundBoxSize; }
-glm::vec3 CollisionObject::position() const { return _position; }
 
-glm::vec3 CollisionObject::positionInBoundBox() const { return _positionInBoundBox; }
+const glm::vec3 &CollisionObject::position() const { return _position; }
 
-glm::mat3 CollisionObject::axes() const { return _axes; }
+const glm::vec3 &CollisionObject::positionInBoundBox() const { return _positionInBoundBox; }
+
+const glm::mat3 &CollisionObject::axes() const { return _axes; }
 
 CollisionObjectType CollisionObject::type() const { return _type; }
+
+void CollisionObject::setBoundBoxSize(glm::vec3 boundBoxSize) { _boundBoxSize = boundBoxSize; }
+
+void CollisionObject::setPosition(glm::vec3 position) { _position = position; }
+
+void CollisionObject::setAxes(glm::mat3 axes) { _axes = axes; }
 
 glm::vec3 CollisionObject::center() const { return _position + _axes * (halfSize() - _boundBoxSize * _positionInBoundBox); }
 
@@ -25,7 +34,4 @@ void CollisionObject::updateWithObject(const Object &object)
     _position = object.position();
 }
 
-void CollisionObject::setPositionInBoundBox(const glm::vec3 &positionInBoundBox)
-{
-    _positionInBoundBox = positionInBoundBox;
-}
+void CollisionObject::setPositionInBoundBox(const glm::vec3 &positionInBoundBox) { _positionInBoundBox = positionInBoundBox; }
