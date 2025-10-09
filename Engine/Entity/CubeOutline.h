@@ -7,7 +7,7 @@
 
 namespace vk
 {
-    class CommandBuffer;
+class CommandBuffer;
 }
 
 using json = nlohmann::json;
@@ -16,7 +16,7 @@ class Camera;
 
 namespace Vkbase
 {
-    class Buffer;
+class Buffer;
 }
 
 struct alignas(16) CubeUniformBufferData
@@ -29,20 +29,23 @@ struct alignas(16) CubeUniformBufferData
     float _pad = 0.0f;
 };
 
-class Cube : public Entity
+class CubeOutline : public Entity
 {
 private:
-    glm::vec3 _color = glm::vec3(0.0f, 0.6f, 0.8f);
+    glm::vec3 _color = glm::vec3(1.0f, 1.0f, 1.0f);
     std::vector<Vkbase::Buffer *> _ubos;
-    bool _isOutline;
 
     void init() override;
-    void objectExtraUpdate() override;
+    void objectExtraUpdate() override {}
 
 public:
-    Cube(const std::string &name, bool dynamic = true, const Object &object = {}, bool isOutline = false);
-    ~Cube();
-    void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const override;
+    CubeOutline(const std::string &name, const Object &object = {});
+    ~CubeOutline();
+
+    void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName,
+              const std::string &uboName) const override;
+
     void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const override;
+
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
 };

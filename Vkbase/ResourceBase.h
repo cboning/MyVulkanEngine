@@ -13,13 +13,16 @@ class ResourceBase
 private:
     inline static ResourceManager &_resourceManager = ResourceManager::instance();
     bool _locked = false;
+    bool _killing = false;
 
     void useSuperresource(ResourceBase *pResource);
     void disuseSuperresource(ResourceBase *pResource);
+    void preDestroy();
+    void tryKillself();
 
 protected:
     ResourceBase(ResourceType resourceType, const std::string &resourceName);
-    std::string _name;
+    const std::string _name;
     const ResourceType _resourceType;
     std::vector<ResourceBase *> _pSubresources;
     std::vector<ResourceBase *> _pSuperresources;
@@ -46,7 +49,6 @@ public:
     const std::string &name() const;
     const ResourceType &type() const;
     void destroy() const;
-    void preDestroy();
     void setLock();
     void setUnlock();
 };

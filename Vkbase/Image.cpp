@@ -3,8 +3,8 @@
 #include "CommandPool.h"
 #include "Device.h"
 #include "Swapchain.h"
-#define STB_IMAGE_IMPLEMENTATION
 #include "../JsonConfigReader/JsonConfigReader.h"
+#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 #include <iostream>
 
@@ -65,9 +65,12 @@ Image::~Image()
 {
     if (!_pDevice)
         return;
-    _pDevice->device().destroy(_view);
-    _pDevice->device().destroy(_image);
-    _pDevice->device().freeMemory(_memory);
+    if (_view)
+        _pDevice->device().destroy(_view);
+    if (_image)
+        _pDevice->device().destroy(_image);
+    if (_memory)
+        _pDevice->device().freeMemory(_memory);
 }
 
 void Image::createImageWithNoData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage)
@@ -93,7 +96,7 @@ void Image::createImageWithData(uint32_t width, uint32_t height, uint32_t depth,
     copyBufferDataToImage(*buffer, width, height, depth);
     transitionImageLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-    buffer->destroy();
+    // buffer->destroy();
     createImageView();
 }
 
@@ -108,9 +111,7 @@ void Image::loadImage(std::string fileName, vk::ImageUsageFlags usage)
 #ifdef DEBUG
         std::cerr << "[Warning] Failed to load image: " << fileName.c_str() << std::endl;
 #endif
-        uint32_t empty_color = 0xFFFF00FF;
-        createImageWithData(1, 1, 1, usage, &empty_color);
-        return;
+        throw std::runtime_error("Failed to load image: " + fileName);
     }
     createImageWithData(width, height, 1, usage, pData);
 

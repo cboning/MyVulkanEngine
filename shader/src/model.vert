@@ -21,6 +21,7 @@ layout(location = 5) in vec4 inWeight;
 layout(location = 0) out vec2 texCoord;
 layout(location = 1) out vec3 outNormal;
 layout(location = 2) out vec3 fragPos;
+layout(location = 3) out vec4 fragLightSpacePos;
 
 void main() {
     vec4 position = vec4(0.0f);

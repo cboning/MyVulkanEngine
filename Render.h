@@ -10,6 +10,7 @@ class Render
 {
 private:
     inline static Camera _camera = Camera({800, 600});
+    inline static Camera _cameraLight = Camera({800, 600});
     inline static Vkbase::ResourceManager &_resourceManager = Vkbase::ResourceBase::resourceManager();
     Vkbase::RenderDelegator *_pRenderDelegator;
     inline static float _lastTime = glfwGetTime();

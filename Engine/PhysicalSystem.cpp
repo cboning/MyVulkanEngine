@@ -20,7 +20,7 @@ void PhysicalSystem::calcTime()
     if (!_lastTime)
         _lastTime = currentTime;
 
-    std::this_thread::sleep_for(std::chrono::milliseconds((int)((1.0f / 60.0f - currentTime + _lastTime))));
+    std::this_thread::sleep_for(std::chrono::milliseconds((int)((1.0f / 300.0f - currentTime + _lastTime))));
     currentTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now().time_since_epoch()).count();
     _deltaTime = currentTime - _lastTime;
     _lastTime = currentTime;

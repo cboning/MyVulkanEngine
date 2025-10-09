@@ -13,6 +13,7 @@ ModelInstance::ModelInstance(const std::string &descriptorSetsName, const std::s
 ModelInstance::~ModelInstance() { _descriptorSets.destroy(); }
 
 Object &ModelInstance::object() { return _object; }
+const Object &ModelInstance::object() const { return _object; }
 
 Vkbase::DescriptorSets &ModelInstance::descriptorSets() { return _descriptorSets; }
 
@@ -43,7 +44,7 @@ void ModelInstance::updateAnimation(float deltaTick)
     _animationProgress = pAnimation->update(deltaTick);
 }
 
-void ModelInstance::updateUniformBuffers(uint32_t currentFrame, const Camera &camera)
+void ModelInstance::updateUniformBuffers(uint32_t currentFrame, const Camera &camera) const
 {
     ModelUniformData uniformData;
     if (_model.animationCount())

@@ -7,7 +7,7 @@ namespace Modelbase
 {
 template <typename T> class Mesh
 {
-  private:
+private:
     const Vkbase::Device &_device;
 
     std::vector<T> _vertices;
@@ -19,12 +19,14 @@ template <typename T> class Mesh
     const std::string _name;
     static const std::string getNewBufferWithName(std::string name);
 
-  public:
+public:
     Mesh(const std::string &name, const std::string &deviceName, const std::vector<T> &vertices, const std::vector<uint16_t> &indices,
          const std::vector<std::vector<std::string>> &textureNames, const std::string &prefix = "");
     void draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const std::vector<vk::DescriptorSet> &descriptorSets) const;
     const std::vector<std::vector<std::string>> &textureNames() const;
     const std::string &name() const;
+    const std::vector<T> &vertices() const;
+    const std::vector<uint16_t> &indices() const;
 };
 
 template <typename T>
@@ -32,10 +34,12 @@ Mesh<T>::Mesh(const std::string &name, const std::string &deviceName, const std:
               const std::vector<std::vector<std::string>> &textureNames, const std::string &prefix)
     : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
       _vertices(vertices), _indices(indices), _textureNames(textureNames),
-      _vertexBuffer(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Vertex"), deviceName,
-                                         _vertices.size() * sizeof(_vertices[0]), vk::BufferUsageFlagBits::eVertexBuffer, _vertices.data()))),
-      _indexBuffer(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Index"), deviceName,
-                                        _indices.size() * sizeof(_indices[0]), vk::BufferUsageFlagBits::eIndexBuffer, _indices.data()))),
+      _vertexBuffer(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(
+          getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Vertex"), deviceName, _vertices.size() * sizeof(_vertices[0]),
+          vk::BufferUsageFlagBits::eVertexBuffer, _vertices.data()))),
+      _indexBuffer(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(
+          getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Index"), deviceName, _indices.size() * sizeof(_indices[0]),
+          vk::BufferUsageFlagBits::eIndexBuffer, _indices.data()))),
       _name(name)
 {
 }
@@ -67,4 +71,7 @@ template <typename T> const std::string Mesh<T>::getNewBufferWithName(std::strin
 }
 
 template <typename T> const std::string &Mesh<T>::name() const { return _name; }
+template <typename T> inline const std::vector<T> &Mesh<T>::vertices() const { return _vertices; }
+template <typename T> inline const std::vector<uint16_t> &Mesh<T>::indices() const { return _indices; }
+
 }; // namespace Modelbase

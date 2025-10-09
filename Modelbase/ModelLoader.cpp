@@ -1,8 +1,9 @@
-#include "AssimpGLMHelpers.h"
 #include "ModelLoader.h"
 #include "Animation.h"
+#include "AssimpGLMHelpers.h"
 #include "Mesh.h"
 #include "Model.h"
+#include "stb_image.h"
 
 namespace Modelbase
 {
@@ -20,9 +21,7 @@ void ModelLoader::loadModel(Model &model, const std::string &fileName)
     uint32_t animationCount = pScene->mNumAnimations;
 
     for (uint32_t i = 0; i < animationCount; ++i)
-    {
         model._animations.emplace_back(pScene->mAnimations[i], model);
-    }
 }
 
 void ModelLoader::processNode(Model &model, aiNode *pNode, const aiScene *pScene, ModelData::AssimpNodeData &src)
@@ -66,7 +65,6 @@ void ModelLoader::setVertexBoneData(ModelData::Vertex &vertex, int boneId, float
         }
     }
 }
-
 
 void ModelLoader::loadVerticesBoneWeight(Model &model, std::vector<ModelData::Vertex> &vertices, aiMesh *pMesh)
 {
@@ -139,12 +137,12 @@ void ModelLoader::processMesh(Model &model, aiMesh *pMesh, const aiScene *pScene
     textureNames.resize(textureTypeFeatures.size(), {"Empty"});
 
     for (uint32_t i = 0; i < textureTypeFeatures.size(); ++i)
-        textureNames[i][0] = loadMaterialTextures(model, pMaterial, textureTypeFeatures[i])[0];
+        textureNames[i][0] = loadMaterialTextures(model, pScene, pMaterial, textureTypeFeatures[i])[0];
+
     model._meshes.emplace_back(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name());
 }
 
-
-std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, aiMaterial *pMaterial, aiTextureType textureType)
+std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const aiScene *pScene, aiMaterial *pMaterial, aiTextureType textureType)
 {
     std::vector<std::string> textureNames;
     for (unsigned int i = 0; i < pMaterial->GetTextureCount(textureType); ++i)
@@ -154,8 +152,46 @@ std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, aiMater
         std::string filename = model._fileDirectory + "/" + path.C_Str();
         if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, filename))
         {
-            Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, filename, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
-                              vk::ImageUsageFlagBits::eSampled);
+            try
+            {
+                Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, filename, vk::Format::eR8G8B8A8Srgb,
+                                                                              vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled);
+            }
+            catch (std::runtime_error e)
+            {
+                const aiTexture *pTexture = pScene->GetEmbeddedTexture(path.C_Str());
+                if (pTexture->mHeight == 0)
+                {
+                    const unsigned char *data = reinterpret_cast<const unsigned char *>(pTexture->pcData);
+                    size_t size = static_cast<size_t>(pTexture->mWidth);
+
+                    int width, height, channels;
+                    unsigned char *pData = stbi_load_from_memory(data, size, &width, &height, &channels, STBI_rgb_alpha);
+
+                    if (!pData)
+                    {
+                        std::cerr << "Failed to load embedded texture: " << stbi_failure_reason() << std::endl;
+                        uint32_t empty_color = 0xFFFF00FF;
+                        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb,
+                                                                                      vk::ImageType::e2D, vk::ImageViewType::e2D,
+                                                                                      vk::ImageUsageFlagBits::eSampled, &empty_color);
+                    }
+                    else
+                    {
+                        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb,
+                                                                                      vk::ImageType::e2D, vk::ImageViewType::e2D,
+                                                                                      vk::ImageUsageFlagBits::eSampled, pData);
+
+                        stbi_image_free(pData);
+                    }
+                }
+                else
+                {
+                    Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, pTexture->mWidth, pTexture->mHeight, 1,
+                                                                                  vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
+                                                                                  vk::ImageUsageFlagBits::eSampled, pTexture->pcData);
+                }
+            }
             model._textureFiles.push_back(filename);
         }
         textureNames.push_back(filename);
@@ -164,6 +200,4 @@ std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, aiMater
         textureNames.push_back("Empty");
     return textureNames;
 }
-
-
-}
+} // namespace Modelbase

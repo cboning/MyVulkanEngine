@@ -18,13 +18,13 @@ public:
     void setCommandRecordFunc(const std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
     void setRenderPassCreateFunc(const std::function<void()> &func);
     static uint32_t maxFlightCount();
+    void recreateSwapchain();
 
 private:
     RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::string &swapchainName, const std::string &commandPoolName);
     ~RenderDelegator() override;
     void init();
     void createSyncObjects();
-    void recreateSwapchain();
     const Device &_device;
     inline static uint32_t _maxFlightCount = MAX_FLIGHT_COUNT;
     Swapchain *_pSwapchain;

@@ -20,7 +20,9 @@ namespace Modelbase
 template <typename T> class Mesh;
 class Animation;
 class ModelInstance;
+
 struct AnimationIndex;
+
 
 struct ModelUniformData
 {
@@ -33,7 +35,8 @@ struct ModelUniformData
 class Model
 {
     friend class ModelLoader;
-  private:
+
+private:
     const std::string _deviceName;
 
     std::string _fileDirectory;
@@ -72,13 +75,13 @@ class Model
 
     inline static std::unordered_set<Model *> _models;
 
-  public:
+public:
     Model(const std::string &deviceName, const vk::Sampler &sampler, const std::string &fileName,
           const std::unordered_map<std::string, std::vector<aiTextureType>> &textureTypeFeatures,
           const std::unordered_map<std::string, std::string> &meshPipelineNames);
     Model(const std::string &deviceName, const vk::Sampler &sampler, json config);
     ~Model();
-    void draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex);
+    void draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex) const;
     std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap();
     int &boneCount();
     ModelData::AssimpNodeData *rootNode();
@@ -93,8 +96,12 @@ class Model
     int32_t instanceIndex(const std::string &instanceName) const;
     void removeInstance(const std::string &instanceName);
     ModelInstance &instance(uint32_t instanceIndex);
+    const ModelInstance &instance(uint32_t instanceIndex) const;
     ModelInstance &instance(const std::string &instanceName);
+    const ModelInstance &instance(const std::string &instanceName) const;
 
     static const std::unordered_set<Model *> &models();
+
+    const std::vector<Mesh<ModelData::Vertex>> &meshes() const;
 };
 }; // namespace Modelbase

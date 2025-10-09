@@ -1,11 +1,15 @@
 #include "Render.h"
 #include "Cloud.h"
 #include "Data.h"
+#include "Data/Octree.h"
+#include "Engine/Entity/Character.h"
 #include "Engine/Entity/Cube.h"
-#include "Engine/Physical/Motion/Collision.h"
-#include "Engine/Physical/Motion/Friction.h"
-#include "Engine/Physical/Motion/Gravity.h"
-#include "Engine/Physical/Motion/Push.h"
+#include "Engine/Entity/ModelEntity.h"
+#include "Engine/Entity/Motion/Collision.h"
+#include "Engine/Entity/Motion/Friction.h"
+#include "Engine/Entity/Motion/Gravity.h"
+#include "Engine/Entity/Motion/Push.h"
+#include "Engine/Physical/Collision/CollisionSystem.h"
 #include "Event/KeyInputEvent.h"
 #include "JsonConfigReader/JsonConfigReader.h"
 #include "Modelbase/Modelbase.h"
@@ -20,6 +24,12 @@ void Render::init()
 
 void Render::resourceInit()
 {
+    _cameraLight.movePosTo(50, 300, 40);
+    _cameraLight.lookAt(glm::vec3(0.0f));
+    _cameraLight.setLight(true);
+    _cameraLight.setNearFar(-2000, 2000);
+    _cameraLight.setFrameSize(glm::vec2(100.0f));
+    Vkbase::Window *pResourcesWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("resourceWindow", "Resources Window", 800, 600);
     Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
     pWindow->setMouseScrollCallback([](double, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
@@ -33,6 +43,10 @@ void Render::resourceInit()
     _pFrameVerticesBuffer = Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6,
                                                                                            vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
 
+    if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
+        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Empty", "Device", 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
+                                                                      vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
+
     Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
     Cube *pCube1 = new Cube("1");
     pCube1->addMotion("Gravity", (Motion *)(new Gravity()));
@@ -40,12 +54,15 @@ void Render::resourceInit()
     pCube1->addMotion("Friction", (Motion *)(new Friction()));
     _pPush = new Push();
     pCube1->addMotion("Push", (Motion *)_pPush);
+    pCube1->object().setPosition(glm::vec3(5.0f, 200.0f, 0.0f));
+    pCube1->object().setScale(glm::vec3(5.0f, 13.0f, 5.0f));
 
     Cube *pCube4 = new Cube("4");
     pCube4->addMotion("Gravity", (Motion *)(new Gravity()));
     pCube4->addMotion("Collision", (Motion *)(new Collision()));
     pCube4->addMotion("Friction", (Motion *)(new Friction()));
-    pCube4->object().setPosition(glm::vec3(5.0f, 3.0f, 0.0f));
+    pCube4->object().setPosition(glm::vec3(5.0f, 50.0f, 0.0f));
+    pCube4->object().setScale(glm::vec3(5.0f, 13.0f, 5.0f));
 
     Object cubeObject2;
     cubeObject2.setScale(glm::vec3(100.0f, 0.5f, 100.0f));
@@ -57,18 +74,50 @@ void Render::resourceInit()
     cubeObject3.setPosition(glm::vec3(0.0f, -9.5f, 0.0f));
     Cube *pCube3 = new Cube("3", false, cubeObject3);
 
+    Object cubeObject5;
+    cubeObject5.setPosition(glm::vec3(30.0f, 30.0f, 30.0f));
+    ModelEntity *pCharacter = new ModelEntity("5", false, cubeObject5, JsonConfigReader::load("config/model.json")[0]);
+
+    // pCharacter->modelObject().setScale(glm::vec3(0.01f));
+
+    auto pOctrees = std::vector{CollisionSystem::instance().octree()};
+    int outlineIndex = 0;
+    while (pOctrees.size())
+    {
+        auto &pCollisionOctree = *pOctrees.back();
+        pOctrees.pop_back();
+
+        if (pCollisionOctree.objects().size())
+        {
+            uint32_t level = pCollisionOctree.level();
+            uint32_t x, y, z;
+            x = pCollisionOctree.x();
+            y = pCollisionOctree.y();
+            z = pCollisionOctree.z();
+            float powLevel2 = 1u << level;
+            Object octreeBoundary;
+            glm::vec3 postion = glm::vec3(-1000.0f), size = glm::vec3(2000.0f);
+            octreeBoundary.setPosition(postion + size * glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f) / (float)powLevel2);
+            octreeBoundary.setScale(size / (float)powLevel2);
+            new Cube("Outline" + std::to_string(outlineIndex++), false, octreeBoundary, true);
+        }
+
+        if (pCollisionOctree.hasSubTrees())
+            for (uint8_t pos = 0; pos < 8; ++pos)
+                pOctrees.push_back(pCollisionOctree.subTree(pos).get());
+    }
+
     // delete new Cloud();
 
-    Modelbase::Model *pModel =
-        new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
-                             JsonConfigReader::load("config/model.json")[0]);
+    // Modelbase::Model *pModel =
+    //     new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
+    //                          JsonConfigReader::load("config/model.json")[0]);
+    // Modelbase::ModelInstance &instance = pModel->createNewInstance("1", {0, 0.0f});
+    // Object &modelObject = instance.object();
+    // modelObject.setScale(glm::vec3(0.01f));
 
     _pFont = std::make_unique<Font>("Device", "./src/fonts/Minecraft.ttf");
     _pText = std::make_unique<Text>(*_pFont, "Hello Vulkan!", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(10.0f, 50.0f), 1.0f);
-
-    Modelbase::ModelInstance &instance = pModel->createNewInstance("1", {0, 0.0f});
-    Object &modelObject = instance.object();
-    modelObject.setScale(glm::vec3(1.0f));
 
     createDescriptorSets();
     createRenderPass();
@@ -77,7 +126,7 @@ void Render::resourceInit()
 void Render::initWindowEvents()
 {
     Event::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::ResourceType::Window, "mainWindow"))->keyInputEvent();
-    Object &Box1 = Entity::entity<Cube>("1").object();
+    Object &Box1 = Entity::entity<Cube>("1")->object();
     event.addPressedKeyEvent(GLFW_KEY_W, []() { _camera.moveFront(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_S, []() { _camera.moveBack(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_A, []() { _camera.moveLeft(_speed * (_deltaTime)); });
@@ -200,8 +249,9 @@ void Render::createRenderPass()
     Vkbase::VertexInfo cubeVertexInfo(GeometryVertexData::attributeDescriptions(), {GeometryVertexData::bindingDescription()});
 
     const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {
-        {"blend", screenVertexInfo}, {"blur_h", screenVertexInfo},  {"blur_v", screenVertexInfo},        {"light", screenVertexInfo},
-        {"text", textVertexInfo},    {"g_buffer", modelVertexInfo}, {"GeometryPipeline", cubeVertexInfo}};
+        {"blend", screenVertexInfo},       {"blur_h", screenVertexInfo},  {"blur_v", screenVertexInfo},         {"light", screenVertexInfo},
+        {"text", textVertexInfo},          {"g_buffer", modelVertexInfo}, {"GeometryPipeline", cubeVertexInfo}, {"GeometryOutlinePipeline", cubeVertexInfo},
+        {"GeometryShadow", cubeVertexInfo}};
 
     const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> descriptorSetLayouts = {
         {"blend", {descriptorSets.layout("BlendInputAttachments")}},
@@ -209,15 +259,18 @@ void Render::createRenderPass()
         {"blur_v", {descriptorSets.layout("BlurSampler2")}},
         {"light", {descriptorSets.layout("G_BufferInputAttachments")}},
         {"text", {_pFont->layout(), Font::projectiveLayout("MainDescriptorSets")}},
-        {"g_buffer", (*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")},
-        {"GeometryPipeline", Entity::entity<Cube>("1").descriptorSetLayouts()}};
+        {"g_buffer", {(*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")}},
+        {"GeometryPipeline", Entity::entity<Cube>("1")->descriptorSetLayouts()},
+        {"GeometryOutlinePipeline", Entity::entity<Cube>("1")->descriptorSetLayouts()},
+        {"GeometryShadow", Entity::entity<Cube>("1")->descriptorSetLayouts()}};
 
     const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> viewportInfo = {{vk::Rect2D().setExtent(swapchain.extent())},
                                                                                         {vk::Viewport().setWidth(extent.width).setHeight(extent.height)}};
 
     const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> viewportInfos = {
-        {"blend", viewportInfo}, {"blur_h", viewportInfo},   {"blur_v", viewportInfo},          {"light", viewportInfo},
-        {"text", viewportInfo},  {"g_buffer", viewportInfo}, {"GeometryPipeline", viewportInfo}};
+        {"blend", viewportInfo},         {"blur_h", viewportInfo},   {"blur_v", viewportInfo},           {"light", viewportInfo},
+        {"text", viewportInfo},          {"g_buffer", viewportInfo}, {"GeometryPipeline", viewportInfo}, {"GeometryOutlinePipeline", viewportInfo},
+        {"GeometryShadow", viewportInfo}};
 
     renderPass.createPipelines(JsonConfigReader::load("config/render.json")[0]["pipelines"], vertexInfos, descriptorSetLayouts, viewportInfos);
 
@@ -250,6 +303,8 @@ void Render::draw()
     clacDeltaTime();
     Event::KeyInputEvent::processing();
     _camera.updatePerspective();
+    _cameraLight.lookAt(glm::vec3(0.0f));
+    _cameraLight.updatePerspective();
 
     if (_resourceManager.resources().count(Vkbase::ResourceType::RenderDelegator))
     {
@@ -270,9 +325,10 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
     const Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
 
     std::vector<vk::ClearValue> clearValues = {vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
-                                               vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}),
                                                vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
-                                               vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}), vk::ClearValue().setDepthStencil({1.0f, 0})};
+                                               vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
+                                               vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({1.0f, 1.0f, 1.0f, 1.0f}),
+                                               vk::ClearValue().setDepthStencil({1.0f, 0}),         vk::ClearValue().setDepthStencil({1.0f, 0})};
 
     vk::Extent2D extent = dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"))->extent();
     renderPass.begin(
@@ -280,16 +336,20 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
         *dynamic_cast<const Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
         clearValues, extent);
 
-    // for (Modelbase::Model *pModel : Modelbase::Model::models())
-    // {
-    //     Modelbase::ModelInstance &instance = pModel->instance("1");
+    for (Modelbase::Model *pModel : Modelbase::Model::models())
+    {
+        // Modelbase::ModelInstance &instance = pModel->instance("1");
 
-    //     pModel->updateAnimation(_deltaTime);
-    //     instance.updateUniformBuffers(currentFrame, _camera);
-    //     pModel->draw(currentFrame, commandBuffer, 0);
-    // }
+        pModel->updateAnimation(_deltaTime);
+        // instance.updateUniformBuffers(currentFrame, _camera);
+        // pModel->draw(currentFrame, commandBuffer, 0);
+    }
 
-    Entity::drawEntities(commandBuffer, _camera, currentFrame);
+    Entity::drawEntities(commandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryPipeline", "UBO", "UBO");
+    Entity::drawEntities(commandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryOutlinePipeline", "UBO", "UBO");
+    commandBuffer.nextSubpass(vk::SubpassContents::eInline);
+    // Entity::drawEntities(commandBuffer, _cameraLight, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryShadow", "Shadow_UBO",
+    //                      "ShadowUBO");
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(commandBuffer, "light", descriptorSets.sets("G_BufferInputAttachments")[imageIndex]);

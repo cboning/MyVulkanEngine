@@ -83,6 +83,7 @@ private:
 public:
     template <typename T, typename... Args> T *create(Args &&...args);
     const ResourceSet &resources() const;
+    
     ResourceBase *resource(ResourceType type, std::string name) const;
     void remove(ResourceType type, const std::string &name);
     const vk::Instance &vkInstance() const;

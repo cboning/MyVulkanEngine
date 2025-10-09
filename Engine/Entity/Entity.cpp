@@ -1,8 +1,9 @@
 #include "Entity.h"
 #include "../../Camera/Camera.h"
+#include "../Physical/Collision/CollisionBox.h"
 #include "../Physical/Collision/CollisionObjectDelegator.h"
 #include "../Physical/Collision/CollisionSystem.h"
-#include "../Physical/Motion/Motion.h"
+#include "Motion/Motion.h"
 #include <iostream>
 
 Entity::Entity(const std::string &name, bool dynamic, const Object &object) : _name(name), _object(object), _dynamic(dynamic)
@@ -14,16 +15,21 @@ Entity::Entity(const std::string &name, bool dynamic, const Object &object) : _n
 
 Entity::~Entity()
 {
-    CollisionSystem::instance().destroyDynamicObject(_pCollisionObjectDelegator);
+    for (CollisionObjectDelegator *pCollisionObjectDelegator : _pCollisionObjectDelegators)
+        CollisionSystem::instance().destroyDynamicObject(pCollisionObjectDelegator);
     for (auto &motion : _pMotions)
         delete motion.second;
 }
 
-CollisionObjectDelegator *Entity::collisionObject() { return _pCollisionObjectDelegator; }
+CollisionObjectDelegator *Entity::collisionObject() { return _pCollisionObjectDelegators[0]; }
+
+CollisionObjectDelegator *Entity::collisionObject(uint32_t index) { return _pCollisionObjectDelegators[index]; }
+
+uint32_t Entity::collisionObjectDelegatorsCount() const { return _pCollisionObjectDelegators.size(); }
 
 std::unordered_map<std::string, Motion *> &Entity::motions() { return _pMotions; }
 
-void Entity::setCollisionObject(CollisionObjectDelegator *pCollisionObjectDelegator) { _pCollisionObjectDelegator = pCollisionObjectDelegator; }
+void Entity::addCollisionObject(CollisionObjectDelegator *pCollisionObjectDelegator) { _pCollisionObjectDelegators.push_back(pCollisionObjectDelegator); }
 
 const std::string &Entity::name() const { return _name; }
 
@@ -33,13 +39,12 @@ Object &Entity::object() { return _object; }
 
 const Object &Entity::object() const { return _object; }
 
-const CollisionObjectDelegator *Entity::collisionObject() const { return _pCollisionObjectDelegator; }
+const CollisionObjectDelegator *Entity::collisionObject() const { return _pCollisionObjectDelegators[0]; }
 
 void Entity::updateCollisionObject()
 {
-    if (!_pCollisionObjectDelegator)
-        return;
-    _pCollisionObjectDelegator->updateWithObject(_object);
+    for (auto pCollisionObjectDelegator : _pCollisionObjectDelegators)
+        pCollisionObjectDelegator->collisionObject<CollisionObject>().updateWithObject(object());
 }
 
 void Entity::updateVelocity(float deltaTime) { _velocity += deltaTime * _acceleration; }
@@ -49,6 +54,7 @@ void Entity::updatePosition(float deltaTime) { _object.setPosition(deltaTime * _
 void Entity::update(float deltaTime)
 {
     updatePosition(deltaTime);
+    objectExtraUpdate();
     updateVelocity(deltaTime);
     _tempVelocity = _velocity;
 }
@@ -65,6 +71,7 @@ void Entity::updateAll(float deltaTime)
     {
         pEntity.second->update(deltaTime);
     }
+
     for (auto &pEntity : _pEntities)
     {
         pEntity.second->_acceleration = glm::vec3(0.0f);
@@ -117,11 +124,12 @@ void Entity::eraseMotion(const std::string &name)
     delete _pMotions.extract(name).mapped();
 }
 
-void Entity::drawEntities(const vk::CommandBuffer &commandBuffer, const Camera &camera, uint32_t index)
+void Entity::drawEntities(const vk::CommandBuffer &commandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index, const std::string &pipelineName,
+                          const std::string &UBOName, const std::string &setsName)
 {
     for (auto &entity : _pEntities)
     {
-        entity.second->updateUBO(camera, index);
-        entity.second->draw(commandBuffer, index);
+        entity.second->updateUBO(camera, index, mat, UBOName);
+        entity.second->draw(commandBuffer, index, pipelineName, setsName);
     }
 }

@@ -40,9 +40,10 @@ class ModelInstance
 
   public:
     Object &object();
+    const Object &object() const;
     Vkbase::DescriptorSets &descriptorSets();
     const Vkbase::DescriptorSets &descriptorSets() const;
-    void updateUniformBuffers(uint32_t currentFrame, const Camera &camera);
+    void updateUniformBuffers(uint32_t currentFrame, const Camera &camera) const;
     bool canAddAnimationToStack() const;
     void setBasicAnimation(const AnimationIndex &animationIndex);
     void addAnimationIndexToStack(const std::vector<AnimationIndex> &animationIndices);

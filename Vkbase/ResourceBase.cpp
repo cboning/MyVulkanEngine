@@ -17,6 +17,9 @@ ResourceBase::~ResourceBase()
 #ifdef DEBUG
     std::cout << "[Info] Success to remove the resource. Type: " << toString(_resourceType) << ", Name: " << _name << std::endl;
 #endif
+    _killing = true;
+    if (_resourceManager.resource(_resourceType, _name))
+        destroy();
     for (std::reverse_iterator<std::vector<Vkbase::ResourceBase *>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend(); ++iter)
         (*iter)->disuseSuperresource(this);
 }
@@ -29,6 +32,12 @@ void ResourceBase::preDestroy()
         _pSuperresources.pop_back();
         back->disusedSubresource(this);
     }
+}
+
+void ResourceBase::tryKillself() {
+    if (_killing)
+        return;
+    delete this;
 }
 
 ResourceManager &ResourceBase::resourceManager() { return _resourceManager; }

@@ -68,7 +68,7 @@ template <typename T> inline void Octree<T>::addObject(T object)
         if (!pBlock->_mipped)
             for (uint8_t i = 0; i < 8; ++i)
                 pBlock->_pSubTrees[i] =
-                    Ptr(new Octree<T>(_level + 1, pBlock->_x * 2 + ((i >> 0) & 1), pBlock->_y * 2 + ((i >> 1) & 1), pBlock->_z * 2 + ((i >> 2) & 1), _mipFunc));
+                    Ptr(new Octree<T>(pBlock->level() + 1, pBlock->_x * 2 + ((i >> 0) & 1), pBlock->_y * 2 + ((i >> 1) & 1), pBlock->_z * 2 + ((i >> 2) & 1), _mipFunc));
         pBlock->_mipped = true;
         if (result.pos >= 8 || !pBlock->_pSubTrees[result.pos])
             throw std::runtime_error("Invalid mip result position");

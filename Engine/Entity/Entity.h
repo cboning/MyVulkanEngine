@@ -24,12 +24,9 @@ class CollisionObjectDelegator;
 class Entity
 {
 private:
-    struct Deleter 
+    struct Deleter
     {
-        void operator()(Entity *pEntity)
-        {
-            delete pEntity;
-        }
+        void operator()(Entity *pEntity) { delete pEntity; }
     };
 
     Object _object;
@@ -39,7 +36,7 @@ private:
     const std::string _name;
     const bool _dynamic;
     std::unordered_map<std::string, Motion *> _pMotions;
-    CollisionObjectDelegator *_pCollisionObjectDelegator = nullptr;
+    std::vector<CollisionObjectDelegator *> _pCollisionObjectDelegators;
 
     inline static std::unordered_map<std::string, std::unique_ptr<Entity, Deleter>> _pEntities = {};
     void updateCollisionObject();
@@ -53,19 +50,22 @@ protected:
     Entity(const std::string &name, bool dynamic = true, const Object &object = Object());
     virtual ~Entity();
     CollisionObjectDelegator *collisionObject();
+    CollisionObjectDelegator *collisionObject(uint32_t index);
+    uint32_t collisionObjectDelegatorsCount() const;
     std::unordered_map<std::string, Motion *> &motions();
-    void setCollisionObject(CollisionObjectDelegator *pCollisionObjectDelegator);
+    void addCollisionObject(CollisionObjectDelegator *pCollisionObjectDelegator);
+    virtual void objectExtraUpdate() = 0;
 
 public:
     bool dynamic();
-    virtual void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex) const = 0;
+    virtual void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const = 0;
     Object &object();
     const Object &object() const;
     const CollisionObjectDelegator *collisionObject() const;
 
     const std::string &name() const;
 
-    template <typename T> static T &entity(const std::string &name) { return *dynamic_cast<T *>(_pEntities.at(name).get()); }
+    template <typename T> static T *entity(const std::string &name) { return dynamic_cast<T *>(_pEntities.at(name).get()); }
 
     virtual std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() = 0;
     static void updateCollisionObjects();
@@ -82,7 +82,8 @@ public:
     Motion *motion(const std::string &name);
     void eraseMotion(const std::string &name);
 
-    virtual void updateUBO(const Camera &camera, uint32_t index) const = 0;
+    virtual void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const = 0;
 
-    static void drawEntities(const vk::CommandBuffer &commandBuffer, const Camera &camera, uint32_t index);
+    static void drawEntities(const vk::CommandBuffer &commandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index,
+                             const std::string &pipelineName, const std::string &UBOName, const std::string &setsName);
 };

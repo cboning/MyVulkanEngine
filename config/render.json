@@ -6,7 +6,7 @@
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "Store",
+                    "storeOp": "DontCare",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -16,7 +16,7 @@
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "Store",
+                    "storeOp": "DontCare",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -26,7 +26,7 @@
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "Store",
+                    "storeOp": "DontCare",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -36,7 +36,7 @@
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "Store",
+                    "storeOp": "DontCare",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -46,7 +46,7 @@
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "Store",
+                    "storeOp": "DontCare",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -56,7 +56,17 @@
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "Store",
+                    "storeOp": "DontCare",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "DontCare",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -81,6 +91,16 @@
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
                     "finalLayout": "DepthStencilAttachmentOptimal"
+                },
+                {
+                    "format": "DEPTH_FORMAT",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
                 }
             ],
             "attachmentReferences": [
@@ -96,15 +116,25 @@
                     {
                         "attachment": 2,
                         "layout": "ColorAttachmentOptimal"
+                    },
+                    {
+                        "attachment": 3,
+                        "layout": "ColorAttachmentOptimal"
                     }
                 ],
                 [
                     {
-                        "attachment": 3,
+                        "attachment": 4,
                         "layout": "ColorAttachmentOptimal"
                     },
                     {
-                        "attachment": 4,
+                        "attachment": 5,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 6,
                         "layout": "ColorAttachmentOptimal"
                     }
                 ],
@@ -116,13 +146,7 @@
                 ],
                 [
                     {
-                        "attachment": 4,
-                        "layout": "ColorAttachmentOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 6,
+                        "attachment": 7,
                         "layout": "ColorAttachmentOptimal"
                     }
                 ],
@@ -138,11 +162,13 @@
                     {
                         "attachment": 2,
                         "layout": "ShaderReadOnlyOptimal"
-                    }
-                ],
-                [
+                    },
                     {
-                        "attachment": 4,
+                        "attachment": 3,
+                        "layout": "ShaderReadOnlyOptimal"
+                    },
+                    {
+                        "attachment": 9,
                         "layout": "ShaderReadOnlyOptimal"
                     }
                 ],
@@ -154,17 +180,29 @@
                 ],
                 [
                     {
-                        "attachment": 3,
-                        "layout": "ShaderReadOnlyOptimal"
-                    },
-                    {
-                        "attachment": 4,
+                        "attachment": 6,
                         "layout": "ShaderReadOnlyOptimal"
                     }
                 ],
                 [
                     {
-                        "attachment": 7,
+                        "attachment": 4,
+                        "layout": "ShaderReadOnlyOptimal"
+                    },
+                    {
+                        "attachment": 5,
+                        "layout": "ShaderReadOnlyOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 8,
+                        "layout": "DepthStencilAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 9,
                         "layout": "DepthStencilAttachmentOptimal"
                     }
                 ]
@@ -173,6 +211,9 @@
                 {
                     "colorAttachments": 0,
                     "depthStencilAttachment": 9
+                },
+                {
+                    "depthStencilAttachment": 10
                 },
                 {
                     "colorAttachments": 1,
@@ -205,18 +246,32 @@
                         "ColorAttachmentOutput"
                     ],
                     "dstAccessMask": [
-                        "ColorAttachmentRead",
                         "ColorAttachmentWrite"
                     ]
                 },
                 {
+                    "srcSubpass": 1,
+                    "dstSubpass": 2,
+                    "srcStageMask": [
+                        "LateFragmentTests"
+                    ],
+                    "srcAccessMask": [
+                        "DepthStencilAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "ShaderRead"
+                    ]
+                },
+                {
                     "srcSubpass": 0,
-                    "dstSubpass": 1,
+                    "dstSubpass": 2,
                     "srcStageMask": [
                         "ColorAttachmentOutput"
                     ],
                     "srcAccessMask": [
-                        "ColorAttachmentRead",
                         "ColorAttachmentWrite"
                     ],
                     "dstStageMask": [
@@ -227,30 +282,12 @@
                     ]
                 },
                 {
-                    "srcSubpass": 1,
-                    "dstSubpass": 2,
-                    "srcStageMask": [
-                        "ColorAttachmentOutput"
-                    ],
-                    "srcAccessMask": [
-                        "ColorAttachmentRead",
-                        "ColorAttachmentWrite"
-                    ],
-                    "dstStageMask": [
-                        "FragmentShader"
-                    ],
-                    "dstAccessMask": [
-                        "ShaderRead"
-                    ]
-                },
-                {
                     "srcSubpass": 2,
                     "dstSubpass": 3,
                     "srcStageMask": [
                         "ColorAttachmentOutput"
                     ],
                     "srcAccessMask": [
-                        "ColorAttachmentRead",
                         "ColorAttachmentWrite"
                     ],
                     "dstStageMask": [
@@ -267,24 +304,22 @@
                         "ColorAttachmentOutput"
                     ],
                     "srcAccessMask": [
-                        "ColorAttachmentRead",
                         "ColorAttachmentWrite"
                     ],
                     "dstStageMask": [
                         "FragmentShader"
                     ],
                     "dstAccessMask": [
-                        "InputAttachmentRead"
+                        "ShaderRead"
                     ]
                 },
                 {
-                    "srcSubpass": 1,
-                    "dstSubpass": 4,
+                    "srcSubpass": 4,
+                    "dstSubpass": 5,
                     "srcStageMask": [
                         "ColorAttachmentOutput"
                     ],
                     "srcAccessMask": [
-                        "ColorAttachmentRead",
                         "ColorAttachmentWrite"
                     ],
                     "dstStageMask": [
@@ -330,6 +365,20 @@
                 {
                     "type": "create",
                     "name": "AlbedoSpec",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "InputAttachment"
+                        ]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "LightSpacPos",
                     "imageConfig": {
                         "type": "NoData",
                         "format": "R16G16B16A16Sfloat",
@@ -401,6 +450,21 @@
                             "DepthStencilAttachment"
                         ]
                     }
+                },
+                {
+                    "type": "create",
+                    "name": "Shadow",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "DEPTH_FORMAT",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "DepthStencilAttachment",
+                            "Sampled",
+                            "InputAttachment"
+                        ]
+                    }
                 }
             ]
         },
@@ -423,6 +487,18 @@
                         },
                         {
                             "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "InputAttachment",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "CombinedImageSampler",
                             "shaderStageFlags": [
                                 "Fragment"
                             ]
@@ -546,6 +622,33 @@
                     }
                 },
                 {
+                    "name": "G_BufferInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 3,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "LightSpacPos",
+                            "imageLayout": "ShaderReadOnlyOptimal"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "G_BufferInputAttachments",
+                    "type": "Framebuffer",
+                    "binding": 4,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Shadow",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
                     "name": "BlendInputAttachments",
                     "type": "Framebuffer",
                     "binding": 0,
@@ -595,7 +698,7 @@
                         "minDepthBounds": 0.0,
                         "maxDepthBounds": 1.0
                     },
-                    "subpass": 4,
+                    "subpass": 5,
                     "colorBlendState": {
                         "logicOp": "Copy",
                         "blendAttachments": [
@@ -644,7 +747,7 @@
                         "minDepthBounds": 0.0,
                         "maxDepthBounds": 1.0
                     },
-                    "subpass": 2,
+                    "subpass": 3,
                     "colorBlendState": {
                         "logicOp": "Copy",
                         "blendAttachments": [
@@ -693,7 +796,7 @@
                         "minDepthBounds": 0.0,
                         "maxDepthBounds": 1.0
                     },
-                    "subpass": 3,
+                    "subpass": 4,
                     "colorBlendState": {
                         "logicOp": "Copy",
                         "blendAttachments": [
@@ -742,7 +845,7 @@
                         "minDepthBounds": 0.0,
                         "maxDepthBounds": 1.0
                     },
-                    "subpass": 4,
+                    "subpass": 5,
                     "colorBlendState": {
                         "logicOp": "Copy",
                         "blendAttachments": [
@@ -798,7 +901,7 @@
                         "minDepthBounds": 0.0,
                         "maxDepthBounds": 1.0
                     },
-                    "subpass": 1,
+                    "subpass": 2,
                     "colorBlendState": {
                         "logicOp": "Copy",
                         "blendAttachments": [
@@ -883,18 +986,26 @@
                                     "B",
                                     "A"
                                 ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
                             }
                         ]
                     }
                 },
                 "shaderInfos": [
                     {
-                        "filename": "shader/bin/g_bufferVert.spv",
+                        "filename": "shader/bin/modelVert.spv",
                         "stageName": "main",
                         "shaderStageFlags": "Vertex"
                     },
                     {
-                        "filename": "shader/bin/g_bufferFrag.spv",
+                        "filename": "shader/bin/modelFrag.spv",
                         "stageName": "main",
                         "shaderStageFlags": "Fragment"
                     }
@@ -949,6 +1060,14 @@
                                     "B",
                                     "A"
                                 ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
                             }
                         ]
                     }
@@ -961,6 +1080,122 @@
                     },
                     {
                         "filename": "shader/bin/geometryFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "GeometryOutlinePipeline",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "frontFace": "Clockwise",
+                        "lineWidth": 1.0,
+                        "polygonMode": "Line"
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/geometryVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/geometryFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "GeometryShadow",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "frontFace": "Clockwise",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 1,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": []
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/geometryShadowVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/geometryShadowFrag.spv",
                         "stageName": "main",
                         "shaderStageFlags": "Fragment"
                     }

@@ -1,43 +1,36 @@
 #pragma once
 #include <glm/glm.hpp>
 
-
 enum class CollisionObjectType
 {
     Box,
-    Ellipsoid
+    Capsule,
+    Triangle
 };
 
 class Object;
-// class CollisionSystem;
+
 class CollisionObject
 {
     friend class CollisionSystem;
 
 private:
-    glm::vec3 _boundBoxSize;
-    glm::vec3 _position;
-    glm::vec3 _positionInBoundBox;
-    glm::mat3 _axes;
-    CollisionObjectType _type;
+    const CollisionObjectType _type;
+    glm::vec3 _center{0.0f};
 
 protected:
+    CollisionObject(CollisionObjectType type, const glm::vec3 &center);
     CollisionObject(CollisionObjectType type);
-    virtual ~CollisionObject();
+    virtual ~CollisionObject() = default;
 
 public:
-    glm::vec3 boundBoxSize() const;
-    glm::vec3 center() const;
-    glm::vec3 halfSize() const;
-    const glm::vec3 &position() const;
-    const glm::vec3 &positionInBoundBox() const;
-    const glm::mat3 &axes() const;
+    CollisionObject(const CollisionObject &) = delete;
+    CollisionObject &operator=(const CollisionObject &) = delete;
+
+    const glm::vec3 &center() const;
     CollisionObjectType type() const;
 
-    void setBoundBoxSize(glm::vec3 boundBoxSize);
-    void setPosition(glm::vec3 position);
-    void setAxes(glm::mat3 axes);
+    void setCenter(const glm::vec3 &center);
 
-    void setPositionInBoundBox(const glm::vec3 &positionInBoundBox);
-    void updateWithObject(const Object &object);
+    virtual void updateWithObject(const Object &object) = 0;
 };

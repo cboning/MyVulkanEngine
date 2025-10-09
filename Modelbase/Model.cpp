@@ -3,6 +3,7 @@
 #include "Modelbase.h"
 #include "../JsonConfigReader/JsonConfigReader.h"
 #include <iostream>
+#include "Model.h"
 
 namespace Modelbase
 {
@@ -50,9 +51,9 @@ void Model::createDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const
     writeDescriptorSets(descriptorSets);
 }
 
-void Model::draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex)
+void Model::draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex) const
 {
-    for (Mesh<ModelData::Vertex> &mesh : _meshes)
+    for (const Mesh<ModelData::Vertex> &mesh : _meshes)
     {
         std::vector<vk::DescriptorSet> descriptorSets;
         descriptorSets.push_back(_pInstances[instanceIndex]->descriptorSets().sets("UBO")[currentFrame]);
@@ -230,10 +231,18 @@ int32_t Model::instanceIndex(const std::string &instanceName) const
 
 ModelInstance &Model::instance(uint32_t instanceIndex) { return *_pInstances[instanceIndex]; }
 
+const ModelInstance &Model::instance(uint32_t instanceIndex) const { return *_pInstances[instanceIndex]; }
+
 ModelInstance &Model::instance(const std::string &instanceName) { return instance(instanceIndex(instanceName)); }
+
+const ModelInstance &Model::instance(const std::string &instanceName) const { return instance(instanceIndex(instanceName)); }
 
 void Model::removeInstance(const std::string &instanceName) { _instanceIndexMap.erase(instanceName); }
 
 const std::unordered_set<Model *> &Model::models() { return _models; }
+
+const std::vector<Mesh<ModelData::Vertex>> &Model::meshes() const {
+    return _meshes;
+}
 
 } // namespace Modelbase

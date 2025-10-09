@@ -1,6 +1,7 @@
 #include "CollisionObjectDelegator.h"
+#include "CollisionSystem.h"
 
-CollisionObjectDelegator::CollisionObjectDelegator(CollisionObjectType type) : CollisionObject(type) {}
+CollisionObjectDelegator::CollisionObjectDelegator(CollisionObject *pCollisionObject) : _pCollisionObject(pCollisionObject) {}
 
 void CollisionObjectDelegator::setCollisionCallback(std::function<void()> func) { _collisionCallback = func; }
 
