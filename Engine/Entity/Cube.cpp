@@ -10,16 +10,7 @@
 
 Cube::Cube(const std::string &name, bool dynamic, const Object &object, bool isOutline) : Entity(name, dynamic, object), _isOutline(isOutline) { init(); }
 
-Cube::~Cube()
-{
-    for (auto ubo : _ubos)
-        ubo->destroy();
-
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::DescriptorSets, name() + "_Cube");
-
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, "CubeVertex_" + name());
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, "CubeIndices_" + name());
-}
+Cube::~Cube() {}
 
 void Cube::init()
 {
@@ -30,12 +21,12 @@ void Cube::init()
                                  .size();
          ++i)
     {
-        _ubos.push_back(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(name() + "_Cube_UBO_" + std::to_string(i), "Device",
-                                                                                       sizeof(CubeUniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer));
-        _ubos.push_back(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(name() + "_Cube_Shadow_UBO_" + std::to_string(i), "Device",
-                                                                                       sizeof(CubeUniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer));
+        _ubos.push_back(createResource<Vkbase::Buffer>(name() + "_Cube_UBO_" + std::to_string(i), "Device", sizeof(CubeUniformBufferData),
+                                                       vk::BufferUsageFlagBits::eUniformBuffer));
+        _ubos.push_back(createResource<Vkbase::Buffer>(name() + "_Cube_Shadow_UBO_" + std::to_string(i), "Device", sizeof(CubeUniformBufferData),
+                                                       vk::BufferUsageFlagBits::eUniformBuffer));
     }
-    Vkbase::DescriptorSets &descriptorSets = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>(name() + "_Cube", "Device"));
+    Vkbase::DescriptorSets &descriptorSets = *(createResource<Vkbase::DescriptorSets>(name() + "_Cube", "Device"));
     config["descriptorSets"]["write"][0]["detail"]["bufferInfo"]["bufferName"] = name() + "_Cube_UBO";
     config["descriptorSets"]["write"][1]["detail"]["bufferInfo"]["bufferName"] = name() + "_Cube_Shadow_UBO";
     descriptorSets.addDescriptorSetCreateConfigWithJson(config["descriptorSets"]["sets"]);
@@ -72,19 +63,16 @@ void Cube::init()
 
                               20, 21, 22, 22, 23, 20};
 
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("CubeVertex_" + name(), "Device", sizeof(GeometryVertexData) * 24,
-                                                                   vk::BufferUsageFlagBits::eVertexBuffer, cubeVertices);
+    createResource<Vkbase::Buffer>("CubeVertex_" + name(), "Device", sizeof(GeometryVertexData) * 24, vk::BufferUsageFlagBits::eVertexBuffer, cubeVertices);
 
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("CubeIndices_" + name(), "Device", sizeof(uint32_t) * 36,
-                                                                   vk::BufferUsageFlagBits::eIndexBuffer, cubeIndices);
-    
+    createResource<Vkbase::Buffer>("CubeIndices_" + name(), "Device", sizeof(uint32_t) * 36, vk::BufferUsageFlagBits::eIndexBuffer, cubeIndices);
+
     if (_isOutline)
-        return ;
+        return;
 
     if (dynamic())
     {
-        CollisionObjectDelegator *pCollisionObject =
-            CollisionSystem::instance().createDynamicObject<CollisionBox>(object());
+        CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createDynamicObject<CollisionBox>(object());
         pCollisionObject->setEntity(this);
         addCollisionObject(pCollisionObject);
     }
@@ -99,29 +87,36 @@ void Cube::init()
 
 void Cube::objectExtraUpdate() {}
 
-void Cube::draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const
+void Cube::draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const
 {
     if (_isOutline && pipelineName != "GeometryOutlinePipeline")
-        return ;
-    
+        return;
     if (!_isOutline && pipelineName == "GeometryOutlinePipeline")
-        return ;
-    
-    Vkbase::Pipeline &pipeline =
-        *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, pipelineName));
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
-    commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0,
-        {dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, name() + "_Cube"))
-             ->sets(uboName)[frameIndex]},
-        {});
-    commandBuffer.bindVertexBuffers(
-        0, {dynamic_cast<Vkbase::Buffer *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeVertex_" + name()))->buffer()},
-        {0});
-    commandBuffer.bindIndexBuffer(
-        {dynamic_cast<Vkbase::Buffer *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeIndices_" + name()))->buffer()}, 0,
-        vk::IndexType::eUint32);
-    commandBuffer.drawIndexed(36, 1, 0, 0, 0);
+        return;
+
+    auto *pPipeline = dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, pipelineName));
+
+    auto *pDescriptorSets =
+        dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, name() + "_Cube"));
+
+    auto *pVertexBuffer =
+        dynamic_cast<Vkbase::Buffer *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeVertex_" + name()));
+
+    auto *pIndexBuffer =
+        dynamic_cast<Vkbase::Buffer *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeIndices_" + name()));
+
+    if (!pPipeline || !pDescriptorSets || !pVertexBuffer || !pIndexBuffer)
+        throw std::runtime_error("[Cube::draw] Missing required resources.");
+
+    pCommandBuffer->bindPipeline(pPipeline);
+
+    pCommandBuffer->bindDescriptorSets(0, {{pDescriptorSets, {uboName, frameIndex}}}, {});
+
+    pCommandBuffer->bindVertexBuffers(0, {pVertexBuffer}, {0});
+
+    pCommandBuffer->bindIndexBuffer(pIndexBuffer, 0, vk::IndexType::eUint32);
+
+    pCommandBuffer->commandBuffer().drawIndexed(36, 1, 0, 0, 0);
 }
 
 void Cube::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const

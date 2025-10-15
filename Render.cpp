@@ -29,8 +29,8 @@ void Render::resourceInit()
     _cameraLight.setLight(true);
     _cameraLight.setNearFar(-2000, 2000);
     _cameraLight.setFrameSize(glm::vec2(100.0f));
-    Vkbase::Window *pResourcesWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("resourceWindow", "Resources Window", 800, 600);
-    Vkbase::Window *pWindow = Vkbase::ResourceBase::resourceManager().create<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
+    Vkbase::Window *pResourcesWindow = createResource<Vkbase::Window>("resourceWindow", "Resources Window", 800, 600);
+    Vkbase::Window *pWindow = createResource<Vkbase::Window>("mainWindow", "Vulkan Window", 800, 600);
     pWindow->setMouseMoveCallback([this](double x, double y) { Render::camera().addViewBy(x, -y); });
     pWindow->setMouseScrollCallback([](double, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
 
@@ -40,14 +40,13 @@ void Render::resourceInit()
                                   {glm::vec3(1.0f, -1.0f, 0.0f), glm::vec2(1.0f, 1.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(-1.0f, 1.0f, 0.0f), glm::vec2(0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)},
                                   {glm::vec3(1.0f, 1.0f, 0.0f), glm::vec2(1.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f)}};
-    _pFrameVerticesBuffer = Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6,
-                                                                                           vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
+    _pFrameVerticesBuffer = createResource<Vkbase::Buffer>("Vertex", "Device", sizeof(VertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
 
     if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
-        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Empty", "Device", 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
-                                                                      vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
+        createResource<Vkbase::Image>("Empty", "Device", 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
+                                      vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("Sampler", "Device");
+    createResource<Vkbase::Sampler>("Sampler", "Device");
     Cube *pCube1 = new Cube("1");
     pCube1->addMotion("Gravity", (Motion *)(new Gravity()));
     pCube1->addMotion("Collision", (Motion *)(new Collision()));
@@ -80,32 +79,32 @@ void Render::resourceInit()
 
     // pCharacter->modelObject().setScale(glm::vec3(0.01f));
 
-    auto pOctrees = std::vector{CollisionSystem::instance().octree()};
-    int outlineIndex = 0;
-    while (pOctrees.size())
-    {
-        auto &pCollisionOctree = *pOctrees.back();
-        pOctrees.pop_back();
+    // auto pOctrees = std::vector{CollisionSystem::instance().octree()};
+    // int outlineIndex = 0;
+    // while (pOctrees.size())
+    // {
+    //     auto &pCollisionOctree = *pOctrees.back();
+    //     pOctrees.pop_back();
 
-        if (pCollisionOctree.objects().size())
-        {
-            uint32_t level = pCollisionOctree.level();
-            uint32_t x, y, z;
-            x = pCollisionOctree.x();
-            y = pCollisionOctree.y();
-            z = pCollisionOctree.z();
-            float powLevel2 = 1u << level;
-            Object octreeBoundary;
-            glm::vec3 postion = glm::vec3(-1000.0f), size = glm::vec3(2000.0f);
-            octreeBoundary.setPosition(postion + size * glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f) / (float)powLevel2);
-            octreeBoundary.setScale(size / (float)powLevel2);
-            new Cube("Outline" + std::to_string(outlineIndex++), false, octreeBoundary, true);
-        }
+    //     if (pCollisionOctree.objects().size())
+    //     {
+    //         uint32_t level = pCollisionOctree.level();
+    //         uint32_t x, y, z;
+    //         x = pCollisionOctree.x();
+    //         y = pCollisionOctree.y();
+    //         z = pCollisionOctree.z();
+    //         float powLevel2 = 1u << level;
+    //         Object octreeBoundary;
+    //         glm::vec3 postion = glm::vec3(-1000.0f), size = glm::vec3(2000.0f);
+    //         octreeBoundary.setPosition(postion + size * glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f) / (float)powLevel2);
+    //         octreeBoundary.setScale(size / (float)powLevel2);
+    //         new Cube("Outline" + std::to_string(outlineIndex++), false, octreeBoundary, true);
+    //     }
 
-        if (pCollisionOctree.hasSubTrees())
-            for (uint8_t pos = 0; pos < 8; ++pos)
-                pOctrees.push_back(pCollisionOctree.subTree(pos).get());
-    }
+    //     if (pCollisionOctree.hasSubTrees())
+    //         for (uint8_t pos = 0; pos < 8; ++pos)
+    //             pOctrees.push_back(pCollisionOctree.subTree(pos).get());
+    // }
 
     // delete new Cloud();
 
@@ -233,8 +232,8 @@ void Render::createRenderPass()
 
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
 
-    Vkbase::RenderPass &renderPass = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderPass>(
-        "mainWindow", "Device", JsonConfigReader::load("config/render.json")[0]["renderPass"], "mainWindow", depthFormat));
+    Vkbase::RenderPass &renderPass =
+        *(createResource<Vkbase::RenderPass>("mainWindow", "Device", JsonConfigReader::load("config/render.json")[0]["renderPass"], "mainWindow", depthFormat));
     vk::Extent2D extent = swapchain.extent();
     renderPass.createFramebuffer("mainWindow", JsonConfigReader::load("config/render.json")[0]["framebuffers"], extent.width, extent.height, "mainWindow",
                                  depthFormat);
@@ -279,7 +278,7 @@ void Render::createRenderPass()
 
 void Render::createDescriptorSets()
 {
-    Vkbase::DescriptorSets *pDescriptorSets = Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>("MainDescriptorSets", "Device");
+    Vkbase::DescriptorSets *pDescriptorSets = createResource<Vkbase::DescriptorSets>("MainDescriptorSets", "Device");
     Font::addProjectiveDescriptorSet(pDescriptorSets->name());
     pDescriptorSets->init();
 
@@ -291,9 +290,9 @@ void Render::createRenderDelegator()
 {
     const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"));
 
-    _pRenderDelegator = Vkbase::ResourceBase::resourceManager().create<Vkbase::RenderDelegator>("MainRender", "Device", swapchain.name(), "GraphicsDevice");
-    _pRenderDelegator->setCommandRecordFunc([this](const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
-                                            { this->recordCommand(commandBuffer, imageIndex, currentFrame); });
+    _pRenderDelegator = createResource<Vkbase::RenderDelegator>("MainRender", "Device", swapchain.name(), "GraphicsDevice");
+    _pRenderDelegator->setCommandRecordFunc([this](Vkbase::CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)
+                                            { this->recordCommand(pCommandBuffer, imageIndex, currentFrame); });
     _pRenderDelegator->setRenderPassCreateFunc([this]() { this->createRenderPass(); });
 }
 
@@ -301,6 +300,7 @@ void Render::draw()
 {
     glfwPollEvents();
     clacDeltaTime();
+    Vkbase::Device::collectAllDelayResource();
     Event::KeyInputEvent::processing();
     _camera.updatePerspective();
     _cameraLight.lookAt(glm::vec3(0.0f));
@@ -317,12 +317,13 @@ void Render::draw()
 
 void Render::cleanup() {}
 
-void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
+void Render::recordCommand(Vkbase::CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
     _pText->setText(std::to_string(_speed));
+    vk::CommandBuffer commandBuffer = pCommandBuffer->commandBuffer();
 
     Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
-    const Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
+    Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
 
     std::vector<vk::ClearValue> clearValues = {vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
                                                vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}), vk::ClearValue().setColor({0.0f, 0.0f, 0.0f, 1.0f}),
@@ -332,8 +333,8 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
 
     vk::Extent2D extent = dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::ResourceType::Swapchain, "mainWindow"))->extent();
     renderPass.begin(
-        commandBuffer,
-        *dynamic_cast<const Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
+        pCommandBuffer,
+        dynamic_cast<Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
         clearValues, extent);
 
     for (Modelbase::Model *pModel : Modelbase::Model::models())
@@ -345,38 +346,37 @@ void Render::recordCommand(const vk::CommandBuffer &commandBuffer, uint32_t imag
         // pModel->draw(currentFrame, commandBuffer, 0);
     }
 
-    Entity::drawEntities(commandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryPipeline", "UBO", "UBO");
-    Entity::drawEntities(commandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryOutlinePipeline", "UBO", "UBO");
+    Entity::drawEntities(pCommandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryPipeline", "UBO", "UBO");
+    Entity::drawEntities(pCommandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryOutlinePipeline", "UBO", "UBO");
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     // Entity::drawEntities(commandBuffer, _cameraLight, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryShadow", "Shadow_UBO",
     //                      "ShadowUBO");
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-    renderFrame(commandBuffer, "light", descriptorSets.sets("G_BufferInputAttachments")[imageIndex]);
+    renderFrame(pCommandBuffer, "light", {{&descriptorSets, {"G_BufferInputAttachments", imageIndex}}});
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-    renderFrame(commandBuffer, "blur_h", descriptorSets.sets("BlurSampler1")[imageIndex]);
+    renderFrame(pCommandBuffer, "blur_h", {{&descriptorSets, {"BlurSampler1", imageIndex}}});
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-    renderFrame(commandBuffer, "blur_v", descriptorSets.sets("BlurSampler2")[imageIndex]);
+    renderFrame(pCommandBuffer, "blur_v", {{&descriptorSets, {"BlurSampler2", imageIndex}}});
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-    renderFrame(commandBuffer, "blend", descriptorSets.sets("BlendInputAttachments")[imageIndex]);
+    renderFrame(pCommandBuffer, "blend", {{&descriptorSets, {"BlendInputAttachments", imageIndex}}});
 
     Vkbase::Pipeline &textPipeline = *dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "text"));
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, textPipeline.pipeline());
-    _pText->draw(commandBuffer, textPipeline, {Font::projectiveSet("MainDescriptorSets")});
+    pCommandBuffer->bindPipeline(&textPipeline);
+    _pText->draw(pCommandBuffer, textPipeline, {Font::projectiveSet("MainDescriptorSets")});
 
-    renderPass.end(commandBuffer);
+    renderPass.end(pCommandBuffer);
 }
 
-void Render::renderFrame(const vk::CommandBuffer &commandBuffer, const std::string &pipelineName, const vk::DescriptorSet &descriptorSet)
+void Render::renderFrame(Vkbase::CommandBuffer *pCommandBuffer, const std::string &pipelineName, const std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSet)
 {
-    Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, pipelineName));
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0, descriptorSet, {});
-    commandBuffer.bindVertexBuffers(0, {_pFrameVerticesBuffer->buffer()}, {0});
-    commandBuffer.draw(6, 1, 0, 0);
+    pCommandBuffer->bindPipeline(dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, pipelineName)));
+    pCommandBuffer->bindDescriptorSets(0, descriptorSet, {});
+    pCommandBuffer->bindVertexBuffers(0, {_pFrameVerticesBuffer}, {0});
+    pCommandBuffer->commandBuffer().draw(6, 1, 0, 0);
 }
 
 Camera &Render::camera() { return _camera; }

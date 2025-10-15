@@ -2,7 +2,7 @@
 #ifndef DEBUG
 #define DEBUG 0 // 默认值
 #endif
-#include "ResourceBase.h"
+#include "GpuResourceBase.h"
 #include <json.hpp>
 
 using json = nlohmann::json;
@@ -12,28 +12,29 @@ namespace Vkbase
 class Device;
 class Buffer;
 class Swapchain;
-class Image : public ResourceBase
+class Image : public GpuResourceBase
 {
     friend class ResourceManager;
+    friend class DescriptorSets;
+    friend class Framebuffer;
 
-  public:
-    const vk::Image &image() const;
-    const vk::ImageView &view() const;
+public:
     vk::Format format() const;
-    static const std::vector<std::string> getImagesWithSwapchain(const Swapchain &swapchain);
+    static const std::vector<std::string> getImagesWithSwapchain(Swapchain &swapchain);
     void transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout);
 
-  private:
+private:
     Image(const std::string &resourceName, const std::string &deviceName, const std::string &filename, vk::Format format, vk::ImageType type,
           vk::ImageViewType viewType, vk::ImageUsageFlags usage);
     Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
           vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, const void *pData);
     Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
           vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage);
-    Image(const std::string &resourceName, const std::string &deviceName, json config, const void *pData = nullptr, const std::string &swapchainName = "", vk::Format depthFormat = vk::Format());
-    Image(const Swapchain &swapchain, uint32_t index);
+    Image(const std::string &resourceName, const std::string &deviceName, json config, const void *pData = nullptr, const std::string &swapchainName = "",
+          vk::Format depthFormat = vk::Format());
+    Image(Swapchain &swapchain, uint32_t index);
     ~Image() override;
-    const Device *_pDevice;
+    const Device *_pDevice = nullptr;
     vk::Image _image;
     vk::DeviceMemory _memory;
     vk::ImageView _view;
@@ -50,5 +51,7 @@ class Image : public ResourceBase
     uint32_t findMemoryType(uint32_t filterType, vk::MemoryPropertyFlags properties);
     bool isDepthImage();
     static size_t getPixelSize(vk::Format format);
+    const vk::Image &image() const;
+    const vk::ImageView &view() const;
 };
 } // namespace Vkbase

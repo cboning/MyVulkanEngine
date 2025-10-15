@@ -139,7 +139,7 @@ void ModelLoader::processMesh(Model &model, aiMesh *pMesh, const aiScene *pScene
     for (uint32_t i = 0; i < textureTypeFeatures.size(); ++i)
         textureNames[i][0] = loadMaterialTextures(model, pScene, pMaterial, textureTypeFeatures[i])[0];
 
-    model._meshes.emplace_back(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name());
+    model._pMeshes.emplace_back(std::make_unique<Mesh<ModelData::Vertex>>(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name()));
 }
 
 std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const aiScene *pScene, aiMaterial *pMaterial, aiTextureType textureType)
@@ -154,8 +154,8 @@ std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const a
         {
             try
             {
-                Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, filename, vk::Format::eR8G8B8A8Srgb,
-                                                                              vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled);
+                model.createResource<Vkbase::Image>(filename, model._deviceName, filename, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
+                                                    vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled);
             }
             catch (std::runtime_error e)
             {
@@ -172,24 +172,21 @@ std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const a
                     {
                         std::cerr << "Failed to load embedded texture: " << stbi_failure_reason() << std::endl;
                         uint32_t empty_color = 0xFFFF00FF;
-                        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb,
-                                                                                      vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                                                                      vk::ImageUsageFlagBits::eSampled, &empty_color);
+                        model.createResource<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
+                                                            vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, &empty_color);
                     }
                     else
                     {
-                        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb,
-                                                                                      vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                                                                      vk::ImageUsageFlagBits::eSampled, pData);
+                        model.createResource<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
+                                                            vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, pData);
 
                         stbi_image_free(pData);
                     }
                 }
                 else
                 {
-                    Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(filename, model._deviceName, pTexture->mWidth, pTexture->mHeight, 1,
-                                                                                  vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                                                                  vk::ImageUsageFlagBits::eSampled, pTexture->pcData);
+                    model.createResource<Vkbase::Image>(filename, model._deviceName, pTexture->mWidth, pTexture->mHeight, 1, vk::Format::eR8G8B8A8Srgb,
+                                                        vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, pTexture->pcData);
                 }
             }
             model._textureFiles.push_back(filename);

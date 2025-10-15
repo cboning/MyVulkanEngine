@@ -18,7 +18,6 @@ typedef std::function<void()> EventFunc;
 class KeyInputEvent
 {
     friend Vkbase::Window;
-
 public:
     void addPressedKeyEvent(int key, EventFunc event);
     void addDownKeyEvent(int key, EventFunc event);
@@ -41,7 +40,7 @@ private:
     void addEvent(int key);
     void removeEvent(int key);
 
-    GLFWwindow *_pWindow;
+    GLFWwindow *_pWindow = nullptr;
 
     std::unordered_map<int, EventFunc> _keyPressedEventMap;
     std::unordered_map<int, EventFunc> _keyDownEventMap;

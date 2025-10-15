@@ -8,9 +8,7 @@
 namespace Modelbase
 {
 ModelInstance::ModelInstance(const std::string &descriptorSetsName, const std::string &deviceName, Model &model)
-    : _descriptorSets(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>(descriptorSetsName, deviceName))), _model(model) {};
-
-ModelInstance::~ModelInstance() { _descriptorSets.destroy(); }
+    : _descriptorSets(*(createResource<Vkbase::DescriptorSets>(descriptorSetsName, deviceName))), _model(model) {};
 
 Object &ModelInstance::object() { return _object; }
 const Object &ModelInstance::object() const { return _object; }

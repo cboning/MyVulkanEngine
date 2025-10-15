@@ -1,17 +1,33 @@
 #pragma once
 #include "../Vkbase/DescriptorSets.h"
 #include "../Vkbase/Image.h"
+#include "../Vkbase/ResourcesDelegator.h"
 #include "../Vkbase/Sampler.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <glm/glm.hpp>
 #include <iostream>
 #include <unordered_map>
-class Font
+namespace Vkbase
 {
+class Buffer;
+class CommandBuffer;
+}
 
-  private:
-    struct Character
+class Font : public Vkbase::ResourcesDelegator
+{
+private:
+    class ProjectiveUniformBuffer : public Vkbase::ResourcesDelegator
+    {
+    private:
+        const std::string deviceName;
+        Vkbase::Buffer *_pUBO = nullptr;
+
+    public:
+        ProjectiveUniformBuffer(const std::string &deviceName);
+        Vkbase::Buffer *getUBO();
+    };
+    struct Character : public Vkbase::ResourcesDelegator
     {
         Character(const std::string &deviceName, const FT_Face &face, FT_ULong character)
             : imageName(createCharacterImage(deviceName, face, character)), size(glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows)),
@@ -19,9 +35,9 @@ class Font
         {
         }
 
-        const Vkbase::Image &image()
+        Vkbase::Image &image()
         {
-            return *dynamic_cast<const Vkbase::Image *>(Vkbase::Image::resourceManager().resource(Vkbase::ResourceType::Image, imageName));
+            return *dynamic_cast<Vkbase::Image *>(Vkbase::Image::resourceManager().resource(Vkbase::ResourceType::Image, imageName));
         }
 
         const std::string imageName;
@@ -29,7 +45,7 @@ class Font
         glm::ivec2 bearing;
         uint32_t advance;
 
-      private:
+    private:
         const std::string createCharacterImage(const std::string &deviceName, const FT_Face &face, FT_ULong character)
         {
             if (FT_Load_Char(face, character, FT_LOAD_RENDER) || face->glyph->bitmap.width == 0 || face->glyph->bitmap.rows == 0)
@@ -38,9 +54,9 @@ class Font
                 return "Empty";
             }
 
-            return (Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>(std::string(face->style_name) + std::string((const char *)&character), deviceName, face->glyph->bitmap.width,
-                                      face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                      vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer))
+            return (createResource<Vkbase::Image>(std::string(face->style_name) + std::string((const char *)&character), deviceName, face->glyph->bitmap.width,
+                                                  face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D, vk::ImageViewType::e2D,
+                                                  vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer))
                 ->name();
         }
     };
@@ -54,17 +70,18 @@ class Font
     Vkbase::Sampler &_sampler;
     Vkbase::DescriptorSets &_descriptorSets;
     std::unordered_map<FT_ULong, Character> _characters;
+    inline static std::unique_ptr<ProjectiveUniformBuffer> _pProjectiveUniformBuffer = nullptr;
 
-  public:
+public:
     Font(const std::string &deviceName, const std::string &filename);
-    ~Font();
+    ~Font() = default;
     const std::string &deviceName() const;
     const std::unordered_map<FT_ULong, Character> &characters() const;
-    const vk::DescriptorSet &set(FT_ULong character) const;
+    std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>> set(FT_ULong character) const;
     const vk::DescriptorSetLayout &layout() const;
     static void addProjectiveDescriptorSet(const std::string &descriptorSetsName);
     static void writeProjectiveDescriptorSet(const std::string &descriptorSetsName, const std::string &deviceName);
     static void setScreenSize(const glm::ivec2 &screenSize);
     static const vk::DescriptorSetLayout &projectiveLayout(const std::string &descriptorSetsName);
-    static const vk::DescriptorSet &projectiveSet(const std::string &descriptorSetsName);
+    static std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>> projectiveSet(const std::string &descriptorSetsName);
 };

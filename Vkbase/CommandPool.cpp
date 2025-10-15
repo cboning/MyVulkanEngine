@@ -1,4 +1,5 @@
 #include "CommandPool.h"
+#include "CommandBuffer.h"
 #include "Device.h"
 
 namespace Vkbase
@@ -51,47 +52,49 @@ namespace Vkbase
         _commandPool = _device.device().createCommandPool(createInfo);
     }
 
-    std::vector<vk::CommandBuffer> CommandPool::allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const
+    std::vector<CommandBuffer *> CommandPool::allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const
     {
         vk::CommandBufferAllocateInfo allocateInfo;
         allocateInfo.setCommandPool(_commandPool)
             .setCommandBufferCount(maxFlightFrameCount)
             .setLevel(vk::CommandBufferLevel::ePrimary);
         
-        return _device.device().allocateCommandBuffers(allocateInfo);
+        auto commandBuffers = _device.device().allocateCommandBuffers(allocateInfo);
+        std::vector<CommandBuffer *> pCommandBuffers;
+        pCommandBuffers.reserve(commandBuffers.size());
+        for (const vk::CommandBuffer &commandBuffer : commandBuffers)
+            pCommandBuffers.push_back(createResource<CommandBuffer>(std::string(""), *this, commandBuffer, false));
+        
+        return pCommandBuffers;
     }
 
-    vk::CommandBuffer CommandPool::allocateOnceCommandBuffer() const
+    CommandBuffer *CommandPool::allocateOnceCommandBuffer() const
     {
-        vk::CommandBuffer commandBuffer = _device.device().allocateCommandBuffers(vk::CommandBufferAllocateInfo()
+        CommandBuffer *pCommandBuffer = createResource<CommandBuffer>(std::string(""), *this, _device.device().allocateCommandBuffers(vk::CommandBufferAllocateInfo()
             .setCommandPool(_commandPool)
             .setCommandBufferCount(1)
             .setLevel(vk::CommandBufferLevel::ePrimary)
-        )[0];
-
-        commandBuffer.begin(vk::CommandBufferBeginInfo().setFlags(vk::CommandBufferUsageFlagBits::eOneTimeSubmit));
-        return commandBuffer;
+        )[0], true);
+        pCommandBuffer->begin();
+        return pCommandBuffer;
     }
 
-    void CommandPool::endOnceCommandBuffer(vk::CommandBuffer commandBuffer) const
+    void CommandPool::endOnceCommandBuffer(CommandBuffer *pCommandBuffer) const
     {
-        commandBuffer.end();
-
-        vk::SubmitInfo submitInfo;
-        submitInfo.setCommandBuffers(commandBuffer);
-        _queue.submit(submitInfo);
-        _queue.waitIdle();
-        freeCommandBuffers(commandBuffer);
+        pCommandBuffer->end();
+        pCommandBuffer->submit();
+        freeCommandBuffers(pCommandBuffer);
     }
 
-    void CommandPool::freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers) const
+    void CommandPool::freeCommandBuffers(const vk::ArrayProxy<CommandBuffer *> &pCommandBuffers) const
     {
-        _device.device().freeCommandBuffers(_commandPool, commandBuffers);
+        for (const CommandBuffer *pCommandBuffer : pCommandBuffers)
+            pCommandBuffer->destroy();
     }
 
-    const CommandPool &CommandPool::getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType)
+    CommandPool &CommandPool::getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType)
     {
-        const CommandPool *pCommandPool = dynamic_cast<const CommandPool *>(resourceManager().resource(Vkbase::ResourceType::CommandPool, toString(queueType) + deviceName));
+        CommandPool *pCommandPool = dynamic_cast<CommandPool *>(resourceManager().resource(Vkbase::ResourceType::CommandPool, toString(queueType) + deviceName));
         if (pCommandPool)
             return *pCommandPool;
         else

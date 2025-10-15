@@ -1,5 +1,5 @@
 #pragma once
-#include "ResourceBase.h"
+#include "GpuResourceBase.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -10,13 +10,14 @@ class Device;
 class Framebuffer;
 class Pipeline;
 class DescriptorSets;
+class CommandBuffer;
 struct VertexInfo;
 struct PipelineCreateInfo;
-class RenderPass : public ResourceBase
+class RenderPass : public GpuResourceBase
 {
     friend class ResourceManager;
 
-  public:
+public:
     uint32_t attachmentCount() const;
     const vk::RenderPass &renderPass() const;
     const std::vector<vk::Format> &attachmentFormats() const;
@@ -28,16 +29,15 @@ class RenderPass : public ResourceBase
     void createPipelines(const json &config, const std::unordered_map<std::string, VertexInfo> &vertexInfos,
                          const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> &descriptorSetLayouts,
                          const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> &viewportInfos);
-    void begin(const vk::CommandBuffer &commandBuffer, const Framebuffer &framebuffer, std::vector<vk::ClearValue> &clearValues, vk::Extent2D &extent) const;
-    void end(const vk::CommandBuffer &commandBuffer) const;
+    void begin(CommandBuffer *pCommandBuffer, Framebuffer *pFramebuffer, std::vector<vk::ClearValue> &clearValues, vk::Extent2D &extent);
+    void end(CommandBuffer *pCommandBuffer);
     DescriptorSets &descriptorSets();
 
-  private:
+private:
     RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo);
     RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config, const std::string &swapchainName, vk::Format depthFormat);
     ~RenderPass() override;
     vk::RenderPass _renderPass;
-    const Device &_device;
     uint32_t _attachmentCount;
     DescriptorSets &_descriptorSets;
     std::vector<vk::Format> _attachmentFormats;

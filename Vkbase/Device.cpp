@@ -12,6 +12,7 @@ Device::Device(const std::string &resourceName, const vk::SurfaceKHR &surface) :
 
 Device::~Device()
 {
+    _garbageCollector.forceCollect();
     _device.waitIdle();
     _device.destroy();
 }
@@ -127,9 +128,19 @@ SurfaceSupportDetails Device::querySwapChainSupport(const vk::PhysicalDevice &de
     return details;
 }
 
+void Device::collectAllDelayResource()
+{
+    for (auto iter = resourceManager().resources().at(ResourceType::Device).begin(); iter != resourceManager().resources().at(ResourceType::Device).end();
+         ++iter)
+        dynamic_cast<Device *>(iter->second)->gpuResourceGarbageCollector().collect();
+}
+
 const vk::Device &Device::device() const { return _device; }
+
 const vk::PhysicalDevice &Device::physicalDevice() const { return _physicalDevice; }
+
 const vk::Queue &Device::graphicsQueue() const { return _graphicsQueue; }
+
 const vk::Queue &Device::presentQueue() const { return _presentQueue; }
 
 const vk::Queue &Device::computeQueue() const { return _computeQueue; }
@@ -146,7 +157,7 @@ Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
                 targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
                 return &targetDevice;
         }
-    return resourceManager().create<Device>("", surface);
+    return createResource<Device>("", surface);
 }
 
 vk::Format Device::findSupportedFormat(std::vector<vk::Format> formats, vk::ImageTiling tiling, vk::FormatFeatureFlags feature) const
@@ -161,4 +172,5 @@ vk::Format Device::findSupportedFormat(std::vector<vk::Format> formats, vk::Imag
     }
     return vk::Format::eUndefined;
 }
+GpuResourceGarbageCollector &Device::gpuResourceGarbageCollector() { return _garbageCollector; }
 } // namespace Vkbase

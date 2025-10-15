@@ -22,11 +22,13 @@ inline const std::string toString(CommandPoolQueueType type)
     }
 }
 class Device;
+class CommandBuffer;
 class CommandPool : public ResourceBase
 {
     friend class ResourceManager;
+    friend class CommandBuffer;
 
-  private:
+private:
     vk::CommandPool _commandPool;
     const Device &_device;
     const uint32_t _queueIndex;
@@ -38,11 +40,11 @@ class CommandPool : public ResourceBase
     CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType);
     ~CommandPool();
 
-  public:
-    std::vector<vk::CommandBuffer> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const;
-    vk::CommandBuffer allocateOnceCommandBuffer() const;
-    void endOnceCommandBuffer(vk::CommandBuffer commandBuffer) const;
-    void freeCommandBuffers(const vk::ArrayProxy<const vk::CommandBuffer> &commandBuffers) const;
-    static const CommandPool &getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType);
+public:
+    std::vector<CommandBuffer *> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const;
+    CommandBuffer *allocateOnceCommandBuffer() const;
+    void endOnceCommandBuffer(CommandBuffer *pCommandBuffer) const;
+    void freeCommandBuffers(const vk::ArrayProxy<CommandBuffer *> &pCommandBuffers) const;
+    static CommandPool &getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType);
 };
 } // namespace Vkbase

@@ -1,16 +1,15 @@
 #pragma once
-#include "ResourceBase.h"
+#include "GpuResourceBase.h"
 #include <vulkan/vulkan.hpp>
 namespace Vkbase
 {
 class Device;
-class Sampler : public ResourceBase
+class Sampler : public GpuResourceBase
 {
     friend class ResourceManager;
 
 private:
     vk::Sampler _sampler;
-    const Device &_device;
     void createSampler(vk::SamplerCreateInfo createInfo);
     Sampler(const std::string &resourceName, const std::string &deviceName, const vk::SamplerCreateInfo &createInfo = getDefaultCreateInfo());
     ~Sampler();

@@ -25,11 +25,11 @@ void ModelEntity::init()
     if (dynamic())
     {
         for (const auto &mesh : _model.meshes())
-            for (uint32_t i = 0; i < mesh.indices().size(); i += 3)
+            for (uint32_t i = 0; i < mesh->indices().size(); i += 3)
             {
                 CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createDynamicObject<CollisionTriangle>(
                     object().position(),
-                    glm::mat3(mesh.vertices()[mesh.indices()[i]].pos, mesh.vertices()[mesh.indices()[i + 1]].pos, mesh.vertices()[mesh.indices()[i + 2]].pos));
+                    glm::mat3(mesh->vertices()[mesh->indices()[i]].pos, mesh->vertices()[mesh->indices()[i + 1]].pos, mesh->vertices()[mesh->indices()[i + 2]].pos));
                 pCollisionObject->setEntity(this);
                 addCollisionObject(pCollisionObject);
             }
@@ -37,11 +37,11 @@ void ModelEntity::init()
     else
     {
         for (const auto &mesh : _model.meshes())
-            for (uint32_t i = 0; i < mesh.indices().size(); i += 3)
+            for (uint32_t i = 0; i < mesh->indices().size(); i += 3)
             {
                 CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createStaticObject<CollisionTriangle>(
                     object().position(),
-                    glm::mat3(mesh.vertices()[mesh.indices()[i]].pos, mesh.vertices()[mesh.indices()[i + 1]].pos, mesh.vertices()[mesh.indices()[i + 2]].pos));
+                    glm::mat3(mesh->vertices()[mesh->indices()[i]].pos, mesh->vertices()[mesh->indices()[i + 1]].pos, mesh->vertices()[mesh->indices()[i + 2]].pos));
                 pCollisionObject->setEntity(this);
                 addCollisionObject(pCollisionObject);
             }
@@ -51,12 +51,12 @@ void ModelEntity::init()
 
 void ModelEntity::objectExtraUpdate() { _model.instance("1").object().setPosition(object().position()); }
 
-void ModelEntity::draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const
+void ModelEntity::draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &, const std::string &) const
 {
-    _model.draw(frameIndex, commandBuffer, 0);
+    _model.draw(frameIndex, pCommandBuffer, 0);
 }
 
-void ModelEntity::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const
+void ModelEntity::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &, const std::string &) const
 {
     const Modelbase::ModelInstance &instance = _model.instance("1");
     instance.updateUniformBuffers(index, camera);

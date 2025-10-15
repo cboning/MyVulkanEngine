@@ -1,5 +1,6 @@
 #include "Text.h"
 #include "../Vkbase/Buffer.h"
+#include "../Vkbase/CommandBuffer.h"
 
 Text::Text(const Font &font, const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale)
     : _font(font), _text(text), _color(color), _pos(pos), _scale(scale)
@@ -8,13 +9,6 @@ Text::Text(const Font &font, const std::string &text, const glm::vec3 &color, co
 }
 
 Text::Text(const Font &font) : _font(font) {}
-
-Text::~Text()
-{
-    for (const std::string &bufferName : _vertexBufferNames)
-        Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, bufferName);
-    _vertexBufferNames.clear();
-}
 
 void Text::setText(const std::string &text)
 {
@@ -36,21 +30,24 @@ void Text::setScale(float scale)
     updateBuffer();
 }
 
-void Text::draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const vk::ArrayProxy<const vk::DescriptorSet> &descriptorSets)
+void Text::draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
+                const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets)
 {
+    pCommandBuffer->bindPipeline(&pipeline);
     for (uint32_t i = 0; i < _vertexBufferNames.size(); ++i)
-        drawCharacter(commandBuffer, pipeline, _text[i], _vertexBufferNames[i], descriptorSets);
+        drawCharacter(pCommandBuffer, _text[i], _vertexBufferNames[i], descriptorSets);
 }
 
-void Text::drawCharacter(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const char character, const std::string &vertexBufferName,
-                         const vk::ArrayProxy<const vk::DescriptorSet> &descriptorSets)
+void Text::drawCharacter(Vkbase::CommandBuffer *pCommandBuffer, const char character, const std::string &vertexBufferName,
+                         const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets)
 {
-    std::vector<vk::DescriptorSet> descriptorSets_t = {_font.set(character)};
+    std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets_t = {_font.set(character)};
     descriptorSets_t.insert(descriptorSets_t.end(), descriptorSets.begin(), descriptorSets.end());
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0, descriptorSets_t, {});
-    commandBuffer.bindVertexBuffers(
-        0, dynamic_cast<const Vkbase::Buffer *>(Vkbase::Buffer::resourceManager().resource(Vkbase::ResourceType::Buffer, vertexBufferName))->buffer(), {0});
-    commandBuffer.draw(6, 1, 0, 0);
+
+    pCommandBuffer->bindDescriptorSets(0, descriptorSets_t, {});
+    pCommandBuffer->bindVertexBuffers(
+        0, dynamic_cast<Vkbase::Buffer *>(Vkbase::Buffer::resourceManager().resource(Vkbase::ResourceType::Buffer, vertexBufferName)), {0});
+    pCommandBuffer->commandBuffer().draw(6, 1, 0, 0);
 }
 
 void Text::updateBuffer()
@@ -80,6 +77,6 @@ void Text::updateBuffer()
 
         currentPos += glm::vec2(charData.advance >> 6, 0.0f) * _scale;
         _vertexBufferNames.push_back(
-            (Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("", _font.deviceName(), 6 * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, vertices.data()))->name());
+            (createResource<Vkbase::Buffer>("", _font.deviceName(), 6 * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, vertices.data()))->name());
     }
 }

@@ -1,4 +1,5 @@
 #include "ResourceBase.h"
+#include "ResourcesDelegator.h"
 #include <iostream>
 
 namespace Vkbase
@@ -17,6 +18,8 @@ ResourceBase::~ResourceBase()
 #ifdef DEBUG
     std::cout << "[Info] Success to remove the resource. Type: " << toString(_resourceType) << ", Name: " << _name << std::endl;
 #endif
+    if (_pResourcesDelegator)
+        _pResourcesDelegator->removeResource(this);
     _killing = true;
     if (_resourceManager.resource(_resourceType, _name))
         destroy();
@@ -30,14 +33,13 @@ void ResourceBase::preDestroy()
     {
         Vkbase::ResourceBase *back = _pSuperresources.back();
         _pSuperresources.pop_back();
-        back->disusedSubresource(this);
+        back->disuseSubresource(this);
     }
 }
 
-void ResourceBase::tryKillself() {
-    if (_killing)
-        return;
-    delete this;
+bool ResourceBase::killingSelf()
+{
+    return _killing;
 }
 
 ResourceManager &ResourceBase::resourceManager() { return _resourceManager; }
@@ -58,9 +60,11 @@ void ResourceBase::useSubresource(ResourceBase *pResource)
     _pSubresources.push_back(pResource);
 }
 
-void ResourceBase::disusedSubresource(ResourceBase *pResource)
+void ResourceBase::disuseSubresource(ResourceBase *pResource)
 {
     std::vector<ResourceBase *>::iterator iter = std::find(_pSubresources.begin(), _pSubresources.end(), pResource);
+    if (iter == _pSubresources.end())
+        return;
     _pSubresources.erase(iter);
     destroy();
 }
@@ -68,6 +72,8 @@ void ResourceBase::disusedSubresource(ResourceBase *pResource)
 void ResourceBase::disuseSuperresource(ResourceBase *pResource)
 {
     std::vector<ResourceBase *>::iterator iter = std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource);
+    if (iter == _pSuperresources.end())
+        return;
     _pSuperresources.erase(iter);
     if (_pSuperresources.empty() && !_locked)
         destroy();

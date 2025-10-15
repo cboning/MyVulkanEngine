@@ -12,7 +12,7 @@ class ModelLoader
 {
     friend class Model;
 
-  private:
+private:
     static void loadModel(Model &model, const std::string &filename);
     static void processNode(Model &model, aiNode *pNode, const aiScene *pScene, ModelData::AssimpNodeData &src);
     static void processMesh(Model &model, aiMesh *pMesh, const aiScene *pScene);

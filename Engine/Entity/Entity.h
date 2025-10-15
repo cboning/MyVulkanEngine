@@ -1,5 +1,6 @@
 #pragma once
 #include "../../Object/Object.h"
+#include "../Vkbase/ResourcesDelegator.h"
 #include <glm/glm.hpp>
 #include <json.hpp>
 #include <string>
@@ -15,13 +16,14 @@ class DescriptorSetLayout;
 namespace Vkbase
 {
 class Buffer;
+class CommandBuffer;
 }
 
 class Motion;
 class Camera;
 class CollisionObjectDelegator;
 
-class Entity
+class Entity : public Vkbase::ResourcesDelegator
 {
 private:
     struct Deleter
@@ -29,12 +31,13 @@ private:
         void operator()(Entity *pEntity) { delete pEntity; }
     };
 
+    const std::string _name;
     Object _object;
+    const bool _dynamic;
+    
     glm::vec3 _velocity = glm::vec3(0.0f);
     glm::vec3 _tempVelocity = glm::vec3(0.0f);
     glm::vec3 _acceleration = glm::vec3(0.0f);
-    const std::string _name;
-    const bool _dynamic;
     std::unordered_map<std::string, Motion *> _pMotions;
     std::vector<CollisionObjectDelegator *> _pCollisionObjectDelegators;
 
@@ -58,7 +61,7 @@ protected:
 
 public:
     bool dynamic();
-    virtual void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const = 0;
+    virtual void draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const = 0;
     Object &object();
     const Object &object() const;
     const CollisionObjectDelegator *collisionObject() const;
@@ -84,6 +87,6 @@ public:
 
     virtual void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const = 0;
 
-    static void drawEntities(const vk::CommandBuffer &commandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index,
+    static void drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index,
                              const std::string &pipelineName, const std::string &UBOName, const std::string &setsName);
 };

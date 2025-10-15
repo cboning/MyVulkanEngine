@@ -8,39 +8,17 @@
 namespace Vkbase
 {
 Window::Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height)
-    : ResourceBase(Vkbase::ResourceType::Window, resourceName), _width(width), _height(height), _title(title)
+    : GpuResourceBase(Vkbase::ResourceType::Window, resourceName, *Device::getSuitableDevice(createWindow(title, width, height).surface)), _width(width),
+      _height(height), _title(title)
 {
-    init();
-    if (_surface)
-    {
-        _pDevice = connectTo(Device::getSuitableDevice(_surface));
-        connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Graphics));
-        connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute));
-        connectTo(&CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Present));
+    if (!_pendingInitData.has_value())
+        throw std::runtime_error("[Error] No pending window data found (preInit missing)");
 
-        _pSwapchain = resourceManager().create<Swapchain>(resourceName, _pDevice->name(), resourceName);
-    }
-}
+    _pWindow = _pendingInitData->pWindow;
+    _surface = _pendingInitData->surface;
+    _pendingInitData.reset();
 
-Window::~Window()
-{
-    if (_pWindow)
-    {
-        delete _pKeyInputEvent;
-        glfwDestroyWindow(_pWindow);
-    }
-
-    if (_surface)
-        resourceManager().vkInstance().destroySurfaceKHR(_surface);
-}
-
-void Window::init()
-{
-    _pWindow = glfwCreateWindow(_width, _height, _title.c_str(), nullptr, nullptr);
-    if (!_pWindow)
-        throw std::runtime_error("[Error] Failed to create GLFW window");
-
-    _pKeyInputEvent = new Event::KeyInputEvent(_pWindow);
+    _pKeyInputEvent = std::unique_ptr<Event::KeyInputEvent, Deleter>(new Event::KeyInputEvent(_pWindow));
 
     cursorCapture(_cursorState);
     // Set the user pointer to this window instance
@@ -50,11 +28,66 @@ void Window::init()
     glfwSetCursorPosCallback(_pWindow, mouseMoveCallback);
     glfwSetScrollCallback(_pWindow, mouseScrollCallback);
 
+    if (_surface)
+    {
+        connectTo(&CommandPool::getCommandPool(_device.name(), Vkbase::CommandPoolQueueType::Graphics));
+        connectTo(&CommandPool::getCommandPool(_device.name(), Vkbase::CommandPoolQueueType::Compute));
+        connectTo(&CommandPool::getCommandPool(_device.name(), Vkbase::CommandPoolQueueType::Present));
+
+        _pSwapchain = createResource<Swapchain>(resourceName, _device.name(), resourceName);
+    }
+}
+
+Window::InitData Window::createWindow(const std::string &title, uint32_t width, uint32_t height)
+{
+    GLFWwindow *pWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    if (!pWindow)
+        throw std::runtime_error("[Error] Failed to create GLFW window");
+
+    VkSurfaceKHR rawSurface{};
+    VkResult result = glfwCreateWindowSurface(resourceManager().vkInstance(), pWindow, nullptr, &rawSurface);
+
+    if (result != VK_SUCCESS)
+        throw std::runtime_error("[Error] Failed to create Vulkan surface");
+
+    vk::SurfaceKHR surface = rawSurface;
+
+    _pendingInitData = InitData{pWindow, surface};
+
+    return _pendingInitData.value();
+}
+
+Window::~Window()
+{
+    if (_pWindow)
+    {
+        glfwSetCursorPosCallback(_pWindow, nullptr);
+        glfwSetScrollCallback(_pWindow, nullptr);
+        glfwSetWindowCloseCallback(_pWindow, nullptr);
+        glfwSetWindowUserPointer(_pWindow, nullptr);
+    }
+    _onDelayDestroy = [pWindow = _pWindow, surface = _surface]()
+    {
+        if (pWindow)
+            glfwDestroyWindow(pWindow);
+
+        if (surface)
+            resourceManager().vkInstance().destroySurfaceKHR(surface);
+    };
+}
+
+vk::SurfaceKHR Window::init(uint32_t width, uint32_t height, const std::string &title)
+{
+    _pWindow = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
+    if (!_pWindow)
+        throw std::runtime_error("[Error] Failed to create GLFW window");
     // Create Vulkan surface
     glfwCreateWindowSurface(resourceManager().vkInstance(), _pWindow, nullptr, reinterpret_cast<VkSurfaceKHR *>(&_surface));
 
     if (!_surface)
         throw std::runtime_error("[Error] Failed to create Vulkan surface");
+
+    return _surface;
 }
 
 void Window::windowClosedCallback(GLFWwindow *pWindow) { _delayDestroyWindows.insert(static_cast<Window *>(glfwGetWindowUserPointer(pWindow))); }

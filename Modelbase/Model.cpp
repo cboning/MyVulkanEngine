@@ -1,9 +1,9 @@
+#include "Model.h"
+#include "../JsonConfigReader/JsonConfigReader.h"
 #include "ModelInstance.h"
 #include "ModelLoader.h"
 #include "Modelbase.h"
-#include "../JsonConfigReader/JsonConfigReader.h"
 #include <iostream>
-#include "Model.h"
 
 namespace Modelbase
 {
@@ -12,12 +12,12 @@ Model::Model(const std::string &deviceName, const vk::Sampler &sampler, const st
              const std::unordered_map<std::string, std::vector<aiTextureType>> &textureTypeFeatures,
              const std::unordered_map<std::string, std::string> &meshPipelineNames)
     : _deviceName(deviceName), _sampler(sampler), _textureTypeFeatures(textureTypeFeatures), _meshPipelineNames(meshPipelineNames),
-      _descriptorSets(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>(fileName, deviceName)))
+      _descriptorSets(*(createResource<Vkbase::DescriptorSets>(fileName, deviceName)))
 {
     _models.insert(this);
     if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
-        Vkbase::ResourceBase::resourceManager().create<Vkbase::Image>("Empty", deviceName, 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
-                                                                      vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
+        createResource<Vkbase::Image>("Empty", deviceName, 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
+                                      vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
     _textureFiles.push_back("Empty");
 
@@ -40,31 +40,29 @@ Model::~Model()
     for (const ModelInstance *pInstance : _pInstances)
         delete pInstance;
     _models.erase(this);
-
-    _descriptorSets.destroy();
 }
 
-void Model::createDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const
+void Model::createDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
 {
     addUBODescriptorSetsConfig(descriptorSets);
     descriptorSets.init();
     writeDescriptorSets(descriptorSets);
 }
 
-void Model::draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex) const
+void Model::draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, uint32_t instanceIndex) const
 {
-    for (const Mesh<ModelData::Vertex> &mesh : _meshes)
+    for (const std::unique_ptr<Mesh<ModelData::Vertex>> &mesh : _pMeshes)
     {
-        std::vector<vk::DescriptorSet> descriptorSets;
-        descriptorSets.push_back(_pInstances[instanceIndex]->descriptorSets().sets("UBO")[currentFrame]);
-        const std::vector<std::vector<std::string>> &textureNames = mesh.textureNames();
+        std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets;
+        descriptorSets.push_back({&_pInstances[instanceIndex]->descriptorSets(), {"UBO", currentFrame}});
+        const std::vector<std::vector<std::string>> &textureNames = mesh->textureNames();
 
         for (const std::vector<std::string> &textureName : textureNames)
-            descriptorSets.push_back(_descriptorSets.sets(textureName[0])[0]);
+            descriptorSets.push_back({&_descriptorSets, {textureName[0], 0}});
 
-        const Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(
-            Vkbase::ResourceType::Pipeline, _meshPipelineNames.count(mesh.name()) ? _meshPipelineNames.at(mesh.name()) : _meshPipelineNames.at("default")));
-        mesh.draw(commandBuffer, pipeline, descriptorSets);
+        Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(
+            Vkbase::ResourceType::Pipeline, _meshPipelineNames.count(mesh->name()) ? _meshPipelineNames.at(mesh->name()) : _meshPipelineNames.at("default")));
+        mesh->draw(pCommandBuffer, pipeline, descriptorSets);
     }
 }
 
@@ -109,26 +107,26 @@ void Model::addUBODescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) c
 
 void Model::writeTextureDescriptorSets(const vk::Sampler &sampler) const
 {
-    std::vector<vk::DescriptorImageInfo> imageInfo(1);
-    imageInfo[0].setSampler(sampler);
+    std::vector<std::pair<vk::DescriptorImageInfo, Vkbase::Image *>> imageInfo(1);
+    imageInfo[0].first.setSampler(sampler);
     for (const std::string &file : _textureFiles)
     {
-        const Vkbase::Image &image = *dynamic_cast<const Vkbase::Image *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, file));
-        imageInfo[0].setImageView(image.view()).setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+        Vkbase::Image &image = *dynamic_cast<Vkbase::Image *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, file));
+        imageInfo[0].first.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+        imageInfo[0].second = &image;
         _descriptorSets.writeSets(file, 0, {}, imageInfo, 1);
     }
 }
 
-void Model::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const
+void Model::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
 {
-    std::vector<vk::DescriptorBufferInfo> bufferInfos(MAX_FLIGHT_COUNT, vk::DescriptorBufferInfo().setOffset(0).setRange(sizeof(ModelUniformData)));
+    std::vector<std::pair<vk::DescriptorBufferInfo, Vkbase::Buffer *>> bufferInfos(
+        MAX_FLIGHT_COUNT, {vk::DescriptorBufferInfo().setOffset(0).setRange(sizeof(ModelUniformData)), nullptr});
     uint32_t count = 0;
-    for (vk::DescriptorBufferInfo &bufferInfo : bufferInfos)
+    for (auto &bufferInfo : bufferInfos)
     {
-        bufferInfo.setBuffer(
-            (Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(descriptorSets.name() + "_UBO_" + std::to_string(count), _deviceName,
-                                                                            sizeof(ModelUniformData), vk::BufferUsageFlagBits::eUniformBuffer))
-                ->buffer());
+        bufferInfo.second = createResource<Vkbase::Buffer>(descriptorSets.name() + "_UBO_" + std::to_string(count), _deviceName, sizeof(ModelUniformData),
+                                                           vk::BufferUsageFlagBits::eUniformBuffer);
         ++count;
     }
 
@@ -241,8 +239,6 @@ void Model::removeInstance(const std::string &instanceName) { _instanceIndexMap.
 
 const std::unordered_set<Model *> &Model::models() { return _models; }
 
-const std::vector<Mesh<ModelData::Vertex>> &Model::meshes() const {
-    return _meshes;
-}
+const std::vector<std::unique_ptr<Mesh<ModelData::Vertex>>> &Model::meshes() const { return _pMeshes; }
 
 } // namespace Modelbase

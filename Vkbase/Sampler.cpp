@@ -4,13 +4,18 @@
 namespace Vkbase
 {
 Sampler::Sampler(const std::string &resourceName, const std::string &deviceName, const vk::SamplerCreateInfo &createInfo)
-    : ResourceBase(Vkbase::ResourceType::Sampler, resourceName),
-      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))))
+    : GpuResourceBase(Vkbase::ResourceType::Sampler, resourceName,
+                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))
 {
     createSampler(createInfo);
 }
 
-Sampler::~Sampler() { _device.device().destroy(_sampler); }
+Sampler::~Sampler()
+{
+    auto device = _device.device();
+    auto sampler = _sampler;
+    _onDelayDestroy = [device, sampler]() mutable { device.destroy(sampler); };
+}
 
 void Sampler::createSampler(vk::SamplerCreateInfo createInfo)
 {

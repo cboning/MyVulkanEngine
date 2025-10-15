@@ -8,9 +8,9 @@ namespace Vkbase
 {
 Framebuffer::Framebuffer(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName,
                          const std::vector<std::string> &attachmentNames, uint32_t width, uint32_t height)
-    : ResourceBase(Vkbase::ResourceType::Framebuffer, resourceName),
-      _renderPass(*dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(Vkbase::ResourceType::RenderPass, renderPassName)))),
-      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))))
+    : GpuResourceBase(Vkbase::ResourceType::Framebuffer, resourceName,
+                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+      _renderPass(*dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(Vkbase::ResourceType::RenderPass, renderPassName))))
 {
     if (_renderPass.attachmentCount() != attachmentNames.size())
         throw std::runtime_error("The number of image given not enough.");
@@ -34,7 +34,13 @@ Framebuffer::Framebuffer(const std::string &resourceName, const std::string &dev
     _framebuffer = _device.device().createFramebuffer(createInfo);
 }
 
-Framebuffer::~Framebuffer() { _device.device().destroy(_framebuffer); }
+Framebuffer::~Framebuffer()
+{
+    auto device = _device.device();
+    auto framebuffer = _framebuffer;
+
+    _onDelayDestroy = [device, framebuffer]() { device.destroy(framebuffer); };
+}
 
 const vk::Framebuffer &Framebuffer::framebuffer() const { return _framebuffer; }
 } // namespace Vkbase

@@ -1,6 +1,6 @@
 #pragma once
 #include "../JsonConfigReader/JsonConfigReader.h"
-#include "ResourceBase.h"
+#include "GpuResourceBase.h"
 #include "json.hpp"
 #include <iostream>
 
@@ -164,31 +164,32 @@ struct PipelineCreateInfo
     }
 };
 class Device;
-class Pipeline : public ResourceBase
+class Pipeline : public GpuResourceBase
 {
     friend class ResourceManager;
+    friend class CommandBuffer;
 
-  public:
+public:
     static const std::vector<ShaderInfo> getDefaultShader(const std::string &vertexShaderFilename, const std::string &fragmentShaderFilename,
                                                           const std::string &vertexShaderName, const std::string &fragmentShaderName);
     static PipelineRenderInfo getDefaultRenderInfo();
 
-    const vk::Pipeline &pipeline() const;
-    const vk::PipelineLayout &layout() const;
-
-  private:
+private:
     vk::Pipeline _pipeline;
     vk::PipelineLayout _pipelineLayout;
     vk::DescriptorSetLayout _descriptorSetLayout;
     std::vector<vk::ShaderModule> _shaderModules;
+    vk::PipelineBindPoint _pipelineBindPoint;
     vk::SampleMask _sampleMask[2] = {0xFFFFFFFF, 0xFFFFFFFF};
-    const Device &_device;
     Pipeline(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const PipelineCreateInfo &createInfo,
              bool computePipeline = false);
     ~Pipeline();
     vk::ShaderModule createShaderModule(std::string filename);
-    void createPipeline(const std::string &renderPassName, const PipelineCreateInfo &createInfo, bool computePipelin);
+    void createPipeline(const std::string &renderPassName, const PipelineCreateInfo &createInfo, bool computePipeline);
     std::vector<vk::PipelineShaderStageCreateInfo> getShaderStageInfos(const std::vector<ShaderInfo> &shaderInfos);
+    const vk::Pipeline &pipeline() const;
+    const vk::PipelineLayout &layout() const;
+    vk::PipelineBindPoint pipelineBindPoint();
 };
 
 } // namespace Vkbase

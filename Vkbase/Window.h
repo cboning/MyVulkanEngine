@@ -1,6 +1,7 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
-#include "ResourceBase.h"
+#include "../Event/KeyInputEvent.h"
+#include "GpuResourceBase.h"
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <unordered_set>
@@ -14,29 +15,41 @@ namespace Vkbase
 {
 class Device;
 class Swapchain;
-class Window : public ResourceBase
+class Window : public GpuResourceBase
 {
     friend class ResourceManager;
+public:
+    struct InitData {
+        GLFWwindow* pWindow;
+        vk::SurfaceKHR surface;
+    };
 
 private:
-    GLFWwindow *_pWindow;
+    struct Deleter
+    {
+        void operator()(Event::KeyInputEvent *p) const noexcept { delete p; }
+    };
+    GLFWwindow *_pWindow = nullptr;
     vk::SurfaceKHR _surface;
     uint32_t _width, _height;
     std::string _title;
-    const Device *_pDevice = nullptr;
     const Swapchain *_pSwapchain = nullptr;
     double _cursorPosX, _cursorPosY;
     int _cursorState = GLFW_CURSOR_NORMAL;
-    Event::KeyInputEvent *_pKeyInputEvent;
+    std::unique_ptr<Event::KeyInputEvent, Deleter> _pKeyInputEvent;
     std::function<void(double, double)> _mouseMoveCallback;
     std::function<void(double, double)> _mouseScrollCallback;
     inline static std::unordered_set<Window *> _delayDestroyWindows;
+    inline static thread_local std::optional<InitData> _pendingInitData = std::nullopt;
 
-    void init();
+    vk::SurfaceKHR init(uint32_t width, uint32_t height, const std::string &title);
     static void windowClosedCallback(GLFWwindow *pWindow);
     static void mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos);
     static void mouseScrollCallback(GLFWwindow *pWindow, double xOffset, double yOffset);
     Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height);
+    Window(const std::string &resourceName, Device &device, const std::string &title, uint32_t width, uint32_t height);
+    static InitData createWindow(const std::string &title, uint32_t width, uint32_t height);
+
     ~Window() override;
 
 public:

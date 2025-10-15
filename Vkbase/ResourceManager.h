@@ -22,7 +22,8 @@ enum class ResourceType
     RenderPass,
     Sampler,
     DescriptorSets,
-    RenderDelegator
+    RenderDelegator,
+    CommandBuffer
 };
 
 class ResourceBase;
@@ -59,11 +60,14 @@ inline std::string toString(ResourceType type)
         return "DescriptorSets";
     case ResourceType::RenderDelegator:
         return "RenderDelegator";
+    case ResourceType::CommandBuffer:
+        return "CommandBuffer";
     }
 }
 class ResourceManager
 {
     friend class ResourceBase;
+    friend class ResourcesDelegator;
 
 private:
     vk::Instance _instance;
@@ -77,17 +81,17 @@ private:
                         },
                         std::string appName = "Vulkan");
     void addResource(ResourceBase *pResource);
+    template <typename T, typename... Args> T *create(Args &&...args);
     ResourceManager();
     ~ResourceManager();
 
 public:
-    template <typename T, typename... Args> T *create(Args &&...args);
     const ResourceSet &resources() const;
-    
+
     ResourceBase *resource(ResourceType type, std::string name) const;
-    void remove(ResourceType type, const std::string &name);
     const vk::Instance &vkInstance() const;
     static ResourceManager &instance();
+    void remove(ResourceType type, const std::string &name);
 };
 
 template <typename T, typename... Args> T *ResourceManager::create(Args &&...args) { return new T(args...); }

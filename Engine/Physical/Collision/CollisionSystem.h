@@ -26,10 +26,11 @@ private:
 
     using CollisionObjectDelegatorPtr = std::unique_ptr<CollisionObjectDelegator, Deleter>;
 
+    glm::vec3 _pos;
+    glm::vec3 _size;
+    
     Octree<CollisionObjectDelegatorPtr>::Ptr _staticCollisionObjects;
     std::vector<CollisionObjectDelegatorPtr> _dynamicCollisionObjects;
-    glm::vec3 _size;
-    glm::vec3 _pos;
 
     CollisionSystem();
     ~CollisionSystem();

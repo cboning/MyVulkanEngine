@@ -5,7 +5,7 @@
 
 namespace Modelbase
 {
-template <typename T> class Mesh
+template <typename T> class Mesh : public Vkbase::ResourcesDelegator
 {
 private:
     const Vkbase::Device &_device;
@@ -14,15 +14,16 @@ private:
     std::vector<uint16_t> _indices;
     const std::vector<std::vector<std::string>> _textureNames;
 
-    const Vkbase::Buffer &_vertexBuffer;
-    const Vkbase::Buffer &_indexBuffer;
+    Vkbase::Buffer &_vertexBuffer;
+    Vkbase::Buffer &_indexBuffer;
     const std::string _name;
     static const std::string getNewBufferWithName(std::string name);
 
 public:
     Mesh(const std::string &name, const std::string &deviceName, const std::vector<T> &vertices, const std::vector<uint16_t> &indices,
          const std::vector<std::vector<std::string>> &textureNames, const std::string &prefix = "");
-    void draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const std::vector<vk::DescriptorSet> &descriptorSets) const;
+    void draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
+              const std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &pDescriptorSets) const;
     const std::vector<std::vector<std::string>> &textureNames() const;
     const std::string &name() const;
     const std::vector<T> &vertices() const;
@@ -34,24 +35,23 @@ Mesh<T>::Mesh(const std::string &name, const std::string &deviceName, const std:
               const std::vector<std::vector<std::string>> &textureNames, const std::string &prefix)
     : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
       _vertices(vertices), _indices(indices), _textureNames(textureNames),
-      _vertexBuffer(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(
-          getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Vertex"), deviceName, _vertices.size() * sizeof(_vertices[0]),
-          vk::BufferUsageFlagBits::eVertexBuffer, _vertices.data()))),
-      _indexBuffer(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(
-          getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Index"), deviceName, _indices.size() * sizeof(_indices[0]),
-          vk::BufferUsageFlagBits::eIndexBuffer, _indices.data()))),
+      _vertexBuffer(*(createResource<Vkbase::Buffer>(getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Vertex"), deviceName,
+                                                     _vertices.size() * sizeof(_vertices[0]), vk::BufferUsageFlagBits::eVertexBuffer, _vertices.data()))),
+      _indexBuffer(*(createResource<Vkbase::Buffer>(getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Index"), deviceName,
+                                                    _indices.size() * sizeof(_indices[0]), vk::BufferUsageFlagBits::eIndexBuffer, _indices.data()))),
       _name(name)
 {
 }
 
 template <typename T>
-void Mesh<T>::draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const std::vector<vk::DescriptorSet> &descriptorSets) const
+void Mesh<T>::draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
+                   const std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &pDescriptorSets) const
 {
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
-    commandBuffer.bindVertexBuffers(0, _vertexBuffer.buffer(), {0});
-    commandBuffer.bindIndexBuffer(_indexBuffer.buffer(), 0, vk::IndexType::eUint16);
-    commandBuffer.bindDescriptorSets(vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0, descriptorSets, {});
-    commandBuffer.drawIndexed(_indices.size(), 1, 0, 0, 0);
+    pCommandBuffer->bindPipeline(&pipeline);
+    pCommandBuffer->bindVertexBuffers(0, &_vertexBuffer, {0});
+    pCommandBuffer->bindIndexBuffer(&_indexBuffer, 0, vk::IndexType::eUint16);
+    pCommandBuffer->bindDescriptorSets(0, pDescriptorSets, {});
+    pCommandBuffer->commandBuffer().drawIndexed(_indices.size(), 1, 0, 0, 0);
 }
 
 template <typename T> const std::vector<std::vector<std::string>> &Mesh<T>::textureNames() const { return _textureNames; }

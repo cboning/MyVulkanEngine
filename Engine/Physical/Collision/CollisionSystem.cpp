@@ -8,6 +8,7 @@
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
 #include <unordered_set>
+#include <iostream>
 
 constexpr float EPSILON = 1e-6f;
 
@@ -19,8 +20,6 @@ CollisionSystem::CollisionSystem()
               MipResult result = {false, 0};
               uint32_t level = octree.level() + 1;
               float powLevel2 = 1u << level;
-              if (level > 2)
-                  int a;
               for (uint8_t pos = 0; pos < 8; ++pos)
               {
                   uint32_t x, y, z;
@@ -33,15 +32,12 @@ CollisionSystem::CollisionSystem()
                   octreeBoundary.setBoundBoxSize(_size / (float)powLevel2);
                   octreeBoundary.setCenter(_pos + _size * glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f) / (float)powLevel2);
                   bool collisionResult = performCollisionDetection(collisionObject->collisionObject<CollisionObject>(), octreeBoundary).intersect;
-                  glm::mat3 b;
-                  if (collisionObject->collisionObject<CollisionObject>().type() == CollisionObjectType::Triangle)
-                      b = collisionObject->collisionObject<CollisionTriangle>().vertices();
                   if (collisionResult && result.mip)
                       return {false, 0};
                   if (collisionResult)
                   {
-                    result.mip = true;
-                    result.pos = pos;
+                      result.mip = true;
+                      result.pos = pos;
                   }
               }
               return result;
@@ -167,20 +163,17 @@ CollisionResult CollisionSystem::performBoxVCapsuleCollisionDetection(const Coll
 {
     CollisionResult result;
 
-    glm::vec3 dir = capsule.direction(); // 胶囊主轴方向（支持旋转）
+    glm::vec3 dir = capsule.direction();
     float halfH = capsule.height() * 0.5f - capsule.radius();
 
-    // 胶囊线段端点（世界空间）
     glm::vec3 p1 = capsule.center() + dir * halfH;
     glm::vec3 p2 = capsule.center() - dir * halfH;
 
-    // 转到 box 局部空间
     glm::mat3 axes = box.axes();
     glm::vec3 half = box.halfSize();
     glm::vec3 l1 = glm::transpose(axes) * (p1 - box.center());
     glm::vec3 l2 = glm::transpose(axes) * (p2 - box.center());
 
-    // 找出线段上最靠近 box 的点（解析法）
     float t = 0.0f;
     glm::vec3 m = (l1 + l2) * 0.5f;
     glm::vec3 closest(0.0f);
@@ -195,16 +188,13 @@ CollisionResult CollisionSystem::performBoxVCapsuleCollisionDetection(const Coll
             closest[i] = c;
     }
 
-    // 转回世界空间
     glm::vec3 worldClosest = box.center() + axes * closest;
 
-    // 最近点在线段上的投影
     glm::vec3 segDir = p2 - p1;
     float len2 = glm::dot(segDir, segDir);
     t = glm::clamp(glm::dot(worldClosest - p1, segDir) / len2, 0.0f, 1.0f);
     glm::vec3 closestOnSeg = p1 + t * segDir;
 
-    // 距离与法线
     glm::vec3 diff = worldClosest - closestOnSeg;
     float dist = glm::length(diff);
     if (dist < capsule.radius())
@@ -235,7 +225,6 @@ CollisionResult CollisionSystem::performCapsuleVCapsuleCollisionDetection(const 
     glm::vec3 b1 = dst.center() + dirB * (dst.height() * 0.5f - dst.radius());
     glm::vec3 b2 = dst.center() - dirB * (dst.height() * 0.5f - dst.radius());
 
-    // 求两线段最近点
     glm::vec3 u = a2 - a1;
     glm::vec3 v = b2 - b1;
     glm::vec3 w = a1 - b1;
@@ -289,6 +278,9 @@ CollisionResult CollisionSystem::performBoxVTriangleCollisionDetection(const Col
 
     glm::vec3 e[3] = {v1 - v0, v2 - v1, v0 - v2};
     glm::vec3 n = glm::cross(e[0], e[1]);
+
+    if (glm::length2(n) < 1e-8f)
+        return result;
 
     auto projTri = [&](const glm::vec3 &ax)
     {
@@ -491,7 +483,7 @@ void CollisionSystem::updateWithStaticCollisionObjects(CollisionObjectDelegator 
             catch (std::runtime_error e)
             {
 #ifdef DEBUG
-                std::cout << e.
+                std::cout << e.what() << std::endl;
 #endif
             }
         }
@@ -539,13 +531,11 @@ CollisionSystem &CollisionSystem::instance()
 void CollisionSystem::destroyDynamicObject(CollisionObjectDelegator *pCollisionObject)
 {
     for (auto it = _dynamicCollisionObjects.begin(); it != _dynamicCollisionObjects.end(); ++it)
-    {
         if (it->get() == pCollisionObject)
         {
             _dynamicCollisionObjects.erase(it);
             break;
         }
-    }
 }
 
 void CollisionSystem::update()

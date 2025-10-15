@@ -1106,7 +1106,8 @@ vk::PipelineColorBlendStateCreateInfo JsonConfigReader::getPipelineColorBlendSta
          { createInfo.setFlags(getPipelineColorBlendStateCreateFlagsWithJson(config)); }},
         {"logicOp", [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config) { createInfo.setLogicOp(getLogicOp(config)); }},
         {"logicOpEnable",
-         [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config) { createInfo.setLogicOpEnable(getBooleanWithJson(config)); }}};
+         [](vk::PipelineColorBlendStateCreateInfo &createInfo, const json &config) { createInfo.setLogicOpEnable(getBooleanWithJson(config)); }},
+        {"blendAttachments", [](vk::PipelineColorBlendStateCreateInfo &, const json &) {}}};
 
     for (auto it = config.begin(); it != config.end(); ++it)
     {

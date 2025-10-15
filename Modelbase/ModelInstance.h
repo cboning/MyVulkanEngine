@@ -1,8 +1,9 @@
 #pragma once
 
 #include "../Object/Object.h"
-#include <vector>
+#include "../Vkbase/ResourcesDelegator.h"
 #include <string>
+#include <vector>
 
 namespace Vkbase
 {
@@ -22,11 +23,11 @@ struct AnimationIndex
     float beginTime = 0.0f;
 };
 
-class ModelInstance
+class ModelInstance : public Vkbase::ResourcesDelegator
 {
     friend class Model;
 
-  private:
+private:
     float _animationProgress;
     bool _isAnimationIndexStackLock = false;
     Vkbase::DescriptorSets &_descriptorSets;
@@ -35,10 +36,10 @@ class ModelInstance
     Model &_model;
 
     ModelInstance(const std::string &descriptorSetsName, const std::string &deviceName, Model &model);
-    ~ModelInstance();
+    ~ModelInstance() = default;
     void updateAnimation(float deltaTick);
 
-  public:
+public:
     Object &object();
     const Object &object() const;
     Vkbase::DescriptorSets &descriptorSets();

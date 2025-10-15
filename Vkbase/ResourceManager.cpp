@@ -118,22 +118,22 @@ void ResourceManager::remove(ResourceType type, const std::string &name)
     if (iter == _pResources[type].end())
     {
 #ifdef DEBUG
-        std::cout << "[Warning] Failed to remove a resource, because it is not exist. Type: "
-                  << toString(type) << ", Name: " << name << std::endl;
+        std::cout << "[Warning] Failed to remove a resource, because it is not exist. Type: " << toString(type) << ", Name: " << name << std::endl;
 #endif
         return;
     }
     Vkbase::ResourceBase *pBase = iter->second;
-    pBase->preDestroy();
     _pResources[type].erase(iter);
-    pBase->tryKillself();
+    pBase->preDestroy();
+    if (!pBase->killingSelf())
+        delete pBase;
 
     if (_pResources[type].empty())
         _pResources.erase(type);
 }
 
-
-ResourceManager &ResourceManager::instance() {
+ResourceManager &ResourceManager::instance()
+{
     static ResourceManager instance;
     return instance;
 }

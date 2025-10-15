@@ -1,20 +1,22 @@
 #pragma once
 #include "../Vkbase/DescriptorSets.h"
 #include "../Vkbase/Pipeline.h"
+#include "../Vkbase/ResourcesDelegator.h"
 #include "Font.h"
 #include <vulkan/vulkan.hpp>
 
-class Text
+class Text : public Vkbase::ResourcesDelegator
 {
-  public:
+public:
     Text(const Font &font);
     Text(const Font &font, const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale);
-    ~Text();
+    ~Text() = default;
     void setText(const std::string &text);
     void setColor(const glm::vec3 &color);
     void setPos(const glm::vec2 &pos);
     void setScale(float scale);
-    void draw(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const vk::ArrayProxy<const vk::DescriptorSet> &descriptorSets);
+    void draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
+              const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets);
 
     struct Vertex
     {
@@ -39,7 +41,7 @@ class Text
         }
     };
 
-  private:
+private:
     const Font &_font;
     std::vector<std::string> _vertexBufferNames;
     std::string _text;
@@ -47,7 +49,7 @@ class Text
     glm::vec2 _pos;
     float _scale;
 
-    void drawCharacter(const vk::CommandBuffer &commandBuffer, const Vkbase::Pipeline &pipeline, const char character, const std::string &vertexBufferName,
-                       const vk::ArrayProxy<const vk::DescriptorSet> &descriptorSets);
+    void drawCharacter(Vkbase::CommandBuffer *pCommandBuffer, const char character, const std::string &vertexBufferName,
+                       const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets);
     void updateBuffer();
 };

@@ -4,14 +4,15 @@
 #include <glm/gtc/matrix_transform.hpp>
 
 Font::Font(const std::string &deviceName, const std::string &filename)
-    : _deviceName(deviceName), _sampler(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::Sampler>("", deviceName))), _descriptorSets(*(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>("Text", deviceName)))
+    : _deviceName(deviceName), _sampler(*(createResource<Vkbase::Sampler>("", deviceName))),
+      _descriptorSets(*(createResource<Vkbase::DescriptorSets>("Text", deviceName)))
 {
     _descriptorSets.addDescriptorSetCreateConfig("Character", {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, 128);
     _descriptorSets.init();
 
-    vk::DescriptorImageInfo imageInfo;
-    imageInfo.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal).setSampler(_sampler.sampler());
-    std::vector<vk::DescriptorImageInfo> imageInfos(128, imageInfo);
+    std::pair<vk::DescriptorImageInfo, Vkbase::Image *> imageInfo;
+    imageInfo.first.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal).setSampler(_sampler.sampler());
+    std::vector<std::pair<vk::DescriptorImageInfo, Vkbase::Image *>> imageInfos(128, imageInfo);
 
     FT_Library ft;
     if (FT_Init_FreeType(&ft))
@@ -31,10 +32,8 @@ Font::Font(const std::string &deviceName, const std::string &filename)
     FT_Set_Pixel_Sizes(face, 0, 32);
     for (GLubyte i = 0; i < 128; ++i)
     {
-        Character character(deviceName, face, i);
-        _characters.insert(std::pair<char, Character>(i, character));
-
-        imageInfos[i].setImageView(character.image().view());
+        auto [it, inserted] = _characters.try_emplace(i, deviceName, face, i);
+        imageInfos[i].second = &it->second.image();
     }
 
     _descriptorSets.writeSets("Character", 0, {}, imageInfos, 128);
@@ -42,17 +41,14 @@ Font::Font(const std::string &deviceName, const std::string &filename)
     FT_Done_FreeType(ft);
 }
 
-Font::~Font()
-{
-    _descriptorSets.destroy();
-    _sampler.destroy();
-}
-
 const std::string &Font::deviceName() const { return _deviceName; }
 
 const std::unordered_map<FT_ULong, Font::Character> &Font::characters() const { return _characters; }
 
-const vk::DescriptorSet &Font::set(FT_ULong character) const { return _descriptorSets.sets("Character")[character]; }
+std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>> Font::set(FT_ULong character) const
+{
+    return {&_descriptorSets, {"Character", character}};
+}
 
 const vk::DescriptorSetLayout &Font::layout() const { return _descriptorSets.layout("Character"); }
 
@@ -69,11 +65,12 @@ void Font::writeProjectiveDescriptorSet(const std::string &descriptorSetsName, c
     Vkbase::DescriptorSets &descriptorSets =
         *(dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::DescriptorSets::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, descriptorSetsName)));
 
-    vk::DescriptorBufferInfo bufferInfo;
-    bufferInfo.setOffset(0)
-        .setRange(sizeof(UniformBufferData))
-        .setBuffer(
-            (Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("FontProjectiveUniformBuffer", deviceName, sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer))->buffer());
+    std::pair<vk::DescriptorBufferInfo, Vkbase::Buffer *> bufferInfo;
+    bufferInfo.first.setOffset(0).setRange(sizeof(UniformBufferData));
+
+    _pProjectiveUniformBuffer = std::make_unique<ProjectiveUniformBuffer>(deviceName);
+
+    bufferInfo.second = _pProjectiveUniformBuffer->getUBO();
     descriptorSets.writeSets("FontProjective", 0, {bufferInfo}, {}, 1);
 }
 
@@ -93,9 +90,16 @@ const vk::DescriptorSetLayout &Font::projectiveLayout(const std::string &descrip
         *(dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::DescriptorSets::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, descriptorSetsName)));
     return descriptorSets.layout("FontProjective");
 }
-const vk::DescriptorSet &Font::projectiveSet(const std::string &descriptorSetsName)
+std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>> Font::projectiveSet(const std::string &descriptorSetsName)
 {
     Vkbase::DescriptorSets &descriptorSets =
         *(dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::DescriptorSets::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, descriptorSetsName)));
-    return descriptorSets.sets("FontProjective")[0];
+    return {&descriptorSets, {"FontProjective", 0}};
 }
+
+Font::ProjectiveUniformBuffer::ProjectiveUniformBuffer(const std::string &deviceName)
+{
+    _pUBO = createResource<Vkbase::Buffer>("FontProjectiveUniformBuffer", deviceName, sizeof(UniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer);
+}
+
+Vkbase::Buffer *Font::ProjectiveUniformBuffer::getUBO() { return _pUBO; }

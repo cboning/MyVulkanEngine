@@ -7,6 +7,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include "../Vkbase/ResourcesDelegator.h"
 #include "../Vkbase/Vkbase.h"
 
 #include "../Object/Object.h"
@@ -23,7 +24,6 @@ class ModelInstance;
 
 struct AnimationIndex;
 
-
 struct ModelUniformData
 {
     glm::mat4 model;
@@ -32,7 +32,7 @@ struct ModelUniformData
     glm::mat4 bonesMatrices[MAX_BONES];
 };
 
-class Model
+class Model : public Vkbase::ResourcesDelegator
 {
     friend class ModelLoader;
 
@@ -41,7 +41,7 @@ private:
 
     std::string _fileDirectory;
 
-    std::vector<Mesh<ModelData::Vertex>> _meshes;
+    std::vector<std::unique_ptr<Mesh<ModelData::Vertex>>> _pMeshes;
     std::vector<std::string> _textureFiles;
 
     ModelData::AssimpNodeData _rootNode; // 更新动画要用
@@ -64,9 +64,9 @@ private:
 
     std::unordered_map<std::string, uint32_t> _instanceIndexMap;
 
-    void createDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const;
+    void createDescriptorSets(Vkbase::DescriptorSets &descriptorSets);
     void addUBODescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) const;
-    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) const;
+    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets);
     void applyTextureDescriptorSetConfig();
     void writeTextureDescriptorSets(const vk::Sampler &sampler) const;
     static std::unordered_map<std::string, std::vector<aiTextureType>> getTextureFeaturesWithConfig(const json &config);
@@ -81,7 +81,7 @@ public:
           const std::unordered_map<std::string, std::string> &meshPipelineNames);
     Model(const std::string &deviceName, const vk::Sampler &sampler, json config);
     ~Model();
-    void draw(uint32_t currentFrame, const vk::CommandBuffer &commandBuffer, uint32_t instanceIndex) const;
+    void draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, uint32_t instanceIndex) const;
     std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap();
     int &boneCount();
     ModelData::AssimpNodeData *rootNode();
@@ -102,6 +102,6 @@ public:
 
     static const std::unordered_set<Model *> &models();
 
-    const std::vector<Mesh<ModelData::Vertex>> &meshes() const;
+    const std::vector<std::unique_ptr<Mesh<ModelData::Vertex>>> &meshes() const;
 };
 }; // namespace Modelbase

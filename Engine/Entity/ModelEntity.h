@@ -31,7 +31,7 @@ private:
 public:
     ModelEntity(const std::string &name, bool dynamic = true, const Object &object = {}, const json &config = {});
     ~ModelEntity();
-    void draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const override;
+    void draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const override;
     void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const override;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
     Object &modelObject();

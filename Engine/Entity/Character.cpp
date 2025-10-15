@@ -39,12 +39,12 @@ void Character::init()
 
 void Character::objectExtraUpdate() { _model.instance("1").object().setPosition(object().position()); }
 
-void Character::draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const
+void Character::draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &, const std::string &) const
 {
-    _model.draw(frameIndex, commandBuffer, 0);
+    _model.draw(frameIndex, pCommandBuffer, 0);
 }
 
-void Character::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const
+void Character::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &, const std::string &) const
 {
     const Modelbase::ModelInstance &instance = _model.instance("1");
     instance.updateUniformBuffers(index, camera);

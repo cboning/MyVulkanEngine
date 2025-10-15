@@ -124,12 +124,12 @@ void Entity::eraseMotion(const std::string &name)
     delete _pMotions.extract(name).mapped();
 }
 
-void Entity::drawEntities(const vk::CommandBuffer &commandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index, const std::string &pipelineName,
+void Entity::drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index, const std::string &pipelineName,
                           const std::string &UBOName, const std::string &setsName)
 {
     for (auto &entity : _pEntities)
     {
         entity.second->updateUBO(camera, index, mat, UBOName);
-        entity.second->draw(commandBuffer, index, pipelineName, setsName);
+        entity.second->draw(pCommandBuffer, index, pipelineName, setsName);
     }
 }

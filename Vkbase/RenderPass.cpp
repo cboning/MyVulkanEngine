@@ -10,13 +10,14 @@
 #include "Framebuffer.h"
 #include "Image.h"
 #include "Pipeline.h"
+#include "CommandBuffer.h"
 
 namespace Vkbase
 {
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
-    : ResourceBase(Vkbase::ResourceType::RenderPass, resourceName),
-      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
-      _descriptorSets(*connectTo(resourceManager().create<DescriptorSets>(resourceName, deviceName)))
+    : GpuResourceBase(Vkbase::ResourceType::RenderPass, resourceName,
+                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+      _descriptorSets(*connectTo(createResource<DescriptorSets>(resourceName, deviceName)))
 {
     _attachmentCount = createInfo.attachmentCount;
     _attachmentFormats.reserve(_attachmentCount);
@@ -36,7 +37,9 @@ RenderPass::RenderPass(const std::string &resourceName, const std::string &devic
 
 RenderPass::~RenderPass()
 {
-    _device.device().destroy(_renderPass);
+    auto device = _device.device();
+    auto renderPass = _renderPass;
+    _onDelayDestroy = [device, renderPass]() mutable { device.destroy(renderPass); };
 }
 
 const vk::RenderPass &RenderPass::renderPass() const { return _renderPass; }
@@ -48,7 +51,7 @@ const std::vector<vk::Format> &RenderPass::attachmentFormats() const { return _a
 const Framebuffer &RenderPass::createFramebuffer(const std::string &resourceName, const std::vector<std::string> &attachmentNames, uint32_t width,
                                                  uint32_t height) const
 {
-    return *resourceManager().create<Framebuffer>(resourceName, _device.name(), name(), attachmentNames, width, height);
+    return *createResource<Framebuffer>(resourceName, _device.name(), name(), attachmentNames, width, height);
 }
 
 std::vector<std::string> RenderPass::createFramebuffer(const std::string &resourceName, const json &config, uint32_t width, uint32_t height,
@@ -78,9 +81,8 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
                 imageConfig["width"] = width;
                 imageConfig["height"] = height;
                 imageConfig["depth"] = 1;
-                attachmentNames.push_back(resourceManager()
-                                              .create<Vkbase::Image>("Framebuffer_Image_" + std::string(attachment["name"]) + "_" + std::to_string(i),
-                                                                     _device.name(), imageConfig, nullptr, swapchainName, depthFormat)
+                attachmentNames.push_back(createResource<Vkbase::Image>("Framebuffer_Image_" + std::string(attachment["name"]) + "_" + std::to_string(i),
+                                                                        _device.name(), imageConfig, nullptr, swapchainName, depthFormat)
                                               ->name());
             }
             else if (type == "use")
@@ -93,7 +95,7 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
 
 const Pipeline &RenderPass::createPipeline(const std::string &resourceName, const PipelineCreateInfo &createInfo) const
 {
-    return *resourceManager().create<Pipeline>(resourceName, _device.name(), name(), createInfo);
+    return *createResource<Pipeline>(resourceName, _device.name(), name(), createInfo);
 }
 
 void RenderPass::createPipelines(const json &config, const std::unordered_map<std::string, VertexInfo> &vertexInfos,
@@ -110,8 +112,8 @@ void RenderPass::createPipelines(const json &config, const std::unordered_map<st
     }
 }
 
-void RenderPass::begin(const vk::CommandBuffer &commandBuffer, const Framebuffer &framebuffer, std::vector<vk::ClearValue> &clearValues,
-                       vk::Extent2D &extent) const
+void RenderPass::begin(CommandBuffer *pCommandBuffer, Framebuffer *pFramebuffer, std::vector<vk::ClearValue> &clearValues,
+                       vk::Extent2D &extent)
 {
     vk::RenderPassBeginInfo beginInfo;
 
@@ -124,15 +126,15 @@ void RenderPass::begin(const vk::CommandBuffer &commandBuffer, const Framebuffer
 
     vk::Rect2D renderArea;
     renderArea.setExtent(extent).setOffset({0, 0});
-    beginInfo.setFramebuffer(framebuffer.framebuffer()).setRenderPass(_renderPass).setClearValues(clearValues).setRenderArea(renderArea);
+    beginInfo.setClearValues(clearValues).setRenderArea(renderArea);
 
-    commandBuffer.setViewport(0, viewport);
-    commandBuffer.setScissor(0, scissor);
+    pCommandBuffer->commandBuffer().setViewport(0, viewport);
+    pCommandBuffer->commandBuffer().setScissor(0, scissor);
 
-    commandBuffer.beginRenderPass(beginInfo, vk::SubpassContents::eInline);
+    pCommandBuffer->beginRenderPass(this, pFramebuffer, beginInfo, vk::SubpassContents::eInline);
 }
 
-void RenderPass::end(const vk::CommandBuffer &commandBuffer) const { commandBuffer.endRenderPass(); }
+void RenderPass::end(CommandBuffer *pCommandBuffer) { pCommandBuffer->commandBuffer().endRenderPass(); }
 
 DescriptorSets &RenderPass::descriptorSets() { return _descriptorSets; }
 

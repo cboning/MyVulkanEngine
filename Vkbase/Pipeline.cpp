@@ -7,8 +7,8 @@ namespace Vkbase
 {
 Pipeline::Pipeline(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const PipelineCreateInfo &createInfo,
                    bool computePipeline)
-    : ResourceBase(Vkbase::ResourceType::Pipeline, resourceName),
-      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(ResourceType::Device, deviceName))))
+    : GpuResourceBase(Vkbase::ResourceType::Pipeline, resourceName,
+                      *dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName)))
 {
     createPipeline(renderPassName, createInfo, computePipeline);
 }
@@ -16,13 +16,20 @@ Pipeline::Pipeline(const std::string &resourceName, const std::string &deviceNam
 Pipeline::~Pipeline()
 {
     vk::Device device = _device.device();
-    device.destroy(_pipeline);
-    device.destroy(_pipelineLayout);
-    for (const vk::ShaderModule &shaderModule : _shaderModules)
-        device.destroy(shaderModule);
+    std::vector<vk::ShaderModule> shaderModules = _shaderModules;
+    vk::Pipeline pipeline = _pipeline;
+    vk::PipelineLayout pipelineLayout = _pipelineLayout;
+
+    _onDelayDestroy = [device, shaderModules, pipeline, pipelineLayout]()
+    {
+        device.destroy(pipeline);
+        device.destroy(pipelineLayout);
+        for (const vk::ShaderModule &shaderModule : shaderModules)
+            device.destroy(shaderModule);
+    };
 }
 
-void Pipeline::createPipeline(const std::string &renderPassName, const PipelineCreateInfo &createInfo, bool computePipelin)
+void Pipeline::createPipeline(const std::string &renderPassName, const PipelineCreateInfo &createInfo, bool computePipeline)
 {
     std::vector<vk::PipelineShaderStageCreateInfo> stages = getShaderStageInfos(createInfo.shaderInfos);
 
@@ -30,8 +37,9 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
     pipelineLayoutInfo.setSetLayouts(createInfo.descriptorSetLayouts);
 
     _pipelineLayout = _device.device().createPipelineLayout(pipelineLayoutInfo);
-    if (computePipelin)
+    if (computePipeline)
     {
+        _pipelineBindPoint = vk::PipelineBindPoint::eCompute;
         vk::ComputePipelineCreateInfo pipelineInfo;
         pipelineInfo.setStage(stages[0]).setLayout(_pipelineLayout);
 
@@ -44,6 +52,7 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
         return;
     }
 
+    _pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
     vk::PipelineVertexInputStateCreateInfo vertexInputState;
     vertexInputState.setVertexBindingDescriptions(createInfo.vertexInfo.inputBindings).setVertexAttributeDescriptions(createInfo.vertexInfo.inputAttributes);
     createInfo.renderInfo.multisampleStateInfo.setPSampleMask(_sampleMask);
@@ -118,9 +127,7 @@ PipelineRenderInfo Pipeline::getDefaultRenderInfo()
 
     renderInfo.multisampleStateInfo.setRasterizationSamples(vk::SampleCountFlagBits::e1);
 
-    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone)
-        .setFrontFace(vk::FrontFace::eClockwise)
-        .setLineWidth(1.0f);
+    renderInfo.rasterizationStateInfo.setCullMode(vk::CullModeFlagBits::eNone).setFrontFace(vk::FrontFace::eClockwise).setLineWidth(1.0f);
 
     renderInfo.depthStencilStateInfo.setDepthTestEnable(vk::False)
         .setDepthWriteEnable(vk::True)
@@ -138,4 +145,6 @@ PipelineRenderInfo Pipeline::getDefaultRenderInfo()
 const vk::Pipeline &Pipeline::pipeline() const { return _pipeline; }
 
 const vk::PipelineLayout &Pipeline::layout() const { return _pipelineLayout; }
+
+vk::PipelineBindPoint Pipeline::pipelineBindPoint() { return _pipelineBindPoint; }
 } // namespace Vkbase

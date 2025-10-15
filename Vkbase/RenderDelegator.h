@@ -8,6 +8,7 @@ namespace Vkbase
 class Device;
 class Swapchain;
 class CommandPool;
+class CommandBuffer;
 class RenderDelegator : public ResourceBase
 {
     friend class ResourceManager;
@@ -15,7 +16,8 @@ class RenderDelegator : public ResourceBase
 public:
     void draw();
     void sizeChanged();
-    void setCommandRecordFunc(const std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
+    void setCommandRecordFunc(
+        const std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
     void setRenderPassCreateFunc(const std::function<void()> &func);
     static uint32_t maxFlightCount();
     void recreateSwapchain();
@@ -27,15 +29,14 @@ private:
     void createSyncObjects();
     const Device &_device;
     inline static uint32_t _maxFlightCount = MAX_FLIGHT_COUNT;
-    Swapchain *_pSwapchain;
+    Swapchain *_pSwapchain = nullptr;
     const CommandPool &_commandPool;
-    std::vector<vk::CommandBuffer> _commandBuffers;
+    std::vector<CommandBuffer *> _pCommandBuffers;
     std::vector<vk::Semaphore> _imageAvailableSemaphores;
     std::vector<vk::Semaphore> _renderFinishSemaphores;
-    std::vector<vk::Fence> _inFlightFences;
     uint32_t _currentFrame = 0;
     bool _isSizeChanged = false;
-    std::function<void(const vk::CommandBuffer &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)> _commandRecordFunc;
+    std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> _commandRecordFunc;
     std::function<void()> _renderPassCreateFunc;
 };
 } // namespace Vkbase

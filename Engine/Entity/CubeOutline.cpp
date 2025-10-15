@@ -11,13 +11,6 @@ CubeOutline::CubeOutline(const std::string &name, const Object &object) : Entity
 
 CubeOutline::~CubeOutline()
 {
-    for (auto ubo : _ubos)
-        ubo->destroy();
-
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::DescriptorSets, name() + "_CubeOutline");
-
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, "CubeVertex_" + name());
-    Vkbase::ResourceBase::resourceManager().remove(Vkbase::ResourceType::Buffer, "CubeIndices_" + name());
 }
 
 void CubeOutline::init()
@@ -29,11 +22,11 @@ void CubeOutline::init()
                                  .size();
          ++i)
     {
-        _ubos.push_back(Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>(name() + "_CubeOutline_UBO_" + std::to_string(i), "Device",
+        _ubos.push_back(createResource<Vkbase::Buffer>(name() + "_CubeOutline_UBO_" + std::to_string(i), "Device",
                                                                                        sizeof(CubeUniformBufferData), vk::BufferUsageFlagBits::eUniformBuffer));
     }
 
-    Vkbase::DescriptorSets &descriptorSets = *(Vkbase::ResourceBase::resourceManager().create<Vkbase::DescriptorSets>(name() + "_CubeOutline", "Device"));
+    Vkbase::DescriptorSets &descriptorSets = *(createResource<Vkbase::DescriptorSets>(name() + "_CubeOutline", "Device"));
 
     config["descriptorSets"]["write"][0]["detail"]["bufferInfo"]["bufferName"] = name() + "_CubeOutline_UBO";
     descriptorSets.addDescriptorSetCreateConfigWithJson(config["descriptorSets"]["sets"]);
@@ -51,35 +44,49 @@ void CubeOutline::init()
         0, 4, 1, 5, 2, 6, 3, 7  // sides
     };
 
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("CubeVertex_" + name(), "Device", sizeof(GeometryVertexData) * 8,
+    createResource<Vkbase::Buffer>("CubeVertex_" + name(), "Device", sizeof(GeometryVertexData) * 8,
                                                                    vk::BufferUsageFlagBits::eVertexBuffer, cubeVertices);
 
-    Vkbase::ResourceBase::resourceManager().create<Vkbase::Buffer>("CubeIndices_" + name(), "Device", sizeof(uint32_t) * 24,
+    createResource<Vkbase::Buffer>("CubeIndices_" + name(), "Device", sizeof(uint32_t) * 24,
                                                                    vk::BufferUsageFlagBits::eIndexBuffer, cubeIndices);
 }
 
-void CubeOutline::draw(const vk::CommandBuffer &commandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const
+void CubeOutline::draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const
 {
-    Vkbase::Pipeline &pipeline =
-        *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, pipelineName));
-    commandBuffer.bindPipeline(vk::PipelineBindPoint::eGraphics, pipeline.pipeline());
+    // 获取 pipeline
+    auto *pPipeline = dynamic_cast<Vkbase::Pipeline *>(
+        Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, pipelineName));
 
-    commandBuffer.bindDescriptorSets(
-        vk::PipelineBindPoint::eGraphics, pipeline.layout(), 0,
-        {dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, name() + "_CubeOutline"))
-             ->sets(uboName)[frameIndex]},
-        {});
+    // 绑定 pipeline
+    pCommandBuffer->bindPipeline(pPipeline);
 
-    commandBuffer.bindVertexBuffers(
-        0, {dynamic_cast<Vkbase::Buffer *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeVertex_" + name()))->buffer()},
-        {0});
+    // 获取 descriptor sets
+    auto *pDescriptorSets = dynamic_cast<Vkbase::DescriptorSets *>(
+        Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, name() + "_CubeOutline"));
 
-    commandBuffer.bindIndexBuffer(
-        {dynamic_cast<Vkbase::Buffer *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeIndices_" + name()))->buffer()}, 0,
-        vk::IndexType::eUint32);
+    // 绑定 descriptor sets
+    pCommandBuffer->bindDescriptorSets(
+        0,
+        {{pDescriptorSets, {uboName, frameIndex}}}, // first = DescriptorSets*, second = {uboName, frameIndex}
+        {}                                          // dynamicOffsets
+    );
 
-    commandBuffer.drawIndexed(24, 1, 0, 0, 0); // 24 个索引，Line 模式渲染
+    // 顶点缓冲
+    auto *pVertexBuffer = dynamic_cast<Vkbase::Buffer *>(
+        Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeVertex_" + name()));
+
+    // 索引缓冲
+    auto *pIndexBuffer = dynamic_cast<Vkbase::Buffer *>(
+        Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, "CubeIndices_" + name()));
+
+    // 绑定顶点与索引缓冲
+    pCommandBuffer->bindVertexBuffers(0, {pVertexBuffer}, {0});
+    pCommandBuffer->bindIndexBuffer(pIndexBuffer, 0, vk::IndexType::eUint32);
+
+    // 绘制线框立方体（24个索引）
+    pCommandBuffer->commandBuffer().drawIndexed(24, 1, 0, 0, 0);
 }
+
 
 void CubeOutline::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const
 {
