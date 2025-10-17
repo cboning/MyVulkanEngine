@@ -47,7 +47,7 @@ void Render::resourceInit()
                                       vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
     createResource<Vkbase::Sampler>("Sampler", "Device");
-    Cube *pCube1 = new Cube("1");
+    Cube *pCube1 = new Cube("1", "Device", camera(), _cameraLight);
     pCube1->addMotion("Gravity", (Motion *)(new Gravity()));
     pCube1->addMotion("Collision", (Motion *)(new Collision()));
     pCube1->addMotion("Friction", (Motion *)(new Friction()));
@@ -56,7 +56,7 @@ void Render::resourceInit()
     pCube1->object().setPosition(glm::vec3(5.0f, 200.0f, 0.0f));
     pCube1->object().setScale(glm::vec3(5.0f, 13.0f, 5.0f));
 
-    Cube *pCube4 = new Cube("4");
+    Cube *pCube4 = new Cube("4", "Device", camera(), _cameraLight);
     pCube4->addMotion("Gravity", (Motion *)(new Gravity()));
     pCube4->addMotion("Collision", (Motion *)(new Collision()));
     pCube4->addMotion("Friction", (Motion *)(new Friction()));
@@ -66,16 +66,16 @@ void Render::resourceInit()
     Object cubeObject2;
     cubeObject2.setScale(glm::vec3(100.0f, 0.5f, 100.0f));
     cubeObject2.setPosition(glm::vec3(0.0f, -10.0f, 0.0f));
-    Cube *pCube2 = new Cube("2", false, cubeObject2);
+    Cube *pCube2 = new Cube("2", "Device", camera(), _cameraLight, false, cubeObject2);
 
     Object cubeObject3;
     cubeObject3.setScale(glm::vec3(50.0f, 0.5f, 50.0f));
     cubeObject3.setPosition(glm::vec3(0.0f, -9.5f, 0.0f));
-    Cube *pCube3 = new Cube("3", false, cubeObject3);
+    Cube *pCube3 = new Cube("3", "Device", camera(), _cameraLight, false, cubeObject3);
 
     Object cubeObject5;
     cubeObject5.setPosition(glm::vec3(30.0f, 30.0f, 30.0f));
-    ModelEntity *pCharacter = new ModelEntity("5", false, cubeObject5, JsonConfigReader::load("config/model.json")[0]);
+    // ModelEntity *pCharacter = new ModelEntity("5", "Device", camera(), false, cubeObject5, JsonConfigReader::load("config/model.json")[0]);
 
     // pCharacter->modelObject().setScale(glm::vec3(0.01f));
 
@@ -108,12 +108,12 @@ void Render::resourceInit()
 
     // delete new Cloud();
 
-    // Modelbase::Model *pModel =
-    //     new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
-    //                          JsonConfigReader::load("config/model.json")[0]);
-    // Modelbase::ModelInstance &instance = pModel->createNewInstance("1", {0, 0.0f});
-    // Object &modelObject = instance.object();
-    // modelObject.setScale(glm::vec3(0.01f));
+    Modelbase::Model *pModel =
+        new Modelbase::Model("Device", dynamic_cast<const Vkbase::Sampler *>(_resourceManager.resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
+                             JsonConfigReader::load("config/model.json")[0]);
+    Modelbase::ModelInstance &instance = pModel->createNewInstance("1", {0, 0.0f});
+    Object &modelObject = instance.object();
+    modelObject.setScale(glm::vec3(0.01f));
 
     _pFont = std::make_unique<Font>("Device", "./src/fonts/Minecraft.ttf");
     _pText = std::make_unique<Text>(*_pFont, "Hello Vulkan!", glm::vec3(1.0f, 1.0f, 1.0f), glm::vec2(10.0f, 50.0f), 1.0f);
@@ -319,7 +319,9 @@ void Render::cleanup() {}
 
 void Render::recordCommand(Vkbase::CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
-    _pText->setText(std::to_string(_speed));
+    // _pText->setText(std::to_string(1 / _deltaTime));
+    std::cout << 1 / _deltaTime << std::endl;
+    
     vk::CommandBuffer commandBuffer = pCommandBuffer->commandBuffer();
 
     Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::ResourceType::RenderPass, "mainWindow"));
@@ -337,20 +339,18 @@ void Render::recordCommand(Vkbase::CommandBuffer *pCommandBuffer, uint32_t image
         dynamic_cast<Vkbase::Framebuffer *>(_resourceManager.resource(Vkbase::ResourceType::Framebuffer, "mainWindow_" + std::to_string(imageIndex))),
         clearValues, extent);
 
-    for (Modelbase::Model *pModel : Modelbase::Model::models())
-    {
-        // Modelbase::ModelInstance &instance = pModel->instance("1");
+    // for (Modelbase::Model *pModel : Modelbase::Model::models())
+    // {
+    //     // Modelbase::ModelInstance &instance = pModel->instance("1");
 
-        pModel->updateAnimation(_deltaTime);
-        // instance.updateUniformBuffers(currentFrame, _camera);
-        // pModel->draw(currentFrame, commandBuffer, 0);
-    }
+    //     pModel->updateAnimation(_deltaTime);
+    //     // instance.updateUniformBuffers(currentFrame, _camera);
+    //     // pModel->draw(currentFrame, commandBuffer, 0);
+    // }
 
-    Entity::drawEntities(pCommandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryPipeline", "UBO", "UBO");
-    Entity::drawEntities(pCommandBuffer, _camera, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryOutlinePipeline", "UBO", "UBO");
+    // Entity::drawEntities(pCommandBuffer, currentFrame, {std::string("GeometryPipeline"), std::string("UBO"), false});
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
-    // Entity::drawEntities(commandBuffer, _cameraLight, _cameraLight.perspective() * _cameraLight.view(), currentFrame, "GeometryShadow", "Shadow_UBO",
-    //                      "ShadowUBO");
+    // Entity::drawEntities(pCommandBuffer, currentFrame, {std::string("GeometryPipeline"), std::string("ShadowUBO"), true});
 
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(pCommandBuffer, "light", {{&descriptorSets, {"G_BufferInputAttachments", imageIndex}}});
@@ -364,9 +364,9 @@ void Render::recordCommand(Vkbase::CommandBuffer *pCommandBuffer, uint32_t image
     commandBuffer.nextSubpass(vk::SubpassContents::eInline);
     renderFrame(pCommandBuffer, "blend", {{&descriptorSets, {"BlendInputAttachments", imageIndex}}});
 
-    Vkbase::Pipeline &textPipeline = *dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "text"));
-    pCommandBuffer->bindPipeline(&textPipeline);
-    _pText->draw(pCommandBuffer, textPipeline, {Font::projectiveSet("MainDescriptorSets")});
+    // Vkbase::Pipeline &textPipeline = *dynamic_cast<Vkbase::Pipeline *>(_resourceManager.resource(Vkbase::ResourceType::Pipeline, "text"));
+    // pCommandBuffer->bindPipeline(&textPipeline);
+    // _pText->draw(pCommandBuffer, textPipeline, {Font::projectiveSet("MainDescriptorSets")});
 
     renderPass.end(pCommandBuffer);
 }

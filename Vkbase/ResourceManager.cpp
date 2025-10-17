@@ -89,7 +89,7 @@ void ResourceManager::addResource(ResourceBase *pResource)
 
 const ResourceSet &ResourceManager::resources() const { return _pResources; }
 
-ResourceBase *ResourceManager::resource(ResourceType type, std::string name) const
+ResourceBase *ResourceManager::resource(ResourceType type, const std::string &name) const
 {
     Vkbase::ResourceSet::const_iterator typeIter = _pResources.find(type);
     if (typeIter == _pResources.end())

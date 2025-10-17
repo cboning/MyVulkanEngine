@@ -26,14 +26,16 @@ class Character : public Entity
 private:
     Modelbase::Model _model;
 
-    void init() override;
+    void entityInit() override;
     void objectExtraUpdate() override;
 
 public:
-    Character(const std::string &name, bool dynamic = true, const Object &object = {}, const json &config = {});
+    Character(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, bool dynamic = true, const Object &object = {}, const json &config = {});
     ~Character();
-    void draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const override;
-    void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const override;
+    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &) const override;
+    void onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &) const override;
+    void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
+    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
     Object &modelObject();
     const Object &modelObject() const;

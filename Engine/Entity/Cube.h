@@ -1,13 +1,14 @@
 #pragma once
+#include "../../Data.h"
 #include "../../Object/Object.h"
+#include "Entity.h"
 #include <glm/glm.hpp>
 #include <json.hpp>
 #include <string>
-#include "Entity.h"
 
 namespace vk
 {
-    class CommandBuffer;
+class CommandBuffer;
 }
 
 using json = nlohmann::json;
@@ -16,8 +17,10 @@ class Camera;
 
 namespace Vkbase
 {
-    class Buffer;
-}
+class DescriptorSets;
+class Buffer;
+template <typename T> class Mesh;
+} // namespace Vkbase
 
 struct alignas(16) CubeUniformBufferData
 {
@@ -32,17 +35,21 @@ struct alignas(16) CubeUniformBufferData
 class Cube : public Entity
 {
 private:
+    inline static Vkbase::Mesh<GeometryVertexData> *_pCubeMesh = nullptr;
     glm::vec3 _color = glm::vec3(0.0f, 0.6f, 0.8f);
     std::vector<Vkbase::Buffer *> _ubos;
     bool _isOutline;
+    const Camera &_lightCamera;
 
-    void init() override;
+    void entityInit() override;
     void objectExtraUpdate() override;
 
 public:
-    Cube(const std::string &name, bool dynamic = true, const Object &object = {}, bool isOutline = false);
+    Cube(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, bool dynamic = true, const Object &object = {}, bool isOutline = false);
     ~Cube();
-    void draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const override;
-    void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const override;
+    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args) const override;
+    void onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &args) const override;
+    void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
+    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
 };

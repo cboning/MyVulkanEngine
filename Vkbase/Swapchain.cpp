@@ -295,7 +295,7 @@ void Swapchain::determinePresentMode(SurfaceSupportDetails &details)
             throw std::runtime_error("No available present modes");
         }
 
-        vk::PresentModeKHR desirableMode = vk::PresentModeKHR::eFifo;
+        vk::PresentModeKHR desirableMode = vk::PresentModeKHR::eImmediate;
         for (const vk::PresentModeKHR &presentMode : presentModes)
         {
             if (presentMode == vk::PresentModeKHR::eMailbox)
@@ -303,8 +303,6 @@ void Swapchain::determinePresentMode(SurfaceSupportDetails &details)
                 _presentMode = presentMode;
                 return;
             }
-            else if (presentMode == vk::PresentModeKHR::eImmediate)
-                desirableMode = presentMode;
         }
         _presentMode = desirableMode;
     }

@@ -1,7 +1,7 @@
 #include "ModelLoader.h"
 #include "Animation.h"
 #include "AssimpGLMHelpers.h"
-#include "Mesh.h"
+#include "../Vkbase/Mesh.h"
 #include "Model.h"
 #include "stb_image.h"
 
@@ -139,7 +139,7 @@ void ModelLoader::processMesh(Model &model, aiMesh *pMesh, const aiScene *pScene
     for (uint32_t i = 0; i < textureTypeFeatures.size(); ++i)
         textureNames[i][0] = loadMaterialTextures(model, pScene, pMaterial, textureTypeFeatures[i])[0];
 
-    model._pMeshes.emplace_back(std::make_unique<Mesh<ModelData::Vertex>>(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name()));
+    model._pMeshes.emplace_back(std::make_unique<Vkbase::Mesh<ModelData::Vertex>>(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name()));
 }
 
 std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const aiScene *pScene, aiMaterial *pMaterial, aiTextureType textureType)

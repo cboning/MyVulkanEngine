@@ -88,7 +88,7 @@ private:
 public:
     const ResourceSet &resources() const;
 
-    ResourceBase *resource(ResourceType type, std::string name) const;
+    ResourceBase *resource(ResourceType type, const std::string &name) const;
     const vk::Instance &vkInstance() const;
     static ResourceManager &instance();
     void remove(ResourceType type, const std::string &name);

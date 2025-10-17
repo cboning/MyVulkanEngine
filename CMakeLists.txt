@@ -67,9 +67,10 @@ target_compile_options(main PRIVATE
 )
 
 if(APPLE)
-    add_compile_definitions(DEBUG)
+    # add_compile_definitions(DEBUG)
 
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 

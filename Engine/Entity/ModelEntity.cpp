@@ -5,21 +5,22 @@
 #include "../../Vkbase/Vkbase.h"
 #include "../Physical/Collision/CollisionBox.h"
 #include "../Physical/Collision/CollisionCapsule.h"
-#include "../Physical/Collision/CollisionTriangle.h"
 #include "../Physical/Collision/CollisionObjectDelegator.h"
 #include "../Physical/Collision/CollisionSystem.h"
+#include "../Physical/Collision/CollisionTriangle.h"
 
-ModelEntity::ModelEntity(const std::string &name, bool dynamic, const Object &object, const json &config)
-    : Entity(name, dynamic, object),
-      _model("Device", dynamic_cast<Vkbase::Sampler *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
+ModelEntity::ModelEntity(const std::string &name, const std::string &deviceName, const Camera &camera, bool dynamic, const Object &object, const json &config)
+    : Entity(deviceName, camera, 0, 0, name, dynamic, object),
+      _model(deviceName, dynamic_cast<Vkbase::Sampler *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
              config)
 {
-    init();
+    entityInit();
+    delegatorInit();
 }
 
 ModelEntity::~ModelEntity() {}
 
-void ModelEntity::init()
+void ModelEntity::entityInit()
 {
     _model.createNewInstance("1", {0, 0.0f});
     if (dynamic())
@@ -28,8 +29,8 @@ void ModelEntity::init()
             for (uint32_t i = 0; i < mesh->indices().size(); i += 3)
             {
                 CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createDynamicObject<CollisionTriangle>(
-                    object().position(),
-                    glm::mat3(mesh->vertices()[mesh->indices()[i]].pos, mesh->vertices()[mesh->indices()[i + 1]].pos, mesh->vertices()[mesh->indices()[i + 2]].pos));
+                    object().position(), glm::mat3(mesh->vertices()[mesh->indices()[i]].pos, mesh->vertices()[mesh->indices()[i + 1]].pos,
+                                                   mesh->vertices()[mesh->indices()[i + 2]].pos));
                 pCollisionObject->setEntity(this);
                 addCollisionObject(pCollisionObject);
             }
@@ -40,8 +41,8 @@ void ModelEntity::init()
             for (uint32_t i = 0; i < mesh->indices().size(); i += 3)
             {
                 CollisionObjectDelegator *pCollisionObject = CollisionSystem::instance().createStaticObject<CollisionTriangle>(
-                    object().position(),
-                    glm::mat3(mesh->vertices()[mesh->indices()[i]].pos, mesh->vertices()[mesh->indices()[i + 1]].pos, mesh->vertices()[mesh->indices()[i + 2]].pos));
+                    object().position(), glm::mat3(mesh->vertices()[mesh->indices()[i]].pos, mesh->vertices()[mesh->indices()[i + 1]].pos,
+                                                   mesh->vertices()[mesh->indices()[i + 2]].pos));
                 pCollisionObject->setEntity(this);
                 addCollisionObject(pCollisionObject);
             }
@@ -51,16 +52,20 @@ void ModelEntity::init()
 
 void ModelEntity::objectExtraUpdate() { _model.instance("1").object().setPosition(object().position()); }
 
-void ModelEntity::draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &, const std::string &) const
+void ModelEntity::onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &) const
 {
     _model.draw(frameIndex, pCommandBuffer, 0);
 }
 
-void ModelEntity::updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &, const std::string &) const
+void ModelEntity::onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &) const
 {
     const Modelbase::ModelInstance &instance = _model.instance("1");
-    instance.updateUniformBuffers(index, camera);
+    instance.updateUniformBuffers(frameIndex, camera());
 }
+
+void ModelEntity::addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) {}
+
+void ModelEntity::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) {}
 
 std::vector<vk::DescriptorSetLayout> ModelEntity::descriptorSetLayouts() { return _model.descriptorSetLayout("1", "g_buffer"); }
 

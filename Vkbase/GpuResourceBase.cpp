@@ -8,9 +8,9 @@ GpuResourceBase::GpuResourceBase(ResourceType type, const std::string &name, Dev
 GpuResourceBase::~GpuResourceBase()
 {
     for (auto *pExtraSuperresource : _pExtraSuperresources)
-        pExtraSuperresource->removeExtraSubresource(this);
+        pExtraSuperresource->_pExtraSubresources.erase(this);
     for (auto *pExtraSubresource : _pExtraSubresources)
-        removeExtraSubresource(pExtraSubresource);
+        pExtraSubresource->_pExtraSuperresources.erase(this);
 
     if (!_pendingDestroy)
         deferDestroy();

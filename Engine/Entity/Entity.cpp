@@ -6,7 +6,9 @@
 #include "Motion/Motion.h"
 #include <iostream>
 
-Entity::Entity(const std::string &name, bool dynamic, const Object &object) : _name(name), _object(object), _dynamic(dynamic)
+Entity::Entity(const std::string &deviceName, const Camera &camera, uint32_t flightFrameCount, vk::DeviceSize uboSize, const std::string &name, bool dynamic,
+               const Object &object)
+    : RenderObjectDelegator(deviceName, camera, flightFrameCount, uboSize), _name(name), _object(object), _dynamic(dynamic)
 {
     if (_pEntities.count(name))
         throw std::runtime_error("The Entity name " + name + " already exist.");
@@ -124,12 +126,10 @@ void Entity::eraseMotion(const std::string &name)
     delete _pMotions.extract(name).mapped();
 }
 
-void Entity::drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index, const std::string &pipelineName,
-                          const std::string &UBOName, const std::string &setsName)
+void Entity::drawEntities(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args)
 {
     for (auto &entity : _pEntities)
     {
-        entity.second->updateUBO(camera, index, mat, UBOName);
-        entity.second->draw(pCommandBuffer, index, pipelineName, setsName);
+        entity.second->draw(pCommandBuffer, frameIndex, args);
     }
 }

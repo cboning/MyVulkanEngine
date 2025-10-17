@@ -8,7 +8,7 @@
 #include <unordered_set>
 
 #include "../Vkbase/ResourcesDelegator.h"
-#include "../Vkbase/Vkbase.h"
+#include "../Vkbase/Mesh.h"
 
 #include "../Object/Object.h"
 #include "ModelData.h"
@@ -18,7 +18,6 @@ using json = nlohmann::json;
 
 namespace Modelbase
 {
-template <typename T> class Mesh;
 class Animation;
 class ModelInstance;
 
@@ -41,7 +40,7 @@ private:
 
     std::string _fileDirectory;
 
-    std::vector<std::unique_ptr<Mesh<ModelData::Vertex>>> _pMeshes;
+    std::vector<std::unique_ptr<Vkbase::Mesh<ModelData::Vertex>>> _pMeshes;
     std::vector<std::string> _textureFiles;
 
     ModelData::AssimpNodeData _rootNode; // 更新动画要用
@@ -102,6 +101,6 @@ public:
 
     static const std::unordered_set<Model *> &models();
 
-    const std::vector<std::unique_ptr<Mesh<ModelData::Vertex>>> &meshes() const;
+    const std::vector<std::unique_ptr<Vkbase::Mesh<ModelData::Vertex>>> &meshes() const;
 };
 }; // namespace Modelbase

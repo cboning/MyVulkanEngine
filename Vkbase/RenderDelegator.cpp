@@ -55,7 +55,6 @@ void RenderDelegator::createSyncObjects()
     _renderFinishSemaphores.resize(_maxFlightCount);
 
     vk::SemaphoreCreateInfo semaphoreCreateInfo{};
-    vk::FenceCreateInfo fenceCreateInfo{vk::FenceCreateFlagBits::eSignaled};
 
     const auto &device = _device.device();
 

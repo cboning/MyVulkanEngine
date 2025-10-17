@@ -20,8 +20,8 @@ private:
     const CommandPool &_pool;
     vk::CommandBuffer _commandBuffer;
     std::unordered_set<uint32_t *> _pCounters;
-    vk::Fence _fence;
     const bool _oneTimeSubmit = false;
+    vk::Fence _fence;
     bool _inRecording = false;
     Pipeline *_pPipeline = nullptr;
 

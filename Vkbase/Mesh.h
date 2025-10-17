@@ -1,9 +1,8 @@
 #pragma once
 
 #include "../Vkbase/Vkbase.h"
-#include "ModelData.h"
 
-namespace Modelbase
+namespace Vkbase
 {
 template <typename T> class Mesh : public Vkbase::ResourcesDelegator
 {

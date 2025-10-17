@@ -110,7 +110,7 @@ void CommandBuffer::bindDescriptorSets(uint32_t firstSet, const std::vector<std:
         insertCounters(pDescriptorSet.first->counters());
     }
 
-    _commandBuffer.bindDescriptorSets(_pPipeline->pipelineBindPoint(), _pPipeline->layout(), 0, descriptorSets, dynamicOffsets);
+    _commandBuffer.bindDescriptorSets(_pPipeline->pipelineBindPoint(), _pPipeline->layout(), firstSet, descriptorSets, dynamicOffsets);
 }
 
 void CommandBuffer::bindVertexBuffers(uint32_t firstBinding, const vk::ArrayProxy<Buffer *> &buffers, const vk::ArrayProxy<const vk::DeviceSize> &offsets)
@@ -123,7 +123,7 @@ void CommandBuffer::bindVertexBuffers(uint32_t firstBinding, const vk::ArrayProx
         insertCounters(pBuffer->counters());
     }
 
-    _commandBuffer.bindVertexBuffers(0, vkBuffers, {0});
+    _commandBuffer.bindVertexBuffers(firstBinding, vkBuffers, offsets);
 }
 
 void CommandBuffer::bindIndexBuffer(Buffer *pBuffer, vk::DeviceSize offset, vk::IndexType indexType)

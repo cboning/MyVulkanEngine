@@ -1,6 +1,6 @@
 #pragma once
 #include "../../Object/Object.h"
-#include "../Vkbase/ResourcesDelegator.h"
+#include "../Vkbase/RenderObjectDelegator.h"
 #include <glm/glm.hpp>
 #include <json.hpp>
 #include <string>
@@ -17,13 +17,13 @@ namespace Vkbase
 {
 class Buffer;
 class CommandBuffer;
-}
+} // namespace Vkbase
 
 class Motion;
 class Camera;
 class CollisionObjectDelegator;
 
-class Entity : public Vkbase::ResourcesDelegator
+class Entity : public Vkbase::RenderObjectDelegator
 {
 private:
     struct Deleter
@@ -34,7 +34,7 @@ private:
     const std::string _name;
     Object _object;
     const bool _dynamic;
-    
+
     glm::vec3 _velocity = glm::vec3(0.0f);
     glm::vec3 _tempVelocity = glm::vec3(0.0f);
     glm::vec3 _acceleration = glm::vec3(0.0f);
@@ -47,10 +47,11 @@ private:
     void updatePosition(float deltaTime);
     void update(float deltaTime);
 
-    virtual void init() = 0;
+    virtual void entityInit() = 0;
 
 protected:
-    Entity(const std::string &name, bool dynamic = true, const Object &object = Object());
+    Entity(const std::string &deviceName, const Camera &camera, uint32_t flightFrameCount, vk::DeviceSize uboSize, const std::string &name, bool dynamic = true,
+           const Object &object = Object());
     virtual ~Entity();
     CollisionObjectDelegator *collisionObject();
     CollisionObjectDelegator *collisionObject(uint32_t index);
@@ -61,7 +62,6 @@ protected:
 
 public:
     bool dynamic();
-    virtual void draw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::string &pipelineName, const std::string &uboName) const = 0;
     Object &object();
     const Object &object() const;
     const CollisionObjectDelegator *collisionObject() const;
@@ -85,8 +85,5 @@ public:
     Motion *motion(const std::string &name);
     void eraseMotion(const std::string &name);
 
-    virtual void updateUBO(const Camera &camera, uint32_t index, const glm::mat4 &mat, const std::string &uboName) const = 0;
-
-    static void drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const Camera &camera, const glm::mat4 &mat, uint32_t index,
-                             const std::string &pipelineName, const std::string &UBOName, const std::string &setsName);
+    static void drawEntities(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args);
 };

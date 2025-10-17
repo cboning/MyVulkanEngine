@@ -103,9 +103,6 @@
         "xutility": "cpp",
         "future": "cpp"
     },
-    "cmake.configureSettings": {
-        "CMAKE_C_COMPILER": "clang",
-        "CMAKE_CXX_COMPILER": "clang++"
-    },
+    "cmake.generator": "Ninja",
     "cmake.ignoreCMakeListsMissing": true
 }

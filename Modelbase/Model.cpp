@@ -51,7 +51,7 @@ void Model::createDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
 
 void Model::draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, uint32_t instanceIndex) const
 {
-    for (const std::unique_ptr<Mesh<ModelData::Vertex>> &mesh : _pMeshes)
+    for (const std::unique_ptr<Vkbase::Mesh<ModelData::Vertex>> &mesh : _pMeshes)
     {
         std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets;
         descriptorSets.push_back({&_pInstances[instanceIndex]->descriptorSets(), {"UBO", currentFrame}});
@@ -239,6 +239,6 @@ void Model::removeInstance(const std::string &instanceName) { _instanceIndexMap.
 
 const std::unordered_set<Model *> &Model::models() { return _models; }
 
-const std::vector<std::unique_ptr<Mesh<ModelData::Vertex>>> &Model::meshes() const { return _pMeshes; }
+const std::vector<std::unique_ptr<Vkbase::Mesh<ModelData::Vertex>>> &Model::meshes() const { return _pMeshes; }
 
 } // namespace Modelbase
