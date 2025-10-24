@@ -1,5 +1,5 @@
 #pragma once
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 #include <json.hpp>
 #include <unordered_map>
 #include <utility>
@@ -13,9 +13,9 @@ namespace Vkbase
 class Device;
 class Image;
 class Buffer;
-class DescriptorSets : public GpuResourceBase
+class DescriptorSets : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
     friend class CommandBuffer;
 
 private:

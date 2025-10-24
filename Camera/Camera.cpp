@@ -104,7 +104,7 @@ void Camera::updatePerspective()
         return;
     }
     _perspective = glm::perspective(glm::radians(_fov), _frameSize.x / _frameSize.y, _near, _far);
-    _perspective[1][1] *= -1; // Vulkan Y 翻转
+    // _perspective[1][1] *= -1; // Vulkan Y 翻转
 }
 
 void Camera::setFrameSize(glm::vec2 size) { _frameSize = size; }

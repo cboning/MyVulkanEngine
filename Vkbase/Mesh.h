@@ -4,7 +4,7 @@
 
 namespace Vkbase
 {
-template <typename T> class Mesh : public Vkbase::ResourcesDelegator
+template <typename T> class Mesh : public Vkbase::VkResourcesDelegator
 {
 private:
     const Vkbase::Device &_device;
@@ -21,7 +21,7 @@ private:
 public:
     Mesh(const std::string &name, const std::string &deviceName, const std::vector<T> &vertices, const std::vector<uint16_t> &indices,
          const std::vector<std::vector<std::string>> &textureNames, const std::string &prefix = "");
-    void draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
+    void draw(Vkbase::CommandBuffer *pCommandBuffer,
               const std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &pDescriptorSets) const;
     const std::vector<std::vector<std::string>> &textureNames() const;
     const std::string &name() const;
@@ -32,7 +32,7 @@ public:
 template <typename T>
 Mesh<T>::Mesh(const std::string &name, const std::string &deviceName, const std::vector<T> &vertices, const std::vector<uint16_t> &indices,
               const std::vector<std::vector<std::string>> &textureNames, const std::string &prefix)
-    : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : _device(*dynamic_cast<const Vkbase::Device *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _vertices(vertices), _indices(indices), _textureNames(textureNames),
       _vertexBuffer(*(createResource<Vkbase::Buffer>(getNewBufferWithName((prefix.empty() ? "" : prefix + "_") + name + "_Vertex"), deviceName,
                                                      _vertices.size() * sizeof(_vertices[0]), vk::BufferUsageFlagBits::eVertexBuffer, _vertices.data()))),
@@ -43,10 +43,9 @@ Mesh<T>::Mesh(const std::string &name, const std::string &deviceName, const std:
 }
 
 template <typename T>
-void Mesh<T>::draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
+void Mesh<T>::draw(Vkbase::CommandBuffer *pCommandBuffer,
                    const std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &pDescriptorSets) const
 {
-    pCommandBuffer->bindPipeline(&pipeline);
     pCommandBuffer->bindVertexBuffers(0, &_vertexBuffer, {0});
     pCommandBuffer->bindIndexBuffer(&_indexBuffer, 0, vk::IndexType::eUint16);
     pCommandBuffer->bindDescriptorSets(0, pDescriptorSets, {});
@@ -58,12 +57,12 @@ template <typename T> const std::vector<std::vector<std::string>> &Mesh<T>::text
 template <typename T> const std::string Mesh<T>::getNewBufferWithName(std::string name)
 {
     uint32_t count = 0;
-    if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, name))
+    if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Buffer, name))
         return name;
 
     while (true)
     {
-        if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, name + "_" + std::to_string(count)))
+        if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Buffer, name + "_" + std::to_string(count)))
             return name + "_" + std::to_string(count);
         ++count;
     }
@@ -73,4 +72,4 @@ template <typename T> const std::string &Mesh<T>::name() const { return _name; }
 template <typename T> inline const std::vector<T> &Mesh<T>::vertices() const { return _vertices; }
 template <typename T> inline const std::vector<uint16_t> &Mesh<T>::indices() const { return _indices; }
 
-}; // namespace Modelbase
+}; // namespace Vkbase

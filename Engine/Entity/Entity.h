@@ -45,7 +45,7 @@ private:
     void updateCollisionObject();
     void updateVelocity(float deltaTime);
     void updatePosition(float deltaTime);
-    void update(float deltaTime);
+    void updatePhysicalState(float deltaTime);
 
     virtual void entityInit() = 0;
 
@@ -85,5 +85,7 @@ public:
     Motion *motion(const std::string &name);
     void eraseMotion(const std::string &name);
 
-    static void drawEntities(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args);
+    static void drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+                             uint32_t frameIndex);
+    static void updateEntities(uint32_t frameIndex);
 };

@@ -1,13 +1,13 @@
 #pragma once
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 
 namespace Vkbase
 {
 class Device;
 class DescriptorSets;
-class Buffer : public GpuResourceBase
+class Buffer : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
     friend class DescriptorSets;
     friend class Image;
     friend class CommandBuffer;
@@ -17,7 +17,6 @@ private:
     vk::Buffer _buffer;
     vk::DeviceSize _size;
     DescriptorSets *_pDescriptorSets = nullptr;
-
 
     Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData = nullptr);
     ~Buffer() override;

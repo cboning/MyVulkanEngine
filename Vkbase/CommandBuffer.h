@@ -1,7 +1,7 @@
 #pragma once
 #include "CommandPool.h"
-#include "GpuResourceGarbageCollector.h"
-#include "ResourceBase.h"
+#include "VkGpuResourceGarbageCollector.h"
+#include "VkResourceBase.h"
 #include <unordered_set>
 
 namespace Vkbase
@@ -11,9 +11,9 @@ class DescriptorSets;
 class Buffer;
 class RenderPass;
 class Framebuffer;
-class CommandBuffer : public ResourceBase
+class CommandBuffer : public VkResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
 
 private:
     const Device &_device;
@@ -24,8 +24,10 @@ private:
     vk::Fence _fence;
     bool _inRecording = false;
     Pipeline *_pPipeline = nullptr;
+    Buffer *_pIndiceBuffer = nullptr;
+    bool _primary;
 
-    CommandBuffer(const std::string &name, const CommandPool &pool, vk::CommandBuffer handle, bool oneTimeSubmit);
+    CommandBuffer(const std::string &name, const CommandPool &pool, vk::CommandBuffer handle, bool oneTimeSubmit, bool primary);
 
     void cleanCounter();
     void insertCounters(const std::unordered_set<uint32_t *> &pCounters);
@@ -41,6 +43,7 @@ public:
     void reset();
 
     vk::CommandBuffer commandBuffer() const { return _commandBuffer; }
+    const Device &device();
     void bindPipeline(Pipeline *pPipeline);
     void bindDescriptorSets(uint32_t firstSet, const std::vector<std::pair<DescriptorSets *, std::pair<std::string, uint32_t>>> &pDescriptorSets,
                             const vk::ArrayProxy<const uint32_t> &dynamicOffsets);
@@ -48,6 +51,7 @@ public:
 
     void bindIndexBuffer(Buffer *pBuffer, vk::DeviceSize offset, vk::IndexType indexType);
     void beginRenderPass(RenderPass *pRenderPass, Framebuffer *pFramebuffer, vk::RenderPassBeginInfo info, vk::SubpassContents subpassContents);
+    void executeCommands(const std::vector<CommandBuffer *> &pCommandBuffers);
 
     void waitForFence();
 };

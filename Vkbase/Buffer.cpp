@@ -1,13 +1,13 @@
 #include "Buffer.h"
-#include "CommandPool.h"
 #include "CommandBuffer.h"
+#include "CommandPool.h"
 #include "Device.h"
 
 namespace Vkbase
 {
 Buffer::Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData)
-    : GpuResourceBase(Vkbase::ResourceType::Buffer, resourceName,
-                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Buffer, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _size(size)
 {
     if (pData)

@@ -1,12 +1,12 @@
-[
-    {
+{
+    "Normal": {
         "renderPass": {
             "attachments": [
                 {
                     "format": "R16G16B16A16Sfloat",
                     "samples": 1,
                     "loadOp": "Clear",
-                    "storeOp": "DontCare",
+                    "storeOp": "Store",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
@@ -14,73 +14,33 @@
                 },
                 {
                     "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "DontCare",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "DontCare",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "DontCare",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "DontCare",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "DontCare",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "DontCare",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "SWAPCHAIN_FORMAT",
                     "samples": 1,
                     "loadOp": "Clear",
                     "storeOp": "Store",
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
-                    "finalLayout": "PresentSrcKHR"
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
                 },
                 {
                     "format": "DEPTH_FORMAT",
@@ -91,16 +51,6 @@
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
                     "finalLayout": "DepthStencilAttachmentOptimal"
-                },
-                {
-                    "format": "DEPTH_FORMAT",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "Store",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
                 }
             ],
             "attachmentReferences": [
@@ -125,84 +75,6 @@
                 [
                     {
                         "attachment": 4,
-                        "layout": "ColorAttachmentOptimal"
-                    },
-                    {
-                        "attachment": 5,
-                        "layout": "ColorAttachmentOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 6,
-                        "layout": "ColorAttachmentOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 5,
-                        "layout": "ColorAttachmentOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 7,
-                        "layout": "ColorAttachmentOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 0,
-                        "layout": "ShaderReadOnlyOptimal"
-                    },
-                    {
-                        "attachment": 1,
-                        "layout": "ShaderReadOnlyOptimal"
-                    },
-                    {
-                        "attachment": 2,
-                        "layout": "ShaderReadOnlyOptimal"
-                    },
-                    {
-                        "attachment": 3,
-                        "layout": "ShaderReadOnlyOptimal"
-                    },
-                    {
-                        "attachment": 9,
-                        "layout": "ShaderReadOnlyOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 5,
-                        "layout": "ShaderReadOnlyOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 6,
-                        "layout": "ShaderReadOnlyOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 4,
-                        "layout": "ShaderReadOnlyOptimal"
-                    },
-                    {
-                        "attachment": 5,
-                        "layout": "ShaderReadOnlyOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 8,
-                        "layout": "DepthStencilAttachmentOptimal"
-                    }
-                ],
-                [
-                    {
-                        "attachment": 9,
                         "layout": "DepthStencilAttachmentOptimal"
                     }
                 ]
@@ -210,26 +82,7 @@
             "subpasses": [
                 {
                     "colorAttachments": 0,
-                    "depthStencilAttachment": 9
-                },
-                {
-                    "depthStencilAttachment": 10
-                },
-                {
-                    "colorAttachments": 1,
-                    "inputAttachments": 5
-                },
-                {
-                    "colorAttachments": 2,
-                    "inputAttachments": 6
-                },
-                {
-                    "colorAttachments": 3,
-                    "inputAttachments": 7
-                },
-                {
-                    "colorAttachments": 4,
-                    "inputAttachments": 8
+                    "depthStencilAttachment": 1
                 }
             ],
             "subpassDependencies": [
@@ -237,7 +90,7 @@
                     "srcSubpass": -1,
                     "dstSubpass": 0,
                     "srcStageMask": [
-                        "FragmentShader"
+                        "BottomOfPipe"
                     ],
                     "srcAccessMask": [
                         "None"
@@ -246,44 +99,13 @@
                         "ColorAttachmentOutput"
                     ],
                     "dstAccessMask": [
+                        "ColorAttachmentRead",
                         "ColorAttachmentWrite"
-                    ]
-                },
-                {
-                    "srcSubpass": 1,
-                    "dstSubpass": 2,
-                    "srcStageMask": [
-                        "LateFragmentTests"
-                    ],
-                    "srcAccessMask": [
-                        "DepthStencilAttachmentWrite"
-                    ],
-                    "dstStageMask": [
-                        "FragmentShader"
-                    ],
-                    "dstAccessMask": [
-                        "ShaderRead"
                     ]
                 },
                 {
                     "srcSubpass": 0,
-                    "dstSubpass": 2,
-                    "srcStageMask": [
-                        "ColorAttachmentOutput"
-                    ],
-                    "srcAccessMask": [
-                        "ColorAttachmentWrite"
-                    ],
-                    "dstStageMask": [
-                        "FragmentShader"
-                    ],
-                    "dstAccessMask": [
-                        "InputAttachmentRead"
-                    ]
-                },
-                {
-                    "srcSubpass": 2,
-                    "dstSubpass": 3,
+                    "dstSubpass": -1,
                     "srcStageMask": [
                         "ColorAttachmentOutput"
                     ],
@@ -295,38 +117,6 @@
                     ],
                     "dstAccessMask": [
                         "ShaderRead"
-                    ]
-                },
-                {
-                    "srcSubpass": 3,
-                    "dstSubpass": 4,
-                    "srcStageMask": [
-                        "ColorAttachmentOutput"
-                    ],
-                    "srcAccessMask": [
-                        "ColorAttachmentWrite"
-                    ],
-                    "dstStageMask": [
-                        "FragmentShader"
-                    ],
-                    "dstAccessMask": [
-                        "ShaderRead"
-                    ]
-                },
-                {
-                    "srcSubpass": 4,
-                    "dstSubpass": 5,
-                    "srcStageMask": [
-                        "ColorAttachmentOutput"
-                    ],
-                    "srcAccessMask": [
-                        "ColorAttachmentWrite"
-                    ],
-                    "dstStageMask": [
-                        "FragmentShader"
-                    ],
-                    "dstAccessMask": [
-                        "InputAttachmentRead"
                     ]
                 }
             ]
@@ -344,7 +134,7 @@
                         "viewType": "2D",
                         "usage": [
                             "ColorAttachment",
-                            "InputAttachment"
+                            "Sampled"
                         ]
                     }
                 },
@@ -358,7 +148,7 @@
                         "viewType": "2D",
                         "usage": [
                             "ColorAttachment",
-                            "InputAttachment"
+                            "Sampled"
                         ]
                     }
                 },
@@ -372,7 +162,7 @@
                         "viewType": "2D",
                         "usage": [
                             "ColorAttachment",
-                            "InputAttachment"
+                            "Sampled"
                         ]
                     }
                 },
@@ -386,57 +176,9 @@
                         "viewType": "2D",
                         "usage": [
                             "ColorAttachment",
-                            "InputAttachment"
+                            "Sampled"
                         ]
                     }
-                },
-                {
-                    "type": "create",
-                    "name": "OriginalColor",
-                    "imageConfig": {
-                        "type": "NoData",
-                        "format": "R16G16B16A16Sfloat",
-                        "imageType": "2D",
-                        "viewType": "2D",
-                        "usage": [
-                            "ColorAttachment",
-                            "InputAttachment"
-                        ]
-                    }
-                },
-                {
-                    "type": "create",
-                    "name": "BlurColor1",
-                    "imageConfig": {
-                        "type": "NoData",
-                        "format": "R16G16B16A16Sfloat",
-                        "imageType": "2D",
-                        "viewType": "2D",
-                        "usage": [
-                            "ColorAttachment",
-                            "Sampled",
-                            "InputAttachment"
-                        ]
-                    }
-                },
-                {
-                    "type": "create",
-                    "name": "BlurColor2",
-                    "imageConfig": {
-                        "type": "NoData",
-                        "format": "R16G16B16A16Sfloat",
-                        "imageType": "2D",
-                        "viewType": "2D",
-                        "usage": [
-                            "ColorAttachment",
-                            "Sampled",
-                            "InputAttachment"
-                        ]
-                    }
-                },
-                {
-                    "type": "use",
-                    "name": "mainWindow"
                 },
                 {
                     "type": "create",
@@ -450,493 +192,14 @@
                             "DepthStencilAttachment"
                         ]
                     }
-                },
-                {
-                    "type": "create",
-                    "name": "Shadow",
-                    "imageConfig": {
-                        "type": "NoData",
-                        "format": "DEPTH_FORMAT",
-                        "imageType": "2D",
-                        "viewType": "2D",
-                        "usage": [
-                            "DepthStencilAttachment",
-                            "Sampled",
-                            "InputAttachment"
-                        ]
-                    }
                 }
             ]
         },
         "descriptorSets": {
-            "sets": [
-                {
-                    "name": "G_BufferInputAttachments",
-                    "layoutConfig": [
-                        {
-                            "descriptorType": "InputAttachment",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        },
-                        {
-                            "descriptorType": "InputAttachment",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        },
-                        {
-                            "descriptorType": "InputAttachment",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        },
-                        {
-                            "descriptorType": "InputAttachment",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        },
-                        {
-                            "descriptorType": "CombinedImageSampler",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        }
-                    ],
-                    "count": "swapchainImageCount",
-                    "swapchainName": "mainWindow"
-                },
-                {
-                    "name": "BlurSampler1",
-                    "layoutConfig": [
-                        {
-                            "descriptorType": "CombinedImageSampler",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        }
-                    ],
-                    "count": "swapchainImageCount",
-                    "swapchainName": "mainWindow"
-                },
-                {
-                    "name": "BlurSampler2",
-                    "layoutConfig": [
-                        {
-                            "descriptorType": "CombinedImageSampler",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        }
-                    ],
-                    "count": "swapchainImageCount",
-                    "swapchainName": "mainWindow"
-                },
-                {
-                    "name": "BlendInputAttachments",
-                    "layoutConfig": [
-                        {
-                            "descriptorType": "InputAttachment",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        },
-                        {
-                            "descriptorType": "InputAttachment",
-                            "shaderStageFlags": [
-                                "Fragment"
-                            ]
-                        }
-                    ],
-                    "count": "swapchainImageCount",
-                    "swapchainName": "mainWindow"
-                }
-            ],
-            "write": [
-                {
-                    "name": "BlurSampler1",
-                    "type": "Framebuffer",
-                    "binding": 0,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "BlurColor1",
-                            "imageLayout": "ShaderReadOnlyOptimal",
-                            "samplerName": "Sampler"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "BlurSampler2",
-                    "type": "Framebuffer",
-                    "binding": 0,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "BlurColor2",
-                            "imageLayout": "ShaderReadOnlyOptimal",
-                            "samplerName": "Sampler"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "G_BufferInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 0,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "Position",
-                            "imageLayout": "ShaderReadOnlyOptimal"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "G_BufferInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 1,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "Normal",
-                            "imageLayout": "ShaderReadOnlyOptimal"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "G_BufferInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 2,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "AlbedoSpec",
-                            "imageLayout": "ShaderReadOnlyOptimal"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "G_BufferInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 3,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "LightSpacPos",
-                            "imageLayout": "ShaderReadOnlyOptimal"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "G_BufferInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 4,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "Shadow",
-                            "imageLayout": "ShaderReadOnlyOptimal",
-                            "samplerName": "Sampler"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "BlendInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 0,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "OriginalColor",
-                            "imageLayout": "ShaderReadOnlyOptimal"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                },
-                {
-                    "name": "BlendInputAttachments",
-                    "type": "Framebuffer",
-                    "binding": 1,
-                    "count": "auto",
-                    "detail": {
-                        "imageInfo": {
-                            "imageName": "BlurColor1",
-                            "imageLayout": "ShaderReadOnlyOptimal"
-                        },
-                        "swapchainName": "mainWindow"
-                    }
-                }
-            ]
+            "sets": [],
+            "write": []
         },
         "pipelines": [
-            {
-                "name": "blend",
-                "renderInfo": {
-                    "inputAssemblyState": {
-                        "topology": "TriangleList"
-                    },
-                    "rasterizationState": {
-                        "cullMode": "None",
-                        "lineWidth": 1.0
-                    },
-                    "dynamicStatus": [
-                        "Viewport",
-                        "Scissor"
-                    ],
-                    "depthStencilState": {
-                        "depthTestEnable": true,
-                        "depthWriteEnable": true,
-                        "depthCompareOp": "Less",
-                        "minDepthBounds": 0.0,
-                        "maxDepthBounds": 1.0
-                    },
-                    "subpass": 5,
-                    "colorBlendState": {
-                        "logicOp": "Copy",
-                        "blendAttachments": [
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "shaderInfos": [
-                    {
-                        "filename": "shader/bin/blendVert.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Vertex"
-                    },
-                    {
-                        "filename": "shader/bin/blendFrag.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Fragment"
-                    }
-                ]
-            },
-            {
-                "name": "blur_h",
-                "renderInfo": {
-                    "inputAssemblyState": {
-                        "topology": "TriangleList"
-                    },
-                    "rasterizationState": {
-                        "cullMode": "None",
-                        "lineWidth": 1.0
-                    },
-                    "dynamicStatus": [
-                        "Viewport",
-                        "Scissor"
-                    ],
-                    "depthStencilState": {
-                        "depthTestEnable": true,
-                        "depthWriteEnable": true,
-                        "depthCompareOp": "Less",
-                        "minDepthBounds": 0.0,
-                        "maxDepthBounds": 1.0
-                    },
-                    "subpass": 3,
-                    "colorBlendState": {
-                        "logicOp": "Copy",
-                        "blendAttachments": [
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "shaderInfos": [
-                    {
-                        "filename": "shader/bin/blur_hVert.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Vertex"
-                    },
-                    {
-                        "filename": "shader/bin/blur_hFrag.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Fragment"
-                    }
-                ]
-            },
-            {
-                "name": "blur_v",
-                "renderInfo": {
-                    "inputAssemblyState": {
-                        "topology": "TriangleList"
-                    },
-                    "rasterizationState": {
-                        "cullMode": "None",
-                        "lineWidth": 1.0
-                    },
-                    "dynamicStatus": [
-                        "Viewport",
-                        "Scissor"
-                    ],
-                    "depthStencilState": {
-                        "depthTestEnable": true,
-                        "depthWriteEnable": true,
-                        "depthCompareOp": "Less",
-                        "minDepthBounds": 0.0,
-                        "maxDepthBounds": 1.0
-                    },
-                    "subpass": 4,
-                    "colorBlendState": {
-                        "logicOp": "Copy",
-                        "blendAttachments": [
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "shaderInfos": [
-                    {
-                        "filename": "shader/bin/blur_vVert.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Vertex"
-                    },
-                    {
-                        "filename": "shader/bin/blur_vFrag.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Fragment"
-                    }
-                ]
-            },
-            {
-                "name": "text",
-                "renderInfo": {
-                    "inputAssemblyState": {
-                        "topology": "TriangleList"
-                    },
-                    "rasterizationState": {
-                        "cullMode": "None",
-                        "lineWidth": 1.0
-                    },
-                    "dynamicStatus": [
-                        "Viewport",
-                        "Scissor"
-                    ],
-                    "depthStencilState": {
-                        "depthTestEnable": true,
-                        "depthWriteEnable": true,
-                        "depthCompareOp": "Less",
-                        "minDepthBounds": 0.0,
-                        "maxDepthBounds": 1.0
-                    },
-                    "subpass": 5,
-                    "colorBlendState": {
-                        "logicOp": "Copy",
-                        "blendAttachments": [
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ],
-                                "blendEnable": true,
-                                "srcColorBlendFactor": "SrcAlpha",
-                                "dstColorBlendFactor": "OneMinusSrcAlpha",
-                                "colorBlendOp": "Add",
-                                "srcAlphaBlendFactor": "One",
-                                "dstAlphaBlendFactor": "Zero",
-                                "alphaBlendOp": "Add"
-                            }
-                        ]
-                    }
-                },
-                "shaderInfos": [
-                    {
-                        "filename": "shader/bin/textVert.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Vertex"
-                    },
-                    {
-                        "filename": "shader/bin/textFrag.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Fragment"
-                    }
-                ]
-            },
-            {
-                "name": "light",
-                "renderInfo": {
-                    "inputAssemblyState": {
-                        "topology": "TriangleList"
-                    },
-                    "rasterizationState": {
-                        "cullMode": "None",
-                        "lineWidth": 1.0
-                    },
-                    "dynamicStatus": [
-                        "Viewport",
-                        "Scissor"
-                    ],
-                    "depthStencilState": {
-                        "depthTestEnable": true,
-                        "depthWriteEnable": true,
-                        "depthCompareOp": "Less",
-                        "minDepthBounds": 0.0,
-                        "maxDepthBounds": 1.0
-                    },
-                    "subpass": 2,
-                    "colorBlendState": {
-                        "logicOp": "Copy",
-                        "blendAttachments": [
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ]
-                            },
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ]
-                            }
-                        ]
-                    }
-                },
-                "shaderInfos": [
-                    {
-                        "filename": "shader/bin/baseShaderVert.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Vertex"
-                    },
-                    {
-                        "filename": "shader/bin/baseShaderFrag.spv",
-                        "stageName": "main",
-                        "shaderStageFlags": "Fragment"
-                    }
-                ]
-            },
             {
                 "name": "g_buffer",
                 "renderInfo": {
@@ -1159,7 +422,79 @@
                         "shaderStageFlags": "Fragment"
                     }
                 ]
-            },
+            }
+        ]
+    },
+    "Shadow": {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "DEPTH_FORMAT",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "DepthStencilAttachmentOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "depthStencilAttachment": 0
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentWrite"
+                    ]
+                }
+            ]
+        },
+        "framebuffers": {
+            "count": "auto",
+            "images": [
+                {
+                    "type": "create",
+                    "name": "Shadow",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "DEPTH_FORMAT",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "DepthStencilAttachment",
+                            "Sampled"
+                        ]
+                    }
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [],
+            "write": []
+        },
+        "pipelines": [
             {
                 "name": "GeometryShadow",
                 "renderInfo": {
@@ -1182,7 +517,7 @@
                         "minDepthBounds": 0.0,
                         "maxDepthBounds": 1.0
                     },
-                    "subpass": 1,
+                    "subpass": 0,
                     "colorBlendState": {
                         "logicOp": "Copy",
                         "blendAttachments": []
@@ -1202,5 +537,951 @@
                 ]
             }
         ]
+    },
+    "G_Buffer": {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ColorAttachmentOptimal"
+                    },
+                    {
+                        "attachment": 1,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "colorAttachments": 0
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentWrite"
+                    ]
+                }
+            ]
+        },
+        "framebuffers": {
+            "count": "auto",
+            "images": [
+                {
+                    "type": "create",
+                    "name": "OriginalColor",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled"
+                        ]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "HighLight",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled"
+                        ]
+                    }
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [
+                {
+                    "name": "G_BufferAttachments",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
+                }
+            ],
+            "write": [
+                {
+                    "name": "G_BufferAttachments",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Position",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "G_BufferAttachments",
+                    "type": "Framebuffer",
+                    "binding": 1,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Normal",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "G_BufferAttachments",
+                    "type": "Framebuffer",
+                    "binding": 2,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "AlbedoSpec",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "G_BufferAttachments",
+                    "type": "Framebuffer",
+                    "binding": 3,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "LightSpacPos",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "G_BufferAttachments",
+                    "type": "Framebuffer",
+                    "binding": 4,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Shadow",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                }
+            ]
+        },
+        "pipelines": [
+            {
+                "name": "light",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "descriptorSetsNames": [
+                    "G_BufferAttachments"
+                ],
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/baseShaderVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/baseShaderFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            }
+        ]
+    },
+    "Bloom": {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "DontCare",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 1,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ],
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ShaderReadOnlyOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "colorAttachments": 0
+                },
+                {
+                    "colorAttachments": 1,
+                    "inputAttachments": 2
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentWrite"
+                    ]
+                },
+                {
+                    "srcSubpass": 0,
+                    "dstSubpass": 1,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "ShaderRead",
+                        "InputAttachmentRead"
+                    ]
+                },
+                {
+                    "srcSubpass": 0,
+                    "dstSubpass": -1,
+                    "srcStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "srcAccessMask": [
+                        "ColorAttachmentWrite"
+                    ],
+                    "dstStageMask": [
+                        "FragmentShader"
+                    ],
+                    "dstAccessMask": [
+                        "ShaderRead"
+                    ]
+                }
+            ]
+        },
+        "framebuffers": {
+            "count": "auto",
+            "images": [
+                {
+                    "type": "create",
+                    "name": "BlurColor1",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled"
+                        ]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "BlurOutput",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled"
+                        ]
+                    }
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [
+                {
+                    "name": "HighLight",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
+                },
+                {
+                    "name": "BlurSampler1",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
+                }
+            ],
+            "write": [
+                {
+                    "name": "HighLight",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "HighLight",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "BlurSampler1",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "BlurColor1",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                }
+            ]
+        },
+        "pipelines": [
+            {
+                "name": "blur_h",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "descriptorSetsNames": [
+                    "HighLight"
+                ],
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/blur_hVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/blur_hFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "blur_v",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 1,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "descriptorSetsNames": [
+                    "BlurSampler1"
+                ],
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/blur_vVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/blur_vFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            }
+        ]
+    },
+    "Blend": {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "colorAttachments": 0
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentWrite"
+                    ]
+                }
+            ]
+        },
+        "framebuffers": {
+            "count": "auto",
+            "images": [
+                {
+                    "type": "create",
+                    "name": "Output",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled"
+                        ]
+                    }
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [
+                {
+                    "name": "Output",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        },
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
+                }
+            ],
+            "write": [
+                {
+                    "name": "Output",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "BlurOutput",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                },
+                {
+                    "name": "Output",
+                    "type": "Framebuffer",
+                    "binding": 1,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "OriginalColor",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                }
+            ]
+        },
+        "pipelines": [
+            {
+                "name": "blend",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "descriptorSetsNames": [
+                    "Output"
+                ],
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/blendVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/blendFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            },
+            {
+                "name": "text",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ],
+                                "blendEnable": true,
+                                "srcColorBlendFactor": "SrcAlpha",
+                                "dstColorBlendFactor": "OneMinusSrcAlpha",
+                                "colorBlendOp": "Add",
+                                "srcAlphaBlendFactor": "One",
+                                "dstAlphaBlendFactor": "Zero",
+                                "alphaBlendOp": "Add"
+                            }
+                        ]
+                    }
+                },
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/textVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/textFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            }
+        ]
+    },
+    "Present": {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "SWAPCHAIN_FORMAT",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "PresentSrcKHR"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "colorAttachments": 0
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentWrite"
+                    ]
+                }
+            ]
+        },
+        "framebuffers": {
+            "count": "auto",
+            "images": [
+                {
+                    "type": "use",
+                    "name": "mainWindow"
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [
+                {
+                    "name": "FinalPresent",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
+                }
+            ],
+            "write": [
+                {
+                    "name": "FinalPresent",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "Output",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                }
+            ]
+        },
+        "pipelines": [
+            {
+                "name": "present",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "descriptorSetsNames": [
+                    "FinalPresent"
+                ],
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/presentVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/presentFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            }
+        ]
     }
-]
+}

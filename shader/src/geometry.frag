@@ -12,7 +12,7 @@ layout(location = 3) out vec4 gLightSpacPos;
 
 void main()
 {
-    gPosition = vec4(fragPos, 1.0f);
+    gPosition = vec4(1.0f);
     gNormal = vec4(normal, 1.0f);
     gAlbedoSpec.rgb = color;
     gAlbedoSpec.a = 1.0f;

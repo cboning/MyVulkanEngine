@@ -1,0 +1,64 @@
+[
+    [
+        {
+            "renderPassName": "Normal",
+            "pipelineNames": [
+                [
+                    "g_buffer",
+                    "GeometryPipeline",
+                    "GeometryOutlinePipeline"
+                ]
+            ],
+            "attachmentCount": 5
+        },
+        {
+            "renderPassName": "Shadow",
+            "pipelineNames": [
+                [
+                    "GeometryShadow"
+                ]
+            ],
+            "attachmentCount": 1
+        },
+        {
+            "renderPassName": "G_Buffer",
+            "pipelineNames": [
+                [
+                    "light"
+                ]
+            ],
+            "attachmentCount": 2
+        },
+        {
+            "renderPassName": "Bloom",
+            "pipelineNames": [
+                [
+                    "blur_h"
+                ],
+                [
+                    "blur_v"
+                ]
+            ],
+            "attachmentCount": 2
+        },
+        {
+            "renderPassName": "Blend",
+            "pipelineNames": [
+                [
+                    "blend",
+                    "text"
+                ]
+            ],
+            "attachmentCount": 1
+        },
+        {
+            "renderPassName": "Present",
+            "pipelineNames": [
+                [
+                    "present"
+                ]
+            ],
+            "attachmentCount": 1
+        }
+    ]
+]

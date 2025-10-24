@@ -1,18 +1,18 @@
 #pragma once
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 
 namespace Vkbase
 {
 class Image;
 class RenderPass;
 class Device;
-class Framebuffer : public GpuResourceBase
+class Framebuffer : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
     friend class CommandBuffer;
 
 public:
-
+    const vk::Extent2D &extent() const;
 private:
     Framebuffer(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName,
                 const std::vector<std::string> &attachmentNames, uint32_t width, uint32_t height);
@@ -20,5 +20,6 @@ private:
     vk::Framebuffer _framebuffer;
     const RenderPass &_renderPass;
     const vk::Framebuffer &framebuffer() const;
+    vk::Extent2D _extent;
 };
 } // namespace Vkbase

@@ -1,8 +1,8 @@
 #pragma once
 #include <unordered_set>
 
-#include "GpuResourceGarbageCollector.h"
-#include "ResourceBase.h"
+#include "VkGpuResourceGarbageCollector.h"
+#include "VkResourceBase.h"
 
 namespace Vkbase
 {
@@ -15,9 +15,9 @@ struct SurfaceSupportDetails
 class CommandPool;
 enum class CommandPoolQueueType;
 
-class Device : public ResourceBase
+class Device : public VkResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
 
 public:
     struct QueueFamilyIndices
@@ -46,7 +46,7 @@ public:
     const vk::Queue &computeQueue() const;
     const QueueFamilyIndices &queueFamilyIndices() const;
     vk::Format findSupportedFormat(std::vector<vk::Format> formats, vk::ImageTiling tiling, vk::FormatFeatureFlags feature) const;
-    GpuResourceGarbageCollector &gpuResourceGarbageCollector();
+    VkGpuResourceGarbageCollector &gpuResourceGarbageCollector();
 
 private:
     Device(const std::string &resourceName, const vk::SurfaceKHR &surface);
@@ -56,7 +56,7 @@ private:
     vk::Queue _graphicsQueue;
     vk::Queue _presentQueue;
     vk::Queue _computeQueue;
-    GpuResourceGarbageCollector _garbageCollector;
+    VkGpuResourceGarbageCollector _garbageCollector;
     inline static std::vector<const char *> _extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #ifdef __APPLE__
                                                            "VK_KHR_portability_subset"

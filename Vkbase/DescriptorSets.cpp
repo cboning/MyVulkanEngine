@@ -8,8 +8,8 @@
 namespace Vkbase
 {
 DescriptorSets::DescriptorSets(const std::string &resourceName, const std::string &deviceName)
-    : GpuResourceBase(Vkbase::ResourceType::DescriptorSets, resourceName,
-                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))
+    : VkGpuResourceBase(Vkbase::VkResourceType::DescriptorSets, resourceName,
+                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)))
 {
 }
 
@@ -172,7 +172,9 @@ uint32_t DescriptorSets::getCount(const json &config)
         {
             if (!config.count("swapchainName"))
                 throw std::runtime_error("Config Error: There is not swapchainName in DescriptorSets Config.");
-            return dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::ResourceType::Swapchain, config["swapchainName"]))->imageNames().size();
+            return dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::VkResourceType::Swapchain, config["swapchainName"]))
+                ->imageNames()
+                .size();
         }
     }
     else if (countJson.is_number_integer())
@@ -194,7 +196,7 @@ void DescriptorSets::writeSetsWithJson(const json &config)
             {
                 if (std::string(countJson) == "auto")
                     count =
-                        dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::ResourceType::Swapchain, writeConfig["detail"]["swapchainName"]))
+                        dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::VkResourceType::Swapchain, writeConfig["detail"]["swapchainName"]))
                             ->imageNames()
                             .size();
             }
@@ -209,10 +211,10 @@ void DescriptorSets::writeSetsWithJson(const json &config)
             {
                 const json &imageInfoJson = writeConfig["detail"]["imageInfos"][i];
                 imageInfos[i].first.setImageLayout(JsonConfigReader::getImageLayoutWithJson(imageInfoJson["imageLayout"]));
-                imageInfos[i].second = dynamic_cast<Vkbase::Image *>(resourceManager().resource(Vkbase::ResourceType::Image, imageInfoJson["imageName"]));
+                imageInfos[i].second = dynamic_cast<Vkbase::Image *>(resourceManager().resource(Vkbase::VkResourceType::Image, imageInfoJson["imageName"]));
                 if (imageInfoJson.count("samplerName") && imageInfoJson["samplerName"].is_string())
                     imageInfos[i].first.setSampler(
-                        dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::ResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
+                        dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::VkResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
             }
 
             writeSets(writeConfig["name"], writeConfig["binding"], {}, imageInfos, imageInfos.size());
@@ -230,8 +232,8 @@ void DescriptorSets::writeSetsWithJson(const json &config)
                 const json &bufferInfoJson = *pBufferInfoJson;
 
                 Vkbase::Buffer *pBuffer = dynamic_cast<Vkbase::Buffer *>(resourceManager().resource(
-                    Vkbase::ResourceType::Buffer, writeConfig["count"] == "auto" ? std::string(bufferInfoJson["bufferName"]) + "_" + std::to_string(i)
-                                                                                 : std::string(bufferInfoJson["bufferName"])));
+                    Vkbase::VkResourceType::Buffer, writeConfig["count"] == "auto" ? std::string(bufferInfoJson["bufferName"]) + "_" + std::to_string(i)
+                                                                                   : std::string(bufferInfoJson["bufferName"])));
                 if (!pBuffer)
                     throw std::runtime_error("Config Error");
                 bufferInfos[i].first.setOffset(bufferInfoJson["offset"]).setRange(pBuffer->size());
@@ -249,11 +251,11 @@ void DescriptorSets::writeSetsWithJson(const json &config)
                 imageInfos[i].first.setImageLayout(JsonConfigReader::getImageLayoutWithJson(imageInfoJson["imageLayout"]));
 
                 imageInfos[i].second = dynamic_cast<Vkbase::Image *>(resourceManager().resource(
-                    Vkbase::ResourceType::Image, "Framebuffer_Image_" + std::string(imageInfoJson["imageName"]) + std::string("_") + std::to_string(i)));
+                    Vkbase::VkResourceType::Image, "Framebuffer_Image_" + std::string(imageInfoJson["imageName"]) + std::string("_") + std::to_string(i)));
 
                 if (imageInfoJson.count("samplerName") && imageInfoJson["samplerName"].is_string())
                     imageInfos[i].first.setSampler(
-                        dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::ResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
+                        dynamic_cast<Vkbase::Sampler *>(resourceManager().resource(Vkbase::VkResourceType::Sampler, imageInfoJson["samplerName"]))->sampler());
             }
 
             writeSets(writeConfig["name"], writeConfig["binding"], {}, imageInfos, imageInfos.size());

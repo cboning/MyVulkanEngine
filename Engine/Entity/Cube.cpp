@@ -71,39 +71,46 @@ void Cube::entityInit()
 
 void Cube::objectExtraUpdate() {}
 
-void Cube::onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args) const
+void Cube::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
+                  uint32_t frameIndex) const
 {
-    std::string pipelineName = std::any_cast<std::string>(args[0]);
-    std::string setsName = std::any_cast<std::string>(args[1]);
+    std::string setsName;
 
     if (_isOutline && pipelineName != "GeometryOutlinePipeline")
         return;
     if (!_isOutline && pipelineName == "GeometryOutlinePipeline")
         return;
 
-    auto *pPipeline = dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, pipelineName));
+    auto *pDescriptorSets = dynamic_cast<Vkbase::DescriptorSets *>(
+        Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()));
 
-    auto *pDescriptorSets =
-        dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, descriptorSetsName()));
-
-    if (!pPipeline || !pDescriptorSets)
+    if (!pDescriptorSets)
         throw std::runtime_error("[Cube::draw] Missing required resources.");
+    if (pipelineName == "GeometryPipeline")
+        setsName = "UBO";
+    else if (pipelineName == "GeometryShadow")
+        setsName = "ShadowUBO";
+    else
+        return;
 
-    _pCubeMesh->draw(pCommandBuffer, *pPipeline, {{pDescriptorSets, {setsName, frameIndex}}});
+    _pCubeMesh->draw(pCommandBuffer, {{pDescriptorSets, {setsName, frameIndex}}});
 }
 
-void Cube::onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &args) const
+void Cube::onUpdateUBO(uint32_t frameIndex) const
 {
-    CubeUniformBufferData ubo;
-    ubo.color = _color;
-    ubo.lightSpaceMatrix = _lightCamera.perspective() * _lightCamera.view();
-    ubo.model = object().matModel();
-    ubo.proj = camera().perspective();
-    ubo.view = camera().view();
-    if (std::any_cast<bool>(args[2]))
-        frameIndex += flightFrameCount() / 2;
+    for (uint32_t i = 0; i < 2; ++i)
+    {
+        CubeUniformBufferData ubo;
+        ubo.color = _color;
+        ubo.lightSpaceMatrix = _lightCamera.perspective() * _lightCamera.view();
+        ubo.model = object().matModel();
+        ubo.proj = camera().perspective();
+        ubo.view = camera().view();
+        if (i)
+            frameIndex += flightFrameCount() / 2;
 
-    updateUBO(frameIndex, &ubo);
+        updateUBO(frameIndex, &ubo);
+    }
 }
 
 void Cube::addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets)
@@ -120,6 +127,7 @@ void Cube::writeDescriptorSets(Vkbase::DescriptorSets &)
 
 std::vector<vk::DescriptorSetLayout> Cube::descriptorSetLayouts()
 {
-    return {dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, descriptorSetsName()))
-                ->layout("UBO")};
+    return {
+        dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()))
+            ->layout("UBO")};
 }

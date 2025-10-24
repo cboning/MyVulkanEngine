@@ -1,8 +1,8 @@
 #pragma once
 #include "../Vkbase/DescriptorSets.h"
 #include "../Vkbase/Image.h"
-#include "../Vkbase/ResourcesDelegator.h"
 #include "../Vkbase/Sampler.h"
+#include "../Vkbase/VkResourcesDelegator.h"
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <glm/glm.hpp>
@@ -12,22 +12,22 @@ namespace Vkbase
 {
 class Buffer;
 class CommandBuffer;
-}
-
-class Font : public Vkbase::ResourcesDelegator
+} // namespace Vkbase
+class Text;
+class Font : public Vkbase::VkResourcesDelegator
 {
 private:
-    class ProjectiveUniformBuffer : public Vkbase::ResourcesDelegator
+    class projectiveUniformBuffer : public Vkbase::VkResourcesDelegator
     {
     private:
         const std::string deviceName;
         Vkbase::Buffer *_pUBO = nullptr;
 
     public:
-        ProjectiveUniformBuffer(const std::string &deviceName);
+        projectiveUniformBuffer(const std::string &deviceName);
         Vkbase::Buffer *getUBO();
     };
-    struct Character : public Vkbase::ResourcesDelegator
+    struct Character : public Vkbase::VkResourcesDelegator
     {
         Character(const std::string &deviceName, const FT_Face &face, FT_ULong character)
             : imageName(createCharacterImage(deviceName, face, character)), size(glm::ivec2(face->glyph->bitmap.width, face->glyph->bitmap.rows)),
@@ -35,10 +35,7 @@ private:
         {
         }
 
-        Vkbase::Image &image()
-        {
-            return *dynamic_cast<Vkbase::Image *>(Vkbase::Image::resourceManager().resource(Vkbase::ResourceType::Image, imageName));
-        }
+        Vkbase::Image &image() { return *dynamic_cast<Vkbase::Image *>(Vkbase::Image::resourceManager().resource(Vkbase::VkResourceType::Image, imageName)); }
 
         const std::string imageName;
         glm::ivec2 size;
@@ -54,9 +51,9 @@ private:
                 return "Empty";
             }
 
-            return (createResource<Vkbase::Image>(std::string(face->style_name) + std::string((const char *)&character), deviceName, face->glyph->bitmap.width,
-                                                  face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D, vk::ImageViewType::e2D,
-                                                  vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer))
+            return (createResource<Vkbase::Image>(deviceName + std::string(face->style_name) + std::string((const char *)&character), deviceName,
+                                                  face->glyph->bitmap.width, face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D,
+                                                  vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer))
                 ->name();
         }
     };
@@ -70,7 +67,8 @@ private:
     Vkbase::Sampler &_sampler;
     Vkbase::DescriptorSets &_descriptorSets;
     std::unordered_map<FT_ULong, Character> _characters;
-    inline static std::unique_ptr<ProjectiveUniformBuffer> _pProjectiveUniformBuffer = nullptr;
+    std::unordered_set<std::shared_ptr<Text>> _pTexts;
+    inline static std::unique_ptr<projectiveUniformBuffer> _pProjectiveUniformBuffer = nullptr;
 
 public:
     Font(const std::string &deviceName, const std::string &filename);
@@ -78,6 +76,10 @@ public:
     const std::string &deviceName() const;
     const std::unordered_map<FT_ULong, Character> &characters() const;
     std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>> set(FT_ULong character) const;
+
+    std::weak_ptr<Text> createText();
+    std::weak_ptr<Text> createText(const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale);
+    void removeText(std::weak_ptr<Text> &pText);
     const vk::DescriptorSetLayout &layout() const;
     static void addProjectiveDescriptorSet(const std::string &descriptorSetsName);
     static void writeProjectiveDescriptorSet(const std::string &descriptorSetsName, const std::string &deviceName);

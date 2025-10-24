@@ -8,11 +8,9 @@
 #include "../Physical/Collision/CollisionObjectDelegator.h"
 #include "../Physical/Collision/CollisionSystem.h"
 
-Character::Character(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, bool dynamic,
-                     const Object &object, const json &config)
-    : Entity(deviceName, camera, 0, 0, name, dynamic, object),
-      _model("Device", dynamic_cast<Vkbase::Sampler *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Sampler, "Sampler"))->sampler(),
-             config)
+Character::Character(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, Modelbase::Model &model,
+                     bool dynamic, const Object &object)
+    : Entity(deviceName, camera, 0, 0, name, dynamic, object), _model(model)
 {
     entityInit();
     delegatorInit();
@@ -41,16 +39,21 @@ void Character::entityInit()
 
 void Character::objectExtraUpdate() { _model.instance("1").object().setPosition(object().position()); }
 
-void Character::onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &) const
+void Character::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
+                       uint32_t frameIndex) const
 {
-    _model.draw(frameIndex, pCommandBuffer, 0);
+    uint32_t subpass =
+        dynamic_cast<const Vkbase::Pipeline *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Pipeline, pipelineName))->subpass();
+    if (subpass != 0)
+        return;
+    _model.draw(frameIndex, pCommandBuffer, renderPassName, pipelineName, 0);
 }
 
-void Character::onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &) const { _model.instance("1").updateUniformBuffers(frameIndex, camera()); }
+void Character::onUpdateUBO(uint32_t frameIndex) const { _model.instance("1").updateUniformBuffers(frameIndex, camera()); }
 
-void Character::addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) {}
+void Character::addDescriptorSetsConfig(Vkbase::DescriptorSets &) {}
 
-void Character::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) {}
+void Character::writeDescriptorSets(Vkbase::DescriptorSets &) {}
 
 std::vector<vk::DescriptorSetLayout> Character::descriptorSetLayouts() { return _model.descriptorSetLayout("1", "g_buffer"); }
 

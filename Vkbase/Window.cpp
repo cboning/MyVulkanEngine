@@ -8,7 +8,7 @@
 namespace Vkbase
 {
 Window::Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height)
-    : GpuResourceBase(Vkbase::ResourceType::Window, resourceName, *Device::getSuitableDevice(createWindow(title, width, height).surface)), _width(width),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Window, resourceName, *Device::getSuitableDevice(createWindow(title, width, height).surface)), _width(width),
       _height(height), _title(title)
 {
     if (!_pendingInitData.has_value())

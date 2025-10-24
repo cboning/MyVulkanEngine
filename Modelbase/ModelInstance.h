@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../Object/Object.h"
-#include "../Vkbase/ResourcesDelegator.h"
+#include "../Vkbase/VkResourcesDelegator.h"
 #include <string>
 #include <vector>
 
@@ -23,7 +23,7 @@ struct AnimationIndex
     float beginTime = 0.0f;
 };
 
-class ModelInstance : public Vkbase::ResourcesDelegator
+class ModelInstance : public Vkbase::VkResourcesDelegator
 {
     friend class Model;
 
@@ -35,7 +35,7 @@ private:
     Object _object;
     Model &_model;
 
-    ModelInstance(const std::string &descriptorSetsName, const std::string &deviceName, Model &model);
+    ModelInstance(const std::string &deviceName, Model &model);
     ~ModelInstance() = default;
     void updateAnimation(float deltaTick);
 

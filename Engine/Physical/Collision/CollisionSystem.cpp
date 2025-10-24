@@ -7,8 +7,8 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <cmath>
 #include <glm/gtx/quaternion.hpp>
-#include <unordered_set>
 #include <iostream>
+#include <unordered_set>
 
 constexpr float EPSILON = 1e-6f;
 
@@ -18,24 +18,30 @@ CollisionSystem::CollisionSystem()
           [&](const Octree<CollisionObjectDelegatorPtr> &octree, const CollisionObjectDelegatorPtr &collisionObject) -> MipResult
           {
               MipResult result = {false, 0};
-              uint32_t level = octree.level() + 1;
-              float powLevel2 = 1u << level;
+              const uint32_t level = octree.level() + 1;
+              const float invPowLevel2 = 1.0f / static_cast<float>(1u << level);
+
+              // 单位旋转矩阵 & 基础大小
+              const glm::mat3 identityAxes(1.0f);
+              const glm::vec3 half = _size * 0.5f * invPowLevel2;
+
+              // 预定义8个偏移
+              static const glm::vec3 offsets[8] = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
+
+              CollisionBox octreeBoundary;
+              octreeBoundary.setAxes(identityAxes);
+              octreeBoundary.setBoundBoxSize(_size * invPowLevel2);
+
               for (uint8_t pos = 0; pos < 8; ++pos)
               {
-                  uint32_t x, y, z;
-                  x = octree.x() * 2 + ((pos >> 0) & 1);
-                  y = octree.y() * 2 + ((pos >> 1) & 1);
-                  z = octree.z() * 2 + ((pos >> 2) & 1);
+                  const glm::vec3 offset = glm::vec3((octree.x() * 2 + offsets[pos].x), (octree.y() * 2 + offsets[pos].y), (octree.z() * 2 + offsets[pos].z));
 
-                  CollisionBox octreeBoundary;
-                  octreeBoundary.setAxes(glm::toMat3(glm::quat(1.0f, 0.0f, 0.0f, 0.0f)));
-                  octreeBoundary.setBoundBoxSize(_size / (float)powLevel2);
-                  octreeBoundary.setCenter(_pos + _size * glm::vec3(x + 0.5f, y + 0.5f, z + 0.5f) / (float)powLevel2);
-                  bool collisionResult = performCollisionDetection(collisionObject->collisionObject<CollisionObject>(), octreeBoundary).intersect;
-                  if (collisionResult && result.mip)
-                      return {false, 0};
-                  if (collisionResult)
+                  octreeBoundary.setCenter(_pos + (_size * (offset + 0.5f) * invPowLevel2));
+
+                  if (performCollisionDetection(collisionObject->collisionObject<CollisionObject>(), octreeBoundary).intersect)
                   {
+                      if (result.mip)
+                          return {false, 0};
                       result.mip = true;
                       result.pos = pos;
                   }

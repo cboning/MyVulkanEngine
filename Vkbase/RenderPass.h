@@ -1,5 +1,5 @@
 #pragma once
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 #include "json.hpp"
 
 using json = nlohmann::json;
@@ -13,9 +13,9 @@ class DescriptorSets;
 class CommandBuffer;
 struct VertexInfo;
 struct PipelineCreateInfo;
-class RenderPass : public GpuResourceBase
+class RenderPass : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
 
 public:
     uint32_t attachmentCount() const;
@@ -29,7 +29,7 @@ public:
     void createPipelines(const json &config, const std::unordered_map<std::string, VertexInfo> &vertexInfos,
                          const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> &descriptorSetLayouts,
                          const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> &viewportInfos);
-    void begin(CommandBuffer *pCommandBuffer, Framebuffer *pFramebuffer, std::vector<vk::ClearValue> &clearValues, vk::Extent2D &extent);
+    void begin(CommandBuffer *pCommandBuffer, const std::string &framebufferName, const std::vector<vk::ClearValue> &clearValues);
     void end(CommandBuffer *pCommandBuffer);
     DescriptorSets &descriptorSets();
 

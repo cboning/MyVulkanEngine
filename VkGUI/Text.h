@@ -1,22 +1,25 @@
 #pragma once
 #include "../Vkbase/DescriptorSets.h"
 #include "../Vkbase/Pipeline.h"
-#include "../Vkbase/ResourcesDelegator.h"
+#include "../Vkbase/RenderObjectDelegator.h"
 #include "Font.h"
 #include <vulkan/vulkan.hpp>
 
-class Text : public Vkbase::ResourcesDelegator
+namespace Vkbase
 {
+class DescriptorSets;
+}
+
+class Text : public Vkbase::RenderObjectDelegator
+{
+    friend class Font;
+
 public:
-    Text(const Font &font);
-    Text(const Font &font, const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale);
     ~Text() = default;
     void setText(const std::string &text);
     void setColor(const glm::vec3 &color);
     void setPos(const glm::vec2 &pos);
     void setScale(float scale);
-    void draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
-              const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets);
 
     struct Vertex
     {
@@ -42,7 +45,9 @@ public:
     };
 
 private:
-    const Font &_font;
+    Text(Font *font);
+    Text(Font *font, const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale);
+    Font *_pFont;
     std::vector<std::string> _vertexBufferNames;
     std::string _text;
     glm::vec3 _color;
@@ -50,6 +55,11 @@ private:
     float _scale;
 
     void drawCharacter(Vkbase::CommandBuffer *pCommandBuffer, const char character, const std::string &vertexBufferName,
-                       const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets);
+                       const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets) const;
     void updateBuffer();
+    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+                uint32_t frameIndex) const override;
+    void onUpdateUBO(uint32_t frameIndex) const override;
+    void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
+    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
 };

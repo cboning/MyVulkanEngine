@@ -6,24 +6,27 @@
 
 namespace Vkbase
 {
+const vk::Extent2D &Framebuffer::extent() const { return _extent; }
+
 Framebuffer::Framebuffer(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName,
                          const std::vector<std::string> &attachmentNames, uint32_t width, uint32_t height)
-    : GpuResourceBase(Vkbase::ResourceType::Framebuffer, resourceName,
-                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
-      _renderPass(*dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(Vkbase::ResourceType::RenderPass, renderPassName))))
+    : VkGpuResourceBase(Vkbase::VkResourceType::Framebuffer, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
+      _renderPass(*dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(Vkbase::VkResourceType::RenderPass, renderPassName)))),
+      _extent(width, height)
 {
     if (_renderPass.attachmentCount() != attachmentNames.size())
         throw std::runtime_error("The number of image given not enough.");
 
     std::vector<vk::ImageView> attachments;
     attachments.reserve(attachmentNames.size());
-    ResourceManager &manager = resourceManager();
+    VkResourceManager &manager = resourceManager();
 
     const std::vector<vk::Format> &_formats = _renderPass.attachmentFormats();
 
     for (uint32_t i = 0; i < attachmentNames.size(); ++i)
     {
-        const Image &image = *connectTo(dynamic_cast<const Image *>(manager.resource(Vkbase::ResourceType::Image, attachmentNames[i])));
+        const Image &image = *connectTo(dynamic_cast<const Image *>(manager.resource(Vkbase::VkResourceType::Image, attachmentNames[i])));
         if (image.format() != _formats[i])
             throw std::runtime_error("The format of image(s) different with the RenderPass.");
         attachments.push_back(image.view());

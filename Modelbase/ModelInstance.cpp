@@ -7,8 +7,8 @@
 
 namespace Modelbase
 {
-ModelInstance::ModelInstance(const std::string &descriptorSetsName, const std::string &deviceName, Model &model)
-    : _descriptorSets(*(createResource<Vkbase::DescriptorSets>(descriptorSetsName, deviceName))), _model(model) {};
+ModelInstance::ModelInstance(const std::string &deviceName, Model &model)
+    : _descriptorSets(*(createResource<Vkbase::DescriptorSets>("", deviceName))), _model(model) {};
 
 Object &ModelInstance::object() { return _object; }
 const Object &ModelInstance::object() const { return _object; }
@@ -57,7 +57,7 @@ void ModelInstance::updateUniformBuffers(uint32_t currentFrame, const Camera &ca
     uniformData.proj = camera.perspective();
 
     const Vkbase::Buffer &UBO = *dynamic_cast<const Vkbase::Buffer *>(
-        Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Buffer, _descriptorSets.name() + "_UBO_" + std::to_string(currentFrame)));
+        Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Buffer, _descriptorSets.name() + "_UBO_" + std::to_string(currentFrame)));
     UBO.updateBufferData(&uniformData);
 }
 

@@ -7,8 +7,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
-#include "../Vkbase/ResourcesDelegator.h"
 #include "../Vkbase/Mesh.h"
+#include "../Vkbase/VkResourceManager.h"
 
 #include "../Object/Object.h"
 #include "ModelData.h"
@@ -31,7 +31,7 @@ struct ModelUniformData
     glm::mat4 bonesMatrices[MAX_BONES];
 };
 
-class Model : public Vkbase::ResourcesDelegator
+class Model : public Vkbase::VkResourcesDelegator
 {
     friend class ModelLoader;
 
@@ -80,7 +80,7 @@ public:
           const std::unordered_map<std::string, std::string> &meshPipelineNames);
     Model(const std::string &deviceName, const vk::Sampler &sampler, json config);
     ~Model();
-    void draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, uint32_t instanceIndex) const;
+    void draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t instanceIndex) const;
     std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap();
     int &boneCount();
     ModelData::AssimpNodeData *rootNode();

@@ -1,6 +1,6 @@
 #pragma once
 #include "../JsonConfigReader/JsonConfigReader.h"
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 #include "json.hpp"
 #include <iostream>
 
@@ -164,15 +164,16 @@ struct PipelineCreateInfo
     }
 };
 class Device;
-class Pipeline : public GpuResourceBase
+class Pipeline : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
     friend class CommandBuffer;
 
 public:
     static const std::vector<ShaderInfo> getDefaultShader(const std::string &vertexShaderFilename, const std::string &fragmentShaderFilename,
                                                           const std::string &vertexShaderName, const std::string &fragmentShaderName);
     static PipelineRenderInfo getDefaultRenderInfo();
+    uint32_t subpass() const;
 
 private:
     vk::Pipeline _pipeline;
@@ -181,6 +182,7 @@ private:
     std::vector<vk::ShaderModule> _shaderModules;
     vk::PipelineBindPoint _pipelineBindPoint;
     vk::SampleMask _sampleMask[2] = {0xFFFFFFFF, 0xFFFFFFFF};
+    uint32_t _subpass = 0;
     Pipeline(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const PipelineCreateInfo &createInfo,
              bool computePipeline = false);
     ~Pipeline();

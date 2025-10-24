@@ -12,10 +12,12 @@ Model::Model(const std::string &deviceName, const vk::Sampler &sampler, const st
              const std::unordered_map<std::string, std::vector<aiTextureType>> &textureTypeFeatures,
              const std::unordered_map<std::string, std::string> &meshPipelineNames)
     : _deviceName(deviceName), _sampler(sampler), _textureTypeFeatures(textureTypeFeatures), _meshPipelineNames(meshPipelineNames),
-      _descriptorSets(*(createResource<Vkbase::DescriptorSets>(fileName, deviceName)))
+      _descriptorSets(*(createResource<Vkbase::DescriptorSets>("", deviceName)))
 {
+    addKeyResource(&_descriptorSets);
+    _descriptorSets.setLock();
     _models.insert(this);
-    if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Empty"))
+    if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, "Empty"))
         createResource<Vkbase::Image>("Empty", deviceName, 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
                                       vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
@@ -49,20 +51,22 @@ void Model::createDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
     writeDescriptorSets(descriptorSets);
 }
 
-void Model::draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, uint32_t instanceIndex) const
+void Model::draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, const std::string &, const std::string &pipelineName, uint32_t instanceIndex) const
 {
     for (const std::unique_ptr<Vkbase::Mesh<ModelData::Vertex>> &mesh : _pMeshes)
     {
         std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets;
-        descriptorSets.push_back({&_pInstances[instanceIndex]->descriptorSets(), {"UBO", currentFrame}});
         const std::vector<std::vector<std::string>> &textureNames = mesh->textureNames();
+
+        descriptorSets.reserve(textureNames.size() + 1);
+        descriptorSets.push_back({&_pInstances[instanceIndex]->descriptorSets(), {"UBO", currentFrame}});
 
         for (const std::vector<std::string> &textureName : textureNames)
             descriptorSets.push_back({&_descriptorSets, {textureName[0], 0}});
-
-        Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(
-            Vkbase::ResourceType::Pipeline, _meshPipelineNames.count(mesh->name()) ? _meshPipelineNames.at(mesh->name()) : _meshPipelineNames.at("default")));
-        mesh->draw(pCommandBuffer, pipeline, descriptorSets);
+        if (pipelineName != (_meshPipelineNames.count(mesh->name()) ? _meshPipelineNames.at(mesh->name()) : _meshPipelineNames.at("default")))
+            continue;
+        
+        mesh->draw(pCommandBuffer, descriptorSets);
     }
 }
 
@@ -111,7 +115,7 @@ void Model::writeTextureDescriptorSets(const vk::Sampler &sampler) const
     imageInfo[0].first.setSampler(sampler);
     for (const std::string &file : _textureFiles)
     {
-        Vkbase::Image &image = *dynamic_cast<Vkbase::Image *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, file));
+        Vkbase::Image &image = *dynamic_cast<Vkbase::Image *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, file));
         imageInfo[0].first.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
         imageInfo[0].second = &image;
         _descriptorSets.writeSets(file, 0, {}, imageInfo, 1);
@@ -127,6 +131,7 @@ void Model::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
     {
         bufferInfo.second = createResource<Vkbase::Buffer>(descriptorSets.name() + "_UBO_" + std::to_string(count), _deviceName, sizeof(ModelUniformData),
                                                            vk::BufferUsageFlagBits::eUniformBuffer);
+
         ++count;
     }
 
@@ -183,7 +188,7 @@ ModelInstance &Model::createNewInstance(const std::string &instanceName, const A
     }
 
     _instanceIndexMap[instanceName] = _pInstances.size();
-    ModelInstance *pAnimationInstance = new ModelInstance("Model_" + instanceName, _deviceName, *this);
+    ModelInstance *pAnimationInstance = new ModelInstance(_deviceName, *this);
     _pInstances.push_back(pAnimationInstance);
 
     createDescriptorSets(pAnimationInstance->descriptorSets());

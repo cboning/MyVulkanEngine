@@ -24,24 +24,26 @@ layout(location = 1) out vec2 fragTexCoord;
 void main() {
     vec4 position = vec4(0.0f);
     vec3 normal = vec3(0.0f);
-    for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
-    {
-        if (inBoneIds[i] == -1)
-            continue;
-        if (inBoneIds[i] >= MAX_BONES)
-        {
-            position = vec4(inPosition, 1.0f);
-            break;
-        }
-        position += ubo.bonesMatrices[inBoneIds[i]] * vec4(inPosition, 1.0f) * inWeight[i];
-        normal += mat3(ubo.bonesMatrices[inBoneIds[i]]) * inNormal * inWeight[i];
-    }
+    // for (int i = 0; i < MAX_BONE_INFLUENCE; i++)
+    // {
+    //     if (inBoneIds[i] == -1)
+    //         continue;
+    //     if (inBoneIds[i] >= MAX_BONES)
+    //     {
+    //         position = vec4(inPosition, 1.0f);
+    //         break;
+    //     }
+    //     position += ubo.bonesMatrices[inBoneIds[i]] * vec4(inPosition, 1.0f) * inWeight[i];
+    //     normal += mat3(ubo.bonesMatrices[inBoneIds[i]]) * inNormal * inWeight[i];
+    // }
 
-    if (normal == vec3(0.0f))
-    {
+    // if (normal == vec3(0.0f))
+    // {
+    //     position = vec4(inPosition, 1.0f);
+    //     normal = inNormal;
+    // }
         position = vec4(inPosition, 1.0f);
         normal = inNormal;
-    }
     normal = normalize(normal);
 
     gl_Position = ubo.proj * ubo.view * ubo.model * position;

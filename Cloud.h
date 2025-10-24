@@ -1,6 +1,6 @@
 #pragma once
-#include "Vkbase/ResourcesDelegator.h"
-class Cloud : public Vkbase::ResourcesDelegator
+#include "Vkbase/VkResourcesDelegator.h"
+class Cloud : public Vkbase::VkResourcesDelegator
 {
 private:
     void init();

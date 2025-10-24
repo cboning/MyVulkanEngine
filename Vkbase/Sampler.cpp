@@ -4,8 +4,8 @@
 namespace Vkbase
 {
 Sampler::Sampler(const std::string &resourceName, const std::string &deviceName, const vk::SamplerCreateInfo &createInfo)
-    : GpuResourceBase(Vkbase::ResourceType::Sampler, resourceName,
-                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))
+    : VkGpuResourceBase(Vkbase::VkResourceType::Sampler, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)))
 {
     createSampler(createInfo);
 }

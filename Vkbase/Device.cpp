@@ -3,7 +3,7 @@
 
 namespace Vkbase
 {
-Device::Device(const std::string &resourceName, const vk::SurfaceKHR &surface) : ResourceBase(ResourceType::Device, resourceName)
+Device::Device(const std::string &resourceName, const vk::SurfaceKHR &surface) : VkResourceBase(VkResourceType::Device, resourceName)
 {
     _physicalDevice = pickPhysicalDevice(surface);
     _queueFamilyIndices = findQueueFamilies(_physicalDevice, surface);
@@ -130,7 +130,7 @@ SurfaceSupportDetails Device::querySwapChainSupport(const vk::PhysicalDevice &de
 
 void Device::collectAllDelayResource()
 {
-    for (auto iter = resourceManager().resources().at(ResourceType::Device).begin(); iter != resourceManager().resources().at(ResourceType::Device).end();
+    for (auto iter = resourceManager().resources().at(VkResourceType::Device).begin(); iter != resourceManager().resources().at(VkResourceType::Device).end();
          ++iter)
         dynamic_cast<Device *>(iter->second)->gpuResourceGarbageCollector().collect();
 }
@@ -149,8 +149,8 @@ const Device::QueueFamilyIndices &Device::queueFamilyIndices() const { return _q
 
 Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
 {
-    if (resourceManager().resources().count(ResourceType::Device))
-        for (const std::pair<const std::string, Vkbase::ResourceBase *> &device : resourceManager().resources().at(ResourceType::Device))
+    if (resourceManager().resources().count(VkResourceType::Device))
+        for (const std::pair<const std::string, Vkbase::VkResourceBase *> &device : resourceManager().resources().at(VkResourceType::Device))
         {
             Device &targetDevice = *dynamic_cast<Device *>(device.second);
             if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) &&
@@ -172,5 +172,5 @@ vk::Format Device::findSupportedFormat(std::vector<vk::Format> formats, vk::Imag
     }
     return vk::Format::eUndefined;
 }
-GpuResourceGarbageCollector &Device::gpuResourceGarbageCollector() { return _garbageCollector; }
+VkGpuResourceGarbageCollector &Device::gpuResourceGarbageCollector() { return _garbageCollector; }
 } // namespace Vkbase

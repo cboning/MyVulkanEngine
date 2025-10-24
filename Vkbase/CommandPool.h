@@ -1,5 +1,5 @@
 #pragma once
-#include "ResourceBase.h"
+#include "VkResourceBase.h"
 
 namespace Vkbase
 {
@@ -23,9 +23,9 @@ inline const std::string toString(CommandPoolQueueType type)
 }
 class Device;
 class CommandBuffer;
-class CommandPool : public ResourceBase
+class CommandPool : public VkResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
     friend class CommandBuffer;
 
 private:
@@ -42,6 +42,7 @@ private:
 
 public:
     std::vector<CommandBuffer *> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const;
+    std::vector<CommandBuffer *> allocateSecondaryCommandBuffers(uint32_t count) const;
     CommandBuffer *allocateOnceCommandBuffer() const;
     void endOnceCommandBuffer(CommandBuffer *pCommandBuffer) const;
     void freeCommandBuffers(const vk::ArrayProxy<CommandBuffer *> &pCommandBuffers) const;

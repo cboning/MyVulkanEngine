@@ -6,7 +6,7 @@ class Entity;
 class Push : Motion
 {
 private:
-    glm::vec3 _acceleration;
+    glm::vec3 _acceleration = glm::vec3(0.0f);
 
 public:
     Push();

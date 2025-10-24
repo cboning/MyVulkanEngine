@@ -14,7 +14,8 @@ RenderObjectDelegator::RenderObjectDelegator(const std::string &deviceName, cons
 
 void Vkbase::RenderObjectDelegator::delegatorInit()
 {
-    DescriptorSets *pDescriptorSets = dynamic_cast<DescriptorSets *>(ResourceManager::instance().resource(ResourceType::DescriptorSets, _descriptorSetsName));
+    DescriptorSets *pDescriptorSets =
+        dynamic_cast<DescriptorSets *>(VkResourceManager::instance().resource(VkResourceType::DescriptorSets, _descriptorSetsName));
     if (!pDescriptorSets)
         throw std::runtime_error("Failed to get the resource DescriptorSets.");
     addDescriptorSetsConfig(*pDescriptorSets);
@@ -22,11 +23,11 @@ void Vkbase::RenderObjectDelegator::delegatorInit()
     writeDescriptorSets(*pDescriptorSets);
 }
 
-void RenderObjectDelegator::draw(CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args) const
+void RenderObjectDelegator::draw(CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const
 {
-    onUpdateUBO(frameIndex, args);
-    onDraw(pCommandBuffer, frameIndex, args);
+    onDraw(pCommandBuffer, renderPassName, pipelineName, imageIndex, frameIndex);
 }
+void RenderObjectDelegator::update(uint32_t frameIndex) const { onUpdateUBO(frameIndex); }
 
 uint32_t RenderObjectDelegator::flightFrameCount() const { return _flightFrameCount; }
 
@@ -44,10 +45,11 @@ void RenderObjectDelegator::writeUBODescriptorSets(const std::string &name, uint
 {
     std::vector<std::pair<vk::DescriptorBufferInfo, Buffer *>> bufferInfos;
     bufferInfos.reserve(_flightFrameCount);
-    DescriptorSets *pDescriptorSets = dynamic_cast<DescriptorSets *>(ResourceManager::instance().resource(ResourceType::DescriptorSets, _descriptorSetsName));
+    DescriptorSets *pDescriptorSets =
+        dynamic_cast<DescriptorSets *>(VkResourceManager::instance().resource(VkResourceType::DescriptorSets, _descriptorSetsName));
     for (const std::string &uboName : _uboNames)
     {
-        Buffer *pBuffer = dynamic_cast<Buffer *>(ResourceManager::instance().resource(ResourceType::Buffer, uboName));
+        Buffer *pBuffer = dynamic_cast<Buffer *>(VkResourceManager::instance().resource(VkResourceType::Buffer, uboName));
         bufferInfos.push_back({vk::DescriptorBufferInfo().setOffset(0).setRange(pBuffer->size()), pBuffer});
     }
     pDescriptorSets->writeSets(name, binding, bufferInfos, {}, bufferInfos.size());
@@ -59,10 +61,11 @@ void RenderObjectDelegator::writeUBODescriptorSets(const std::string &name, uint
         return;
     std::vector<std::pair<vk::DescriptorBufferInfo, Buffer *>> bufferInfos;
     bufferInfos.reserve(secondIndex - firstIndex);
-    DescriptorSets *pDescriptorSets = dynamic_cast<DescriptorSets *>(ResourceManager::instance().resource(ResourceType::DescriptorSets, _descriptorSetsName));
+    DescriptorSets *pDescriptorSets =
+        dynamic_cast<DescriptorSets *>(VkResourceManager::instance().resource(VkResourceType::DescriptorSets, _descriptorSetsName));
     for (; firstIndex < secondIndex; ++firstIndex)
     {
-        Buffer *pBuffer = dynamic_cast<Buffer *>(ResourceManager::instance().resource(ResourceType::Buffer, _uboNames[firstIndex]));
+        Buffer *pBuffer = dynamic_cast<Buffer *>(VkResourceManager::instance().resource(VkResourceType::Buffer, _uboNames[firstIndex]));
         bufferInfos.push_back({vk::DescriptorBufferInfo().setOffset(0).setRange(pBuffer->size()), pBuffer});
     }
     pDescriptorSets->writeSets(name, binding, bufferInfos, {}, bufferInfos.size());
@@ -73,7 +76,7 @@ void RenderObjectDelegator::updateUBO(uint32_t frameIndex, const void *pData) co
     if (frameIndex >= _uboNames.size())
         throw std::out_of_range("onUpdateUBO: invalid frameIndex");
 
-    Buffer *pBuffer = dynamic_cast<Buffer *>(ResourceManager::instance().resource(ResourceType::Buffer, _uboNames[frameIndex]));
+    Buffer *pBuffer = dynamic_cast<Buffer *>(VkResourceManager::instance().resource(VkResourceType::Buffer, _uboNames[frameIndex]));
     if (!pBuffer)
         throw std::runtime_error("onUpdateUBO: missing UBO buffer");
 

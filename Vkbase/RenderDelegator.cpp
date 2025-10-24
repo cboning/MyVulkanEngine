@@ -10,11 +10,11 @@ namespace Vkbase
 {
 RenderDelegator::RenderDelegator(const std::string &resourceName, const std::string &deviceName, const std::string &swapchainName,
                                  const std::string &commandPoolName)
-    : ResourceBase(Vkbase::ResourceType::RenderDelegator, resourceName),
-      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Device, deviceName)))),
-      _commandPool(*dynamic_cast<const CommandPool *>(connectTo(resourceManager().resource(Vkbase::ResourceType::CommandPool, commandPoolName))))
+    : VkResourceBase(Vkbase::VkResourceType::RenderDelegator, resourceName),
+      _device(*dynamic_cast<const Device *>(connectTo(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)))),
+      _commandPool(*dynamic_cast<const CommandPool *>(connectTo(resourceManager().resource(Vkbase::VkResourceType::CommandPool, commandPoolName))))
 {
-    _pSwapchain = dynamic_cast<Swapchain *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Swapchain, swapchainName)));
+    _pSwapchain = dynamic_cast<Swapchain *>(resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName));
     init();
 }
 
@@ -41,12 +41,14 @@ void RenderDelegator::init()
 void RenderDelegator::recreateSwapchain()
 {
     _device.device().waitIdle();
+    for (auto pCommandBuffer : _pCommandBuffers)
+        pCommandBuffer->reset();
     auto renderPassCreateFunc = _renderPassCreateFunc;
-    auto pSwapchain = _pSwapchain;
-    pSwapchain->recreate();
+    _pSwapchain = _pSwapchain->recreate();
 
     if (renderPassCreateFunc)
         renderPassCreateFunc();
+    _currentFrame = 0;
 }
 
 void RenderDelegator::createSyncObjects()
@@ -71,6 +73,7 @@ void RenderDelegator::draw()
         return;
     CommandBuffer *pCommandBuffer = _pCommandBuffers[_currentFrame];
     pCommandBuffer->waitForFence();
+    _updateFunc(_currentFrame);
 
     vk::Semaphore acquireSemaphore = _imageAvailableSemaphores[_currentFrame];
 
@@ -83,7 +86,7 @@ void RenderDelegator::draw()
     }
     else if (uintResult.result != vk::Result::eSuccess && uintResult.result != vk::Result::eSuboptimalKHR)
         throw std::runtime_error("Failed to acquire swap chain image!");
-    
+
     uint32_t imageIndex = uintResult.value;
 
     pCommandBuffer->reset();
@@ -128,6 +131,8 @@ void RenderDelegator::setCommandRecordFunc(const std::function<void(CommandBuffe
 {
     _commandRecordFunc = func;
 }
+
+void RenderDelegator::setUpdateFunc(const std::function<void(uint32_t currentFrame)> &func) { _updateFunc = func; }
 
 void RenderDelegator::setRenderPassCreateFunc(const std::function<void()> &func) { _renderPassCreateFunc = func; }
 } // namespace Vkbase

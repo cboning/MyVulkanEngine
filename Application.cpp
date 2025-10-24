@@ -5,13 +5,13 @@
 #include "Data/Octree.h"
 
 Application::Application()
+    : _renderer("mainWindow")
 {
     init();
 }
 
 void Application::init()
 {
-    _renderer.init();
 }
 
 void Application::run()

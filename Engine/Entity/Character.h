@@ -24,16 +24,16 @@ namespace Vkbase
 class Character : public Entity
 {
 private:
-    Modelbase::Model _model;
+    Modelbase::Model &_model;
 
     void entityInit() override;
     void objectExtraUpdate() override;
 
 public:
-    Character(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, bool dynamic = true, const Object &object = {}, const json &config = {});
+    Character(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, Modelbase::Model &model, bool dynamic = true, const Object &object = {});
     ~Character();
-    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &) const override;
-    void onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &) const override;
+    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const override;
+    void onUpdateUBO(uint32_t frameIndex) const override;
     void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
     void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;

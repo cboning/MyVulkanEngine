@@ -11,8 +11,8 @@
 namespace Vkbase
 {
 Swapchain::Swapchain(const std::string &resourceName, const std::string &deviceName, const std::string &windowName)
-    : GpuResourceBase(ResourceType::Swapchain, resourceName, *dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName))),
-      _window(*dynamic_cast<Window *>(connectTo(resourceManager().resource(Vkbase::ResourceType::Window, windowName)))), _surface(_window.surface())
+    : VkGpuResourceBase(VkResourceType::Swapchain, resourceName, *dynamic_cast<Device *>(resourceManager().resource(VkResourceType::Device, deviceName))),
+      _window(*dynamic_cast<Window *>(connectTo(resourceManager().resource(Vkbase::VkResourceType::Window, windowName)))), _surface(_window.surface())
 {
     try
     {
@@ -68,6 +68,7 @@ Swapchain *Swapchain::recreate()
 
         window.setLock();
         destroy();
+        Vkbase::Device::collectAllDelayResource();
         Swapchain *pNewSwapchain = new Swapchain(resourceName, deviceName, windowName);
         window.setUnlock();
 
@@ -295,7 +296,7 @@ void Swapchain::determinePresentMode(SurfaceSupportDetails &details)
             throw std::runtime_error("No available present modes");
         }
 
-        vk::PresentModeKHR desirableMode = vk::PresentModeKHR::eImmediate;
+        vk::PresentModeKHR desirableMode = vk::PresentModeKHR::eFifo;
         for (const vk::PresentModeKHR &presentMode : presentModes)
         {
             if (presentMode == vk::PresentModeKHR::eMailbox)
@@ -378,8 +379,6 @@ const std::vector<vk::ImageView> &Swapchain::imageViews() const
     }
     return _imageViews;
 }
-
-Device &Swapchain::device() { return _device; }
 
 const std::vector<std::string> &Swapchain::imageNames() const { return _imageNames; }
 

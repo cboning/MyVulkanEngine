@@ -6,17 +6,17 @@
 #include <iostream>
 
 #include "../JsonConfigReader/JsonConfigReader.h"
+#include "CommandBuffer.h"
 #include "Device.h"
 #include "Framebuffer.h"
 #include "Image.h"
 #include "Pipeline.h"
-#include "CommandBuffer.h"
 
 namespace Vkbase
 {
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
-    : GpuResourceBase(Vkbase::ResourceType::RenderPass, resourceName,
-                      *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : VkGpuResourceBase(Vkbase::VkResourceType::RenderPass, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _descriptorSets(*connectTo(createResource<DescriptorSets>(resourceName, deviceName)))
 {
     _attachmentCount = createInfo.attachmentCount;
@@ -62,7 +62,7 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
     {
         const json &countJson = config["count"];
         if (countJson.is_string() && std::string(countJson) == "auto")
-            count = dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::ResourceType::Swapchain, swapchainName))->imageNames().size();
+            count = dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName))->imageNames().size();
         else if (countJson.is_number_integer())
             count = countJson;
         else
@@ -107,14 +107,21 @@ void RenderPass::createPipelines(const json &config, const std::unordered_map<st
         const std::string &pipelineName = pipelineCreateInfoJson["name"];
         const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> &viewportInfo = viewportInfos.at(pipelineName);
         PipelineRenderInfo renderInfo = PipelineRenderInfo(pipelineCreateInfoJson["renderInfo"], viewportInfo.first, viewportInfo.second);
+        std::vector<vk::DescriptorSetLayout> pipelineDescriptorSetLayouts = descriptorSetLayouts.at(pipelineName);
+
+        if (pipelineCreateInfoJson.count("descriptorSetsNames"))
+            for (const std::string &name : pipelineCreateInfoJson["descriptorSetsNames"])
+                pipelineDescriptorSetLayouts.push_back(_descriptorSets.layout(name));
+
         createPipeline(pipelineCreateInfoJson["name"], PipelineCreateInfo{ShaderInfo::getShaderInfosWithJson(pipelineCreateInfoJson["shaderInfos"]),
-                                                                          vertexInfos.at(pipelineName), descriptorSetLayouts.at(pipelineName), renderInfo});
+                                                                          vertexInfos.at(pipelineName), pipelineDescriptorSetLayouts, renderInfo});
     }
 }
 
-void RenderPass::begin(CommandBuffer *pCommandBuffer, Framebuffer *pFramebuffer, std::vector<vk::ClearValue> &clearValues,
-                       vk::Extent2D &extent)
+void RenderPass::begin(CommandBuffer *pCommandBuffer, const std::string &framebufferName, const std::vector<vk::ClearValue> &clearValues)
 {
+    Vkbase::Framebuffer *pFramebuffer = dynamic_cast<Vkbase::Framebuffer *>(resourceManager().resource(Vkbase::VkResourceType::Framebuffer, framebufferName));
+    const vk::Extent2D &extent = pFramebuffer->extent();
     vk::RenderPassBeginInfo beginInfo;
 
     vk::Viewport viewport;

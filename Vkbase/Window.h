@@ -1,7 +1,7 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
 #include "../Event/KeyInputEvent.h"
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <unordered_set>
@@ -15,12 +15,14 @@ namespace Vkbase
 {
 class Device;
 class Swapchain;
-class Window : public GpuResourceBase
+class Window : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
+
 public:
-    struct InitData {
-        GLFWwindow* pWindow;
+    struct InitData
+    {
+        GLFWwindow *pWindow;
         vk::SurfaceKHR surface;
     };
 

@@ -1,7 +1,7 @@
 #include "ModelLoader.h"
+#include "../Vkbase/Mesh.h"
 #include "Animation.h"
 #include "AssimpGLMHelpers.h"
-#include "../Vkbase/Mesh.h"
 #include "Model.h"
 #include "stb_image.h"
 
@@ -10,7 +10,10 @@ namespace Modelbase
 void ModelLoader::loadModel(Model &model, const std::string &fileName)
 {
     Assimp::Importer importer;
-    const aiScene *pScene = importer.ReadFile(fileName, aiProcess_Triangulate | aiProcess_FlipUVs);
+    const aiScene *pScene = importer.ReadFile(
+        fileName, aiProcess_Triangulate | aiProcess_GenSmoothNormals | aiProcess_OptimizeMeshes | aiProcess_CalcTangentSpace |
+                      aiProcess_JoinIdenticalVertices | aiProcess_LimitBoneWeights | aiProcess_ImproveCacheLocality | aiProcess_SortByPType |
+                      aiProcess_ValidateDataStructure | aiProcess_FixInfacingNormals | aiProcess_FlipUVs | aiProcess_FlipWindingOrder);
 
     if (!pScene || pScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !pScene->mRootNode)
         throw std::runtime_error("Failed to load model!");
@@ -139,7 +142,8 @@ void ModelLoader::processMesh(Model &model, aiMesh *pMesh, const aiScene *pScene
     for (uint32_t i = 0; i < textureTypeFeatures.size(); ++i)
         textureNames[i][0] = loadMaterialTextures(model, pScene, pMaterial, textureTypeFeatures[i])[0];
 
-    model._pMeshes.emplace_back(std::make_unique<Vkbase::Mesh<ModelData::Vertex>>(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name()));
+    model._pMeshes.emplace_back(
+        std::make_unique<Vkbase::Mesh<ModelData::Vertex>>(meshName, model._deviceName, vertices, indices, textureNames, model._descriptorSets.name()));
 }
 
 std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const aiScene *pScene, aiMaterial *pMaterial, aiTextureType textureType)
@@ -150,7 +154,7 @@ std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const a
         aiString path;
         pMaterial->GetTexture(textureType, i, &path);
         std::string filename = model._fileDirectory + "/" + path.C_Str();
-        if (!Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, filename))
+        if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, filename))
         {
             try
             {
@@ -171,23 +175,24 @@ std::vector<std::string> ModelLoader::loadMaterialTextures(Model &model, const a
                     if (!pData)
                     {
                         std::cerr << "Failed to load embedded texture: " << stbi_failure_reason() << std::endl;
-                        uint32_t empty_color = 0xFFFF00FF;
-                        model.createResource<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
-                                                            vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, &empty_color);
+                        filename = "Empty";
                     }
                     else
                     {
-                        model.createResource<Vkbase::Image>(filename, model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
-                                                            vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, pData);
+                        filename = model
+                                       .createResource<Vkbase::Image>("", model._deviceName, width, height, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D,
+                                                                      vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, pData)
+                                       ->name();
 
                         stbi_image_free(pData);
                     }
                 }
                 else
-                {
-                    model.createResource<Vkbase::Image>(filename, model._deviceName, pTexture->mWidth, pTexture->mHeight, 1, vk::Format::eR8G8B8A8Srgb,
-                                                        vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, pTexture->pcData);
-                }
+                    filename =
+                        model
+                            .createResource<Vkbase::Image>("", model._deviceName, pTexture->mWidth, pTexture->mHeight, 1, vk::Format::eR8G8B8A8Srgb,
+                                                           vk::ImageType::e2D, vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, pTexture->pcData)
+                            ->name();
             }
             model._textureFiles.push_back(filename);
         }

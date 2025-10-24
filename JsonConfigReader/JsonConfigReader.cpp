@@ -357,7 +357,7 @@ vk::Format JsonConfigReader::getFormatWithJson(const std::string &format, const 
     else
     {
         if (format == "SWAPCHAIN_FORMAT")
-            return dynamic_cast<Vkbase::Swapchain *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Swapchain, swapchainName))
+            return dynamic_cast<Vkbase::Swapchain *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName))
                 ->format();
         else if (format == "DEPTH_FORMAT")
             return depthFormat;

@@ -13,7 +13,8 @@ namespace Vkbase
 {
 Image::Image(const std::string &resourceName, const std::string &deviceName, const std::string &filename, vk::Format format, vk::ImageType type,
              vk::ImageViewType viewType, vk::ImageUsageFlags usage)
-    : GpuResourceBase(Vkbase::ResourceType::Image, resourceName, *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _pDevice(&_device), _format(format), _type(type), _viewType(viewType)
 {
     loadImage(filename, usage);
@@ -21,7 +22,8 @@ Image::Image(const std::string &resourceName, const std::string &deviceName, con
 
 Image::Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
              vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, const void *pData)
-    : GpuResourceBase(Vkbase::ResourceType::Image, resourceName, *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _pDevice(&_device), _format(format), _type(type), _viewType(viewType)
 {
     createImageWithData(width, height, depth, usage, pData);
@@ -29,14 +31,15 @@ Image::Image(const std::string &resourceName, const std::string &deviceName, uin
 
 Image::Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
              vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage)
-    : GpuResourceBase(Vkbase::ResourceType::Image, resourceName, *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _pDevice(&_device), _format(format), _type(type), _viewType(viewType)
 {
     createImageWithNoData(width, height, depth, usage);
 }
 
 Image::Image(Swapchain &swapchain, uint32_t index)
-    : GpuResourceBase(Vkbase::ResourceType::Image, swapchain.name() + "_" + std::to_string(index), swapchain.device()), _pDevice(nullptr),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, swapchain.name() + "_" + std::to_string(index), swapchain.device()), _pDevice(nullptr),
       _image(swapchain.images()[index]), _view(swapchain.imageViews()[index]), _format(swapchain.format()), _type(vk::ImageType::e2D),
       _viewType(vk::ImageViewType::e2D)
 {
@@ -45,7 +48,8 @@ Image::Image(Swapchain &swapchain, uint32_t index)
 
 Image::Image(const std::string &resourceName, const std::string &deviceName, json config, const void *pData, const std::string &swapchainName,
              vk::Format depthFormat)
-    : GpuResourceBase(Vkbase::ResourceType::Image, resourceName, *dynamic_cast<Device *>(resourceManager().resource(Vkbase::ResourceType::Device, deviceName))),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
+                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
       _pDevice(&_device), _format(JsonConfigReader::getFormatWithJson(config["format"], swapchainName, depthFormat)),
       _type(JsonConfigReader::getImageTypeWithJson(config["imageType"])), _viewType(JsonConfigReader::getImageViewTypeWithJson(config["viewType"]))
 {

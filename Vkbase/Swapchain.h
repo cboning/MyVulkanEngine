@@ -1,5 +1,5 @@
 #pragma once
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 
 namespace Vkbase
 {
@@ -8,9 +8,9 @@ struct SurfaceSupportDetails; // Forward declaration of SurfaceSupportDetails st
 class Image;
 class Window;
 
-class Swapchain : public GpuResourceBase
+class Swapchain : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
 
 private:
     vk::SwapchainKHR _swapchain;
@@ -41,6 +41,5 @@ public:
     const std::vector<vk::Image> &images() const;
     const std::vector<std::string> &imageNames() const;
     const std::vector<vk::ImageView> &imageViews() const;
-    Device &device();
 };
 } // namespace Vkbase

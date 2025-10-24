@@ -54,6 +54,8 @@ file(GLOB SRC_FILES
     "Engine/Physical/Collision/*.cpp"
     "Engine/Entity/Motion/*.cpp"
     "Engine/Entity/*.cpp"
+    "Render/*.cpp"
+    "Resources/*.cpp"
 )
 
 # 创建可执行文件
@@ -67,10 +69,10 @@ target_compile_options(main PRIVATE
 )
 
 if(APPLE)
-    # add_compile_definitions(DEBUG)
+    add_compile_definitions(DEBUG)
 
-    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+    # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
 

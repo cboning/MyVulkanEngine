@@ -53,7 +53,7 @@ void Entity::updateVelocity(float deltaTime) { _velocity += deltaTime * _acceler
 
 void Entity::updatePosition(float deltaTime) { _object.setPosition(deltaTime * _velocity + _object.position()); }
 
-void Entity::update(float deltaTime)
+void Entity::updatePhysicalState(float deltaTime)
 {
     updatePosition(deltaTime);
     objectExtraUpdate();
@@ -70,9 +70,7 @@ void Entity::updateCollisionObjects()
 void Entity::updateAll(float deltaTime)
 {
     for (auto &pEntity : _pEntities)
-    {
-        pEntity.second->update(deltaTime);
-    }
+        pEntity.second->updatePhysicalState(deltaTime);
 
     for (auto &pEntity : _pEntities)
     {
@@ -126,10 +124,15 @@ void Entity::eraseMotion(const std::string &name)
     delete _pMotions.extract(name).mapped();
 }
 
-void Entity::drawEntities(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args)
+void Entity::drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+                          uint32_t frameIndex)
 {
     for (auto &entity : _pEntities)
-    {
-        entity.second->draw(pCommandBuffer, frameIndex, args);
-    }
+        entity.second->draw(pCommandBuffer, renderPassName, pipelineName, imageIndex, frameIndex);
+}
+
+void Entity::updateEntities(uint32_t frameIndex)
+{
+    for (auto &entity : _pEntities)
+        entity.second->update(frameIndex);
 }

@@ -47,9 +47,9 @@ private:
 public:
     Cube(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, bool dynamic = true, const Object &object = {}, bool isOutline = false);
     ~Cube();
-    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args) const override;
-    void onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &args) const override;
+    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const override;
+    void onUpdateUBO(uint32_t frameIndex) const override;
     void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
     void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
-};
+}; 

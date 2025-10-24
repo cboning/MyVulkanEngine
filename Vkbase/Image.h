@@ -2,7 +2,7 @@
 #ifndef DEBUG
 #define DEBUG 0 // 默认值
 #endif
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 #include <json.hpp>
 
 using json = nlohmann::json;
@@ -12,9 +12,9 @@ namespace Vkbase
 class Device;
 class Buffer;
 class Swapchain;
-class Image : public GpuResourceBase
+class Image : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
     friend class DescriptorSets;
     friend class Framebuffer;
 

@@ -1,7 +1,7 @@
 #pragma once
 #include <glm/glm.hpp>
-#include <vulkan/vulkan.hpp>
 #include <vector>
+#include <vulkan/vulkan.hpp>
 
 struct VertexData
 {
@@ -14,36 +14,23 @@ struct VertexData
         std::vector<vk::VertexInputAttributeDescription> descriptions;
         descriptions.resize(3);
         uint32_t index = 0;
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32B32Sfloat)
-            .setOffset(offsetof(VertexData, position));
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(VertexData, position));
 
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32Sfloat)
-            .setOffset(offsetof(VertexData, texCoord));
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32Sfloat).setOffset(offsetof(VertexData, texCoord));
 
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32B32Sfloat)
-            .setOffset(offsetof(VertexData, normal));
-        
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(VertexData, normal));
+
         return descriptions;
     }
 
     static vk::VertexInputBindingDescription bindingDescription()
     {
         vk::VertexInputBindingDescription description;
-        description.setBinding(0)
-            .setStride(sizeof(VertexData))
-            .setInputRate(vk::VertexInputRate::eVertex);
-        
+        description.setBinding(0).setStride(sizeof(VertexData)).setInputRate(vk::VertexInputRate::eVertex);
+
         return description;
     }
-
 };
-
 
 struct GeometryVertexData
 {
@@ -55,29 +42,20 @@ struct GeometryVertexData
         std::vector<vk::VertexInputAttributeDescription> descriptions;
         descriptions.resize(2);
         uint32_t index = 0;
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32B32Sfloat)
-            .setOffset(offsetof(GeometryVertexData, position));
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(GeometryVertexData, position));
 
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32B32Sfloat)
-            .setOffset(offsetof(GeometryVertexData, normal));
-        
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(GeometryVertexData, normal));
+
         return descriptions;
     }
 
     static vk::VertexInputBindingDescription bindingDescription()
     {
         vk::VertexInputBindingDescription description;
-        description.setBinding(0)
-            .setStride(sizeof(GeometryVertexData))
-            .setInputRate(vk::VertexInputRate::eVertex);
-        
+        description.setBinding(0).setStride(sizeof(GeometryVertexData)).setInputRate(vk::VertexInputRate::eVertex);
+
         return description;
     }
-
 };
 
 struct ScreenVertex
@@ -90,26 +68,17 @@ struct ScreenVertex
         std::vector<vk::VertexInputAttributeDescription> descriptions;
         descriptions.resize(2);
         uint32_t index = 0;
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32B32Sfloat)
-            .setOffset(offsetof(ScreenVertex, position));
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32B32Sfloat).setOffset(offsetof(ScreenVertex, position));
 
-        descriptions[index].setBinding(0)
-            .setLocation(index++)
-            .setFormat(vk::Format::eR32G32Sfloat)
-            .setOffset(offsetof(ScreenVertex, texCoord));
+        descriptions[index].setBinding(0).setLocation(index++).setFormat(vk::Format::eR32G32Sfloat).setOffset(offsetof(ScreenVertex, texCoord));
 
-        
         return descriptions;
     }
     static vk::VertexInputBindingDescription bindingDescription()
     {
         vk::VertexInputBindingDescription description;
-        description.setBinding(0)
-            .setStride(sizeof(ScreenVertex))
-            .setInputRate(vk::VertexInputRate::eVertex);
-        
+        description.setBinding(0).setStride(sizeof(ScreenVertex)).setInputRate(vk::VertexInputRate::eVertex);
+
         return description;
     }
 };

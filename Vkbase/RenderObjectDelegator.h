@@ -1,17 +1,17 @@
 #pragma once
-#include "ResourcesDelegator.h"
-#include <any>
+#include "VkResourcesDelegator.h"
 
 class Camera;
 namespace Vkbase
 {
 class CommandBuffer;
 class DescriptorSets;
-class RenderObjectDelegator : public ResourcesDelegator
+class RenderObjectDelegator : public VkResourcesDelegator
 {
 public:
     RenderObjectDelegator(const std::string &deviceName, const Camera &camera, uint32_t flightFrameCount, vk::DeviceSize uboSize);
-    void draw(CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args) const;
+    void draw(CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const;
+    void update(uint32_t frameIndex) const;
 
 protected:
     uint32_t flightFrameCount() const;
@@ -23,8 +23,8 @@ protected:
     void updateUBO(uint32_t frameIndex, const void *pData) const;
     virtual void addDescriptorSetsConfig(DescriptorSets &descriptorSets) = 0;
     virtual void writeDescriptorSets(DescriptorSets &descriptorSets) = 0;
-    virtual void onUpdateUBO(uint32_t frameIndex, const std::vector<std::any> &args) const = 0;
-    virtual void onDraw(CommandBuffer *pCommandBuffer, uint32_t frameIndex, const std::vector<std::any> &args) const = 0;
+    virtual void onUpdateUBO(uint32_t frameIndex) const = 0;
+    virtual void onDraw(CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const = 0;
     const Camera &camera() const;
     const std::string &descriptorSetsName() const;
     const std::vector<std::string> &uboNames() const;

@@ -1,5 +1,5 @@
 #pragma once
-#include "ResourceBase.h"
+#include "VkResourceBase.h"
 #include <functional>
 #define MAX_FLIGHT_COUNT 3
 
@@ -9,15 +9,15 @@ class Device;
 class Swapchain;
 class CommandPool;
 class CommandBuffer;
-class RenderDelegator : public ResourceBase
+class RenderDelegator : public VkResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
 
 public:
     void draw();
     void sizeChanged();
-    void setCommandRecordFunc(
-        const std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
+    void setCommandRecordFunc(const std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
+    void setUpdateFunc(const std::function<void(uint32_t currentFrame)> &func);
     void setRenderPassCreateFunc(const std::function<void()> &func);
     static uint32_t maxFlightCount();
     void recreateSwapchain();
@@ -37,6 +37,7 @@ private:
     uint32_t _currentFrame = 0;
     bool _isSizeChanged = false;
     std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> _commandRecordFunc;
+    std::function<void(uint32_t currentFrame)> _updateFunc;
     std::function<void()> _renderPassCreateFunc;
 };
 } // namespace Vkbase

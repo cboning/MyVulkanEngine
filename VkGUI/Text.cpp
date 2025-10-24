@@ -2,13 +2,13 @@
 #include "../Vkbase/Buffer.h"
 #include "../Vkbase/CommandBuffer.h"
 
-Text::Text(const Font &font, const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale)
-    : _font(font), _text(text), _color(color), _pos(pos), _scale(scale)
+Text::Text(Font *pFont, const std::string &text, const glm::vec3 &color, const glm::vec2 &pos, float scale)
+    : RenderObjectDelegator(pFont->deviceName(), *(Camera *)nullptr, 0, 0), _pFont(pFont), _text(text), _color(color), _pos(pos), _scale(scale)
 {
     updateBuffer();
 }
 
-Text::Text(const Font &font) : _font(font) {}
+Text::Text(Font *pFont) : RenderObjectDelegator(pFont->deviceName(), *(Camera *)nullptr, 0, 0), _pFont(pFont) {}
 
 void Text::setText(const std::string &text)
 {
@@ -30,30 +30,29 @@ void Text::setScale(float scale)
     updateBuffer();
 }
 
-void Text::draw(Vkbase::CommandBuffer *pCommandBuffer, Vkbase::Pipeline &pipeline,
-                const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets)
+void Text::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+                  uint32_t frameIndex) const
 {
-    pCommandBuffer->bindPipeline(&pipeline);
     for (uint32_t i = 0; i < _vertexBufferNames.size(); ++i)
-        drawCharacter(pCommandBuffer, _text[i], _vertexBufferNames[i], descriptorSets);
+        drawCharacter(pCommandBuffer, _text[i], _vertexBufferNames[i], {Font::projectiveSet("MainDescriptorSets")});
 }
 
 void Text::drawCharacter(Vkbase::CommandBuffer *pCommandBuffer, const char character, const std::string &vertexBufferName,
-                         const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets)
+                         const vk::ArrayProxy<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> &descriptorSets) const
 {
-    std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets_t = {_font.set(character)};
+    std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets_t = {_pFont->set(character)};
     descriptorSets_t.insert(descriptorSets_t.end(), descriptorSets.begin(), descriptorSets.end());
 
     pCommandBuffer->bindDescriptorSets(0, descriptorSets_t, {});
     pCommandBuffer->bindVertexBuffers(
-        0, dynamic_cast<Vkbase::Buffer *>(Vkbase::Buffer::resourceManager().resource(Vkbase::ResourceType::Buffer, vertexBufferName)), {0});
+        0, dynamic_cast<Vkbase::Buffer *>(Vkbase::Buffer::resourceManager().resource(Vkbase::VkResourceType::Buffer, vertexBufferName)), {0});
     pCommandBuffer->commandBuffer().draw(6, 1, 0, 0);
 }
 
 void Text::updateBuffer()
 {
     for (const std::string &bufferName : _vertexBufferNames)
-        Vkbase::Buffer::resourceManager().remove(Vkbase::ResourceType::Buffer, bufferName);
+        Vkbase::Buffer::resourceManager().remove(Vkbase::VkResourceType::Buffer, bufferName);
     _vertexBufferNames.clear();
     _vertexBufferNames.reserve(_text.size());
 
@@ -63,7 +62,7 @@ void Text::updateBuffer()
     {
         std::vector<Vertex> vertices;
         vertices.reserve(6);
-        auto &charData = _font.characters().at(*c);
+        auto &charData = _pFont->characters().at(*c);
 
         glm::vec2 cpos = currentPos + glm::vec2(charData.bearing.x, charData.size.y - charData.bearing.y) * _scale;
 
@@ -77,6 +76,12 @@ void Text::updateBuffer()
 
         currentPos += glm::vec2(charData.advance >> 6, 0.0f) * _scale;
         _vertexBufferNames.push_back(
-            (createResource<Vkbase::Buffer>("", _font.deviceName(), 6 * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, vertices.data()))->name());
+            (createResource<Vkbase::Buffer>("", _pFont->deviceName(), 6 * sizeof(Vertex), vk::BufferUsageFlagBits::eVertexBuffer, vertices.data()))->name());
     }
 }
+
+void Text::onUpdateUBO(uint32_t frameIndex) const {}
+
+void Text::addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) {}
+
+void Text::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) {}

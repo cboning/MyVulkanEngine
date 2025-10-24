@@ -4,16 +4,16 @@
 #include "DescriptorSets.h"
 #include "Device.h"
 #include "Framebuffer.h"
-#include "GpuResourceGarbageCollector.h"
 #include "Pipeline.h"
 #include "RenderPass.h"
+#include "VkGpuResourceGarbageCollector.h"
 
 namespace Vkbase
 {
 
-CommandBuffer::CommandBuffer(const std::string &name, const CommandPool &pool, vk::CommandBuffer handle, bool oneTimeSubmit)
-    : ResourceBase(ResourceType::CommandBuffer, name), _device(pool._device), _pool(pool), _commandBuffer(handle), _oneTimeSubmit(oneTimeSubmit),
-      _fence(_device.device().createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled}))
+CommandBuffer::CommandBuffer(const std::string &name, const CommandPool &pool, vk::CommandBuffer handle, bool oneTimeSubmit, bool primary)
+    : VkResourceBase(VkResourceType::CommandBuffer, name), _device(pool._device), _pool(pool), _commandBuffer(handle), _oneTimeSubmit(oneTimeSubmit),
+      _fence(_device.device().createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled})), _primary(primary)
 {
 }
 
@@ -37,6 +37,7 @@ void CommandBuffer::insertCounters(const std::unordered_set<uint32_t *> &pCounte
 CommandBuffer::~CommandBuffer()
 {
     waitForFence();
+    cleanCounter();
     if (_commandBuffer)
         _device.device().freeCommandBuffers(_pool._commandPool, _commandBuffer);
     _device.device().destroy(_fence);
@@ -80,15 +81,25 @@ void CommandBuffer::reset()
 {
     if (_oneTimeSubmit)
         throw std::runtime_error("[ERROR] Cannot reset a one-time CommandBuffer.");
-
+    _pPipeline = nullptr;
+    _pIndiceBuffer = nullptr;
     _commandBuffer.reset({});
     _inRecording = false;
+    cleanCounter();
 }
+
+const Device &CommandBuffer::device() { return _device; }
 
 void CommandBuffer::bindPipeline(Pipeline *pPipeline)
 {
     if (!_inRecording)
         return;
+
+    if (_pPipeline == pPipeline)
+        return;
+
+    if (pPipeline->device().name() != _device.name())
+        throw std::runtime_error("");
 
     _commandBuffer.bindPipeline(pPipeline->pipelineBindPoint(), pPipeline->pipeline());
     _pPipeline = pPipeline;
@@ -116,6 +127,10 @@ void CommandBuffer::bindDescriptorSets(uint32_t firstSet, const std::vector<std:
 void CommandBuffer::bindVertexBuffers(uint32_t firstBinding, const vk::ArrayProxy<Buffer *> &buffers, const vk::ArrayProxy<const vk::DeviceSize> &offsets)
 {
     std::vector<vk::Buffer> vkBuffers;
+    for (auto *pBuffer : buffers)
+        if (pBuffer == nullptr)
+            throw std::runtime_error("Exist Empty Buffer.");
+
     vkBuffers.reserve(buffers.size());
     for (auto *pBuffer : buffers)
     {
@@ -128,9 +143,11 @@ void CommandBuffer::bindVertexBuffers(uint32_t firstBinding, const vk::ArrayProx
 
 void CommandBuffer::bindIndexBuffer(Buffer *pBuffer, vk::DeviceSize offset, vk::IndexType indexType)
 {
-    insertCounters(pBuffer->counters());
-
+    if (_pIndiceBuffer == pBuffer)
+        return;
     _commandBuffer.bindIndexBuffer(pBuffer->buffer(), offset, indexType);
+    _pIndiceBuffer = pBuffer;
+    insertCounters(pBuffer->counters());
 }
 
 void CommandBuffer::beginRenderPass(RenderPass *pRenderPass, Framebuffer *pFramebuffer, vk::RenderPassBeginInfo info, vk::SubpassContents subpassContents)
@@ -143,10 +160,18 @@ void CommandBuffer::beginRenderPass(RenderPass *pRenderPass, Framebuffer *pFrame
     _commandBuffer.beginRenderPass(info, subpassContents);
 }
 
-void CommandBuffer::waitForFence()
+void CommandBuffer::executeCommands(const std::vector<CommandBuffer *> &pCommandBuffers)
 {
-    (void)_device.device().waitForFences(_fence, vk::True, UINT64_MAX);
-    cleanCounter();
+    std::vector<vk::CommandBuffer> commandBuffers;
+    commandBuffers.reserve(pCommandBuffers.size());
+    for (const CommandBuffer *pCommandBuffer : pCommandBuffers)
+    {
+        commandBuffers.push_back(pCommandBuffer->commandBuffer());
+        insertCounters(pCommandBuffer->_pCounters);
+    }
+    _commandBuffer.executeCommands(commandBuffers);
 }
+
+void CommandBuffer::waitForFence() { (void)_device.device().waitForFences(_fence, vk::True, UINT64_MAX); }
 
 } // namespace Vkbase

@@ -18,15 +18,13 @@ void Cloud::createComputePipeline()
 
     descriptorSets.writeSets("Cloud", 0, {},
                              {{vk::DescriptorImageInfo().setImageLayout(vk::ImageLayout::eGeneral),
-                               createResource<Vkbase::Image>(
-                                   "Cloud", "Device", 32, 32, 32, vk::Format::eR32Sfloat, vk::ImageType::e3D, vk::ImageViewType::e3D,
-                                   vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled)}},
+                               createResource<Vkbase::Image>("Cloud", "Device", 32, 32, 32, vk::Format::eR32Sfloat, vk::ImageType::e3D, vk::ImageViewType::e3D,
+                                                             vk::ImageUsageFlagBits::eStorage | vk::ImageUsageFlagBits::eSampled)}},
                              1);
 
     std::vector<Vkbase::ShaderInfo> shaderInfo = {{"./shader/bin/cloudComp.spv", "main", vk::ShaderStageFlagBits::eCompute}};
     Vkbase::PipelineRenderInfo renderInfo;
-    createResource<Vkbase::Pipeline>(
-        "Cloud", "Device", "", Vkbase::PipelineCreateInfo{shaderInfo, {}, {descriptorSets.layout("Cloud")}, renderInfo}, true);
+    createResource<Vkbase::Pipeline>("Cloud", "Device", "", Vkbase::PipelineCreateInfo{shaderInfo, {}, {descriptorSets.layout("Cloud")}, renderInfo}, true);
 }
 
 void Cloud::computeCloudData()
@@ -36,8 +34,9 @@ void Cloud::computeCloudData()
     height = 32;
     depth = 32;
     Vkbase::DescriptorSets &descriptorSets =
-        *dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::DescriptorSets, "Cloud"));
-    Vkbase::Pipeline &pipeline = *dynamic_cast<Vkbase::Pipeline *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Pipeline, "Cloud"));
+        *dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, "Cloud"));
+    Vkbase::Pipeline &pipeline =
+        *dynamic_cast<Vkbase::Pipeline *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Pipeline, "Cloud"));
     Vkbase::CommandPool &commandPool = Vkbase::CommandPool::getCommandPool("Device", Vkbase::CommandPoolQueueType::Compute);
     Vkbase::CommandBuffer *pCommandBuffer = commandPool.allocateOnceCommandBuffer();
     pCommandBuffer->bindPipeline(&pipeline);
@@ -49,6 +48,6 @@ void Cloud::computeCloudData()
     commandPool.endOnceCommandBuffer(pCommandBuffer);
     pipeline.destroy();
 
-    dynamic_cast<Vkbase::Image *>(Vkbase::ResourceBase::resourceManager().resource(Vkbase::ResourceType::Image, "Cloud"))
+    dynamic_cast<Vkbase::Image *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, "Cloud"))
         ->transitionImageLayout(vk::ImageLayout::eGeneral, vk::ImageLayout::eShaderReadOnlyOptimal);
 }

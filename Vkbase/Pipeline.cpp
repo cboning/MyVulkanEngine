@@ -7,8 +7,7 @@ namespace Vkbase
 {
 Pipeline::Pipeline(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const PipelineCreateInfo &createInfo,
                    bool computePipeline)
-    : GpuResourceBase(Vkbase::ResourceType::Pipeline, resourceName,
-                      *dynamic_cast<Device *>(resourceManager().resource(ResourceType::Device, deviceName)))
+    : VkGpuResourceBase(Vkbase::VkResourceType::Pipeline, resourceName, *dynamic_cast<Device *>(resourceManager().resource(VkResourceType::Device, deviceName)))
 {
     createPipeline(renderPassName, createInfo, computePipeline);
 }
@@ -52,6 +51,8 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
         return;
     }
 
+    _subpass = createInfo.renderInfo.subpass;
+
     _pipelineBindPoint = vk::PipelineBindPoint::eGraphics;
     vk::PipelineVertexInputStateCreateInfo vertexInputState;
     vertexInputState.setVertexBindingDescriptions(createInfo.vertexInfo.inputBindings).setVertexAttributeDescriptions(createInfo.vertexInfo.inputAttributes);
@@ -62,7 +63,7 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
     if (!renderPassName.empty())
     {
         const RenderPass *renderPassResource =
-            dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(ResourceType::RenderPass, renderPassName)));
+            dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(VkResourceType::RenderPass, renderPassName)));
         if (!renderPassResource)
             throw std::runtime_error("RenderPass resource not found: " + renderPassName);
         const vk::RenderPass &renderPass = renderPassResource->renderPass();
@@ -141,6 +142,8 @@ PipelineRenderInfo Pipeline::getDefaultRenderInfo()
     renderInfo.dynamicStateInfo.setDynamicStates(renderInfo.dynamicStatus);
     return renderInfo;
 }
+
+uint32_t Pipeline::subpass() const { return _subpass; }
 
 const vk::Pipeline &Pipeline::pipeline() const { return _pipeline; }
 

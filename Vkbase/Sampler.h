@@ -1,12 +1,12 @@
 #pragma once
-#include "GpuResourceBase.h"
+#include "VkGpuResourceBase.h"
 #include <vulkan/vulkan.hpp>
 namespace Vkbase
 {
 class Device;
-class Sampler : public GpuResourceBase
+class Sampler : public VkGpuResourceBase
 {
-    friend class ResourceManager;
+    friend class VkResourceManager;
 
 private:
     vk::Sampler _sampler;
