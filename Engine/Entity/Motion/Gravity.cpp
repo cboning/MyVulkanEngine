@@ -1,6 +1,5 @@
 #include "Gravity.h"
-#include "../../Entity/Entity.h"
-
+#include "../Entity.h"
 
 Gravity::Gravity() {}
 

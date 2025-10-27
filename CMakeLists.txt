@@ -43,19 +43,19 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # 收集源文件（推荐显式列出而非 GLOB）
 file(GLOB SRC_FILES 
     "*.cpp"
-    "Vkbase/*.cpp"
-    "Object/*.cpp"
-    "Modelbase/*.cpp"
-    "VkGUI/*.cpp"
-    "Camera/*.cpp"
-    "JsonConfigReader/JsonConfigReader.cpp"
-    "Event/*.cpp"
+    "Engine/Vkbase/*.cpp"
+    "Engine/Object/*.cpp"
+    "Engine/Modelbase/*.cpp"
+    "Engine/VkGUI/*.cpp"
+    "Engine/Camera/*.cpp"
+    "Engine/JsonConfigReader/JsonConfigReader.cpp"
+    "Engine/Event/*.cpp"
     "Engine/*.cpp"
     "Engine/Physical/Collision/*.cpp"
     "Engine/Entity/Motion/*.cpp"
     "Engine/Entity/*.cpp"
-    "Render/*.cpp"
-    "Resources/*.cpp"
+    "Engine/Render/*.cpp"
+    "Engine/Resources/*.cpp"
 )
 
 # 创建可执行文件

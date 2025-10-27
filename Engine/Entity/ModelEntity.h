@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Object/Object.h"
+#include "../Object/Object.h"
 #include "../Modelbase/Modelbase.h"
 #include "Entity.h"
 #include <glm/glm.hpp>

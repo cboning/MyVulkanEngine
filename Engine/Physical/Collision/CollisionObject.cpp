@@ -1,5 +1,5 @@
 #include "CollisionObject.h"
-#include "../Object/Object.h"
+#include "../../Object/Object.h"
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
 

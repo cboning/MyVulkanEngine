@@ -1,5 +1,5 @@
 #include "Collision.h"
-#include "../../Entity/Entity.h"
+#include "../Entity.h"
 #include "../../Physical/Collision/CollisionObject.h"
 #include "../../Physical/Collision/CollisionObjectDelegator.h"
 #include <iostream>

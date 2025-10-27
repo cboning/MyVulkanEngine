@@ -23,7 +23,6 @@ CollisionSystem::CollisionSystem()
 
               // 单位旋转矩阵 & 基础大小
               const glm::mat3 identityAxes(1.0f);
-              const glm::vec3 half = _size * 0.5f * invPowLevel2;
 
               // 预定义8个偏移
               static const glm::vec3 offsets[8] = {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0}, {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};

@@ -1,6 +1,6 @@
 #pragma once
-#include "../../Data.h"
-#include "../../Object/Object.h"
+#include "../Data.h"
+#include "../Object/Object.h"
 #include "Entity.h"
 #include <glm/glm.hpp>
 #include <json.hpp>

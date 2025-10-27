@@ -1,5 +1,5 @@
 #include "CollisionCapsule.h"
-#include "../../../Object/Object.h"
+#include "../../Object/Object.h"
 
 CollisionCapsule::CollisionCapsule() : CollisionObject(CollisionObjectType::Capsule) {}
 

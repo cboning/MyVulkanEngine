@@ -1,5 +1,5 @@
 #include "Push.h"
-#include "../../Entity/Entity.h"
+#include "../Entity.h"
 
 Push::Push() {}
 

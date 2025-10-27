@@ -1,5 +1,5 @@
 #pragma once
-#include "../../Object/Object.h"
+#include "../Object/Object.h"
 #include "../Vkbase/RenderObjectDelegator.h"
 #include <glm/glm.hpp>
 #include <json.hpp>
@@ -41,7 +41,7 @@ private:
     std::unordered_map<std::string, Motion *> _pMotions;
     std::vector<CollisionObjectDelegator *> _pCollisionObjectDelegators;
 
-    inline static std::unordered_map<std::string, std::unique_ptr<Entity, Deleter>> _pEntities = {};
+    inline static std::unordered_map<std::string, Entity *> _pEntities = {};
     void updateCollisionObject();
     void updateVelocity(float deltaTime);
     void updatePosition(float deltaTime);
@@ -68,7 +68,7 @@ public:
 
     const std::string &name() const;
 
-    template <typename T> static T *entity(const std::string &name) { return dynamic_cast<T *>(_pEntities.at(name).get()); }
+    template <typename T> static T *entity(const std::string &name) { return dynamic_cast<T *>(_pEntities.at(name)); }
 
     virtual std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() = 0;
     static void updateCollisionObjects();

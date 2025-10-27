@@ -1,5 +1,5 @@
 #include "Entity.h"
-#include "../../Camera/Camera.h"
+#include "../Camera/Camera.h"
 #include "../Physical/Collision/CollisionBox.h"
 #include "../Physical/Collision/CollisionObjectDelegator.h"
 #include "../Physical/Collision/CollisionSystem.h"
@@ -12,11 +12,12 @@ Entity::Entity(const std::string &deviceName, const Camera &camera, uint32_t fli
 {
     if (_pEntities.count(name))
         throw std::runtime_error("The Entity name " + name + " already exist.");
-    _pEntities.insert({name, (std::unique_ptr<Entity, Deleter>(this))});
+    _pEntities.insert({name, this});
 }
 
 Entity::~Entity()
 {
+    _pEntities.erase(_name);
     for (CollisionObjectDelegator *pCollisionObjectDelegator : _pCollisionObjectDelegators)
         CollisionSystem::instance().destroyDynamicObject(pCollisionObjectDelegator);
     for (auto &motion : _pMotions)

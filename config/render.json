@@ -925,7 +925,8 @@
                         "viewType": "2D",
                         "usage": [
                             "ColorAttachment",
-                            "Sampled"
+                            "Sampled",
+                            "InputAttachment"
                         ]
                     }
                 },
@@ -1284,7 +1285,7 @@
                 ]
             },
             {
-                "name": "text",
+                "name": "Widget",
                 "renderInfo": {
                     "inputAssemblyState": {
                         "topology": "TriangleList"
@@ -1328,12 +1329,12 @@
                 },
                 "shaderInfos": [
                     {
-                        "filename": "shader/bin/textVert.spv",
+                        "filename": "shader/bin/widgetVert.spv",
                         "stageName": "main",
                         "shaderStageFlags": "Vertex"
                     },
                     {
-                        "filename": "shader/bin/textFrag.spv",
+                        "filename": "shader/bin/widgetFrag.spv",
                         "stageName": "main",
                         "shaderStageFlags": "Fragment"
                     }

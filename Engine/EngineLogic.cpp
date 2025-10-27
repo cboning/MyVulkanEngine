@@ -1,5 +1,5 @@
 #include "EngineLogic.h"
-#include "../Vkbase/Window.h"
+#include "Vkbase/Window.h"
 #include "Entity/Cube.h"
 #include "PhysicalSystem.h"
 #include <thread>

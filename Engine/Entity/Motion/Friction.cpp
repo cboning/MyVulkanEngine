@@ -1,6 +1,5 @@
 #include "Friction.h"
-#include "../../Entity/Entity.h"
-
+#include "../Entity.h"
 
 Friction::Friction() {}
 

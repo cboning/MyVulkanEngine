@@ -46,7 +46,7 @@
             "pipelineNames": [
                 [
                     "blend",
-                    "text"
+                    "Widget"
                 ]
             ],
             "attachmentCount": 1

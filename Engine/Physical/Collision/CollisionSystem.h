@@ -1,6 +1,6 @@
 #pragma once
 
-#include "../../../Data/Octree.h"
+#include "../../Data/Octree.h"
 #include "CollisionObjectDelegator.h"
 #include <glm/glm.hpp>
 #include <string>
@@ -28,7 +28,7 @@ private:
 
     glm::vec3 _pos;
     glm::vec3 _size;
-    
+
     Octree<CollisionObjectDelegatorPtr>::Ptr _staticCollisionObjects;
     std::vector<CollisionObjectDelegatorPtr> _dynamicCollisionObjects;
 

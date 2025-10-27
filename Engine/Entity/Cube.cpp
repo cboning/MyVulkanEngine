@@ -1,11 +1,11 @@
 #include "Cube.h"
-#include "../../Camera/Camera.h"
-#include "../../JsonConfigReader/JsonConfigReader.h"
-#include "../../Vkbase/Vkbase.h"
+#include "../Camera/Camera.h"
+#include "../JsonConfigReader/JsonConfigReader.h"
 #include "../Physical/Collision/CollisionBox.h"
 #include "../Physical/Collision/CollisionCapsule.h"
 #include "../Physical/Collision/CollisionObjectDelegator.h"
 #include "../Physical/Collision/CollisionSystem.h"
+#include "../Vkbase/Vkbase.h"
 
 Cube::Cube(const std::string &name, const std::string &deviceName, const Camera &camera, const Camera &lightCamera, bool dynamic, const Object &object,
            bool isOutline)
@@ -71,8 +71,7 @@ void Cube::entityInit()
 
 void Cube::objectExtraUpdate() {}
 
-void Cube::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
-                  uint32_t frameIndex) const
+void Cube::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &, const std::string &pipelineName, uint32_t, uint32_t frameIndex) const
 {
     std::string setsName;
 

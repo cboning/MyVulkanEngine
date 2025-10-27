@@ -1,5 +1,5 @@
 #include "CollisionTriangle.h"
-#include "../Object/Object.h"
+#include "../../Object/Object.h"
 
 CollisionTriangle::CollisionTriangle() : CollisionObject(CollisionObjectType::Triangle) {}
 

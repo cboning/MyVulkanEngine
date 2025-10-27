@@ -1,5 +1,5 @@
 #include "CollisionBox.h"
-#include "../../../Object/Object.h"
+#include "../../Object/Object.h"
 #include "CollisionObject.h"
 #include <glm/glm.hpp>
 
@@ -10,11 +10,7 @@ CollisionBox::CollisionBox(const glm::vec3 &center, const glm::vec3 &boundBoxSiz
 {
 }
 
-CollisionBox::CollisionBox(const Object &object)
-    : CollisionObject(CollisionObjectType::Box)
-{
-    updateWithObject(object);
-}
+CollisionBox::CollisionBox(const Object &object) : CollisionObject(CollisionObjectType::Box) { updateWithObject(object); }
 
 const glm::vec3 &CollisionBox::boundBoxSize() const { return _boundBoxSize; }
 
@@ -32,4 +28,3 @@ void CollisionBox::updateWithObject(const Object &object)
     setCenter(object.position());
     setAxes(glm::toMat3(object.rotation()));
 }
-

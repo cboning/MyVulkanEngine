@@ -1,13 +1,13 @@
 #include "ModelEntity.h"
-#include "../../Camera/Camera.h"
-#include "../../Data.h"
-#include "../../JsonConfigReader/JsonConfigReader.h"
-#include "../../Vkbase/Vkbase.h"
+#include "../Camera/Camera.h"
+#include "../Data.h"
+#include "../JsonConfigReader/JsonConfigReader.h"
 #include "../Physical/Collision/CollisionBox.h"
 #include "../Physical/Collision/CollisionCapsule.h"
 #include "../Physical/Collision/CollisionObjectDelegator.h"
 #include "../Physical/Collision/CollisionSystem.h"
 #include "../Physical/Collision/CollisionTriangle.h"
+#include "../Vkbase/Vkbase.h"
 
 ModelEntity::ModelEntity(const std::string &name, const std::string &deviceName, const Camera &camera, Modelbase::Model &model, bool dynamic,
                          const Object &object)
