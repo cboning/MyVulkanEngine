@@ -1,7 +1,7 @@
 /*
  * mvk_datatypes.h
  *
- * Copyright (c) 2015-2024 The Brenwill Workshop Ltd. (http://www.brenwill.com)
+ * Copyright (c) 2015-2025 The Brenwill Workshop Ltd. (http://www.brenwill.com)
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -173,17 +173,17 @@ const char* mvkVkFormatName(VkFormat vkFormat);
 const char* mvkMTLPixelFormatName(MTLPixelFormat mtlFormat);
 
 /**
- * Returns the MTLClearColor value corresponding to the color value in the VkClearValue,
+ * Returns the MTLClearColor value corresponding to the Vulkan color value,
  * extracting the color value that is VkFormat for the VkFormat.
  */
 MTLClearColor mvkMTLClearColorFromVkClearValue(VkClearValue vkClearValue,
 											   VkFormat vkFormat);
 
-/** Returns the Metal depth value corresponding to the depth value in the specified VkClearValue. */
-double mvkMTLClearDepthFromVkClearValue(VkClearValue vkClearValue);
+/** Returns the Metal depth value corresponding to the Vulkan depth value. */
+double mvkMTLClearDepthFromVkClearValue(VkClearDepthStencilValue clearValue);
 
-/** Returns the Metal stencil value corresponding to the stencil value in the specified VkClearValue. */
-uint32_t mvkMTLClearStencilFromVkClearValue(VkClearValue vkClearValue);
+/** Returns the Metal stencil value corresponding to the Vulkan stencil value. */
+uint32_t mvkMTLClearStencilFromVkClearValue(VkClearDepthStencilValue clearValue);
 
 /** Returns whether the specified Metal MTLPixelFormat can be used as a depth format. */
 bool mvkMTLPixelFormatIsDepthFormat(MTLPixelFormat mtlFormat);
@@ -332,6 +332,15 @@ typedef enum {
 	kMVKShaderStageCount,
 	kMVKShaderStageMax = kMVKShaderStageCount	// Public API legacy value
 } MVKShaderStage;
+
+typedef enum {
+	kMVKBarrierStageVertex = 0,
+	kMVKBarrierStageFragment,
+	kMVKBarrierStageCompute,
+	kMVKBarrierStageCopy,
+	kMVKBarrierStageNone,
+	kMVKBarrierStageCount = kMVKBarrierStageNone
+} MVKBarrierStage;
 
 /** Returns the Metal MTLColorWriteMask corresponding to the specified Vulkan VkColorComponentFlags. */
 MTLColorWriteMask mvkMTLColorWriteMaskFromVkChannelFlags(VkColorComponentFlags vkWriteFlags);

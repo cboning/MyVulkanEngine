@@ -17,7 +17,7 @@ VkResourceManager::VkResourceManager()
 
     createInstance({"VK_LAYER_KHRONOS_validation"}, {
 #ifdef __APPLE__
-                                                        VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, "VK_MVK_macos_surface"
+                                                        "VK_MVK_macos_surface"
 #endif
                                                     });
 }
@@ -29,40 +29,86 @@ VkResourceManager::~VkResourceManager()
 
     _instance.destroy();
 }
-
 void VkResourceManager::createInstance(std::vector<const char *> layers, std::vector<const char *> extensions, std::string appName)
 {
-    vk::ApplicationInfo applicationInfo;
-    applicationInfo.setPApplicationName(appName.c_str())
-        .setApiVersion(vk::ApiVersion13)
-        .setPEngineName("No Engine")
-        .setEngineVersion(vk::makeApiVersion(0, 0, 1, 0));
+    vk::ApplicationInfo appInfo;
+    appInfo.setPApplicationName(appName.c_str()).setApiVersion(VK_API_VERSION_1_3).setPEngineName("No Engine").setEngineVersion(vk::makeApiVersion(0, 0, 1, 0));
 
-    uint32_t extensionCount = 0;
-    const char **ppExtensions = glfwGetRequiredInstanceExtensions(&extensionCount);
-    extensions.insert(extensions.end(), ppExtensions, ppExtensions + extensionCount);
+    // ---- 获取 GLFW 所需扩展 ----
+    uint32_t glfwExtCount = 0;
+    const char **glfwExts = glfwGetRequiredInstanceExtensions(&glfwExtCount);
+    extensions.insert(extensions.end(), glfwExts, glfwExts + glfwExtCount);
 
-    std::vector<const char *> tempLayerNames;
+#ifdef __APPLE__
+    // MoltenVK portability 特性在 macOS 必须要加
+    extensions.push_back(VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME);
+    extensions.push_back(VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME);
+#endif
 
-    std::vector<vk::LayerProperties> usableLayers = vk::enumerateInstanceLayerProperties();
-    std::vector<std::string> usableLayerNames;
-    for (const vk::LayerProperties &layer : usableLayers)
-        usableLayerNames.push_back(layer.layerName);
+    // ---- 检查哪些扩展可用 ----
+    std::vector<vk::ExtensionProperties> availableExts = vk::enumerateInstanceExtensionProperties();
+    std::vector<std::string> availableExtNames;
+    for (auto &e : availableExts)
+        availableExtNames.push_back(e.extensionName);
 
-    for (const char *layerName : layers)
-        if (std::find(usableLayerNames.begin(), usableLayerNames.end(), layerName) != usableLayerNames.end())
-            tempLayerNames.push_back(layerName);
+    std::vector<const char *> enabledExts;
+    for (const char *ext : extensions)
+    {
+        if (std::find(availableExtNames.begin(), availableExtNames.end(), ext) != availableExtNames.end())
+            enabledExts.push_back(ext);
+#ifdef DEBUG
+        else
+            std::cout << "[Warning] Extension not found: " << ext << std::endl;
+#endif
+    }
 
+    // ---- 检查验证层 ----
+    std::vector<vk::LayerProperties> availableLayers = vk::enumerateInstanceLayerProperties();
+    std::vector<std::string> availableLayerNames;
+    for (auto &l : availableLayers)
+        availableLayerNames.push_back(l.layerName);
+
+    std::vector<const char *> enabledLayers;
+    for (const char *layer : layers)
+    {
+        if (std::find(availableLayerNames.begin(), availableLayerNames.end(), layer) != availableLayerNames.end())
+            enabledLayers.push_back(layer);
+#ifdef DEBUG
+        else
+            std::cout << "[Warning] Layer not found: " << layer << std::endl;
+#endif
+    }
+
+    // ---- 创建实例 ----
     vk::InstanceCreateInfo createInfo;
-    createInfo.setPApplicationInfo(&applicationInfo)
-        .setPEnabledExtensionNames(extensions)
-        .setPEnabledLayerNames(tempLayerNames)
-        .setFlags(vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR);
+#ifdef __APPLE__
+    // 关键：MoltenVK 要求加 portability flag
+    createInfo.flags = vk::InstanceCreateFlagBits::eEnumeratePortabilityKHR;
+#endif
+    createInfo.setPApplicationInfo(&appInfo).setPEnabledExtensionNames(enabledExts).setPEnabledLayerNames(enabledLayers);
 
-    _instance = vk::createInstance(createInfo);
+    try
+    {
+        _instance = vk::createInstance(createInfo);
+    }
+    catch (const vk::ExtensionNotPresentError &e)
+    {
+        std::cerr << "[Error] Vulkan extension missing: " << e.what() << std::endl;
+        throw;
+    }
+
     if (!_instance)
-        throw std::runtime_error("[ERROR] Failed to create vulkan instance.");
-    std::vector<vk::PhysicalDevice> physicalDevices = _instance.enumeratePhysicalDevices();
+        throw std::runtime_error("[ERROR] Failed to create Vulkan instance.");
+
+#ifdef DEBUG
+    std::cout << "[Info] Vulkan instance created with extensions:" << std::endl;
+    for (auto *ext : enabledExts)
+        std::cout << "    " << ext << std::endl;
+#endif
+
+    auto devices = _instance.enumeratePhysicalDevices();
+    if (devices.empty())
+        throw std::runtime_error("[Error] No Vulkan-compatible GPU found.");
 }
 
 void VkResourceManager::addResource(VkResourceBase *pResource)
@@ -134,8 +180,18 @@ void VkResourceManager::remove(VkResourceType type, const std::string &name)
 
 VkResourceManager &VkResourceManager::instance()
 {
-    static VkResourceManager instance;
-    return instance;
+    if (!_pInstance)
+        _pInstance = new VkResourceManager();
+    
+    return *_pInstance;
+}
+
+void VkResourceManager::shutDown()
+{
+    if (_pInstance){
+        delete _pInstance;
+        _pInstance = nullptr;
+    }
 }
 
 const vk::Instance &VkResourceManager::vkInstance() const { return _instance; }

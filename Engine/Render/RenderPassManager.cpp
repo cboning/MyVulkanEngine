@@ -17,7 +17,8 @@ std::vector<RenderPassManager::RenderPassInfo> RenderPassManager::processConfig(
 
 RenderPassManager::RenderPassManager(const json &config) : _renderPasses(processConfig(config)) {}
 
-RenderPassManager::~RenderPassManager() {
+RenderPassManager::~RenderPassManager()
+{
     for (auto pipeline : _secondaryCommandBuffers)
         for (auto &[shouldRecord, secondaryCommandBuffer] : pipeline.second)
             secondaryCommandBuffer->destroy();
@@ -100,7 +101,7 @@ void RenderPassManager::shouldRecordFor(const std::string &pipelineName)
 
     for (auto &[state, pCommandBuffer] : _secondaryCommandBuffers[pipelineName])
     {
-        if (pCommandBuffer)
+        if (state)
             pCommandBuffer->reset();
         state = false;
     }

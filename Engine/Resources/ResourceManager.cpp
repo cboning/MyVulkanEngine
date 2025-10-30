@@ -5,8 +5,18 @@ namespace Resources
 {
 ResourceManager &ResourceManager::instance()
 {
-    static ResourceManager instance;
-    return instance;
+    if (!_pInstance)
+        _pInstance = new ResourceManager();
+    return *_pInstance;
+}
+
+void ResourceManager::shutDown()
+{
+    if (_pInstance)
+    {
+        delete _pInstance;
+        _pInstance = nullptr;
+    }
 }
 
 ResourceManager::~ResourceManager()

@@ -41,22 +41,12 @@ link_directories("./lib")
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # 收集源文件（推荐显式列出而非 GLOB）
-file(GLOB SRC_FILES 
+file(GLOB_RECURSE SRC_FILES 
+    "Engine/**.cpp"
     "*.cpp"
-    "Engine/Vkbase/*.cpp"
-    "Engine/Object/*.cpp"
-    "Engine/Modelbase/*.cpp"
-    "Engine/VkGUI/*.cpp"
-    "Engine/Camera/*.cpp"
-    "Engine/JsonConfigReader/JsonConfigReader.cpp"
-    "Engine/Event/*.cpp"
-    "Engine/*.cpp"
-    "Engine/Physical/Collision/*.cpp"
-    "Engine/Entity/Motion/*.cpp"
-    "Engine/Entity/*.cpp"
-    "Engine/Render/*.cpp"
-    "Engine/Resources/*.cpp"
 )
+
+list(FILTER SRC_FILES EXCLUDE REGEX ".*/CMakeFiles/.*")
 
 # 创建可执行文件
 add_executable(main ${SRC_FILES})
@@ -69,7 +59,7 @@ target_compile_options(main PRIVATE
 )
 
 if(APPLE)
-    add_compile_definitions(DEBUG)
+    # add_compile_definitions(DEBUG)
 
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
     # set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
@@ -95,7 +85,7 @@ add_custom_target(compile_shaders
     COMMENT "Compiling shaders..."
 )
 
-# 主目标依赖着色器编译
+# # 主目标依赖着色器编译
 add_dependencies(main compile_shaders)
 
 # macOS特定设置

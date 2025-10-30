@@ -17,7 +17,7 @@ for file in "$SRC_DIR"/*.{vert,frag,comp}; do
     type_suffix="$(tr '[:lower:]' '[:upper:]' <<< ${ext:0:1})${ext:1}"
     out_file="$OUT_DIR/${name_no_ext}${type_suffix}.spv"
 
-    glslc "$file" -o "$out_file" || exit 1
+    ../bin/glslc "$file" -o "$out_file" || exit 1
 done
 
 echo "All shaders compiled successfully."

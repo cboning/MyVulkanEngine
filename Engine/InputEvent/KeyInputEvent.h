@@ -11,7 +11,7 @@ namespace Vkbase
 class Window;
 }
 
-namespace Event
+namespace InputEvent
 {
 typedef std::function<void()> EventFunc;
 
@@ -42,9 +42,9 @@ private:
 
     GLFWwindow *_pWindow = nullptr;
 
-    std::unordered_map<int, EventFunc> _keyPressedEventMap;
-    std::unordered_map<int, EventFunc> _keyDownEventMap;
-    std::unordered_map<int, EventFunc> _keyUpEventMap;
+    std::unordered_map<int, std::vector<EventFunc>> _keyPressedEventMap;
+    std::unordered_map<int, std::vector<EventFunc>> _keyDownEventMap;
+    std::unordered_map<int, std::vector<EventFunc>> _keyUpEventMap;
     std::unordered_map<int, bool> _keyPressed;
 
     std::mutex _controlMutex;
@@ -54,4 +54,4 @@ private:
     inline static std::unordered_set<KeyInputEvent *> _pKeyInputEvents = {};
     inline static std::unordered_set<KeyInputEvent *> _pEnabledEvents = {};
 };
-} // namespace Event
+} // namespace InputEvent

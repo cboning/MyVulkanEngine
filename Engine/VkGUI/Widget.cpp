@@ -10,6 +10,10 @@
 
 namespace VkGUI
 {
+MouseState Widget::mouseState() const { return _mouseState; }
+
+void Widget::onUpdate() {}
+
 void Widget::updateRenderRect()
 {
     if (auto sp = _superWidget.lock())
@@ -29,11 +33,65 @@ void Widget::updateRenderRect()
 
 void Widget::buildMesh()
 {
-    std::vector<Vertex> vertices = {{{0.0f, 0.0f, 0.0f, 0.0f}}, {{1.0f, 0.0f, 1.0f, 0.0f}}, {{1.0f, 1.0f, 1.0f, 1.0f}}, {{0.0f, 1.0f, 0.0f, 1.0f}}};
+    static std::vector<Vertex> vertices = {{{0.0f, 0.0f, 0.0f, 0.0f}}, {{1.0f, 0.0f, 1.0f, 0.0f}}, {{1.0f, 1.0f, 1.0f, 1.0f}}, {{0.0f, 1.0f, 0.0f, 1.0f}}};
 
-    std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+    static std::vector<uint16_t> indices = {0, 1, 2, 2, 3, 0};
+    if (auto p = _superWidget.lock())
+        _mesh = p->_mesh;
+    else
+        _mesh = std::make_shared<Vkbase::Mesh<Vertex>>(std::string(""), deviceName(), vertices, indices, std::vector<std::vector<std::string>>{});
+}
 
-    _mesh = std::make_unique<Vkbase::Mesh<Vertex>>(std::string(""), deviceName(), vertices, indices, std::vector<std::vector<std::string>>{});
+void Widget::processMouse(glm::vec2 pos, MouseEventType eventType)
+{
+    if (!inRect(pos))
+    {
+        if (eventType == MouseEventType::Down)
+            return;
+
+        if (eventType == MouseEventType::Move && _mouseState == MouseState::Above)
+            _mouseState = MouseState::Normal;
+        else if (eventType == MouseEventType::Up && _mouseState == MouseState::Clicked)
+            _mouseState = MouseState::Normal;
+    }
+    else
+    {
+        if (eventType == MouseEventType::Move && _mouseState == MouseState::Normal)
+            _mouseState = MouseState::Above;
+        else if (eventType == MouseEventType::Down)
+            _mouseState = MouseState::Clicked;
+        else if (eventType == MouseEventType::Up && _mouseState == MouseState::Clicked)
+        {
+            _trigger = true;
+            _mouseState = MouseState::Above;
+        }
+    }
+
+    for (auto it = _subWidgets.rbegin(); it != _subWidgets.rend(); ++it)
+    {
+        if (eventType == MouseEventType::Down)
+        {
+            if ((*it)->inRect(pos))
+            {
+                (*it)->processMouse(pos, eventType);
+                break;
+            }
+        }
+        else
+            (*it)->processMouse(pos, eventType);
+    }
+}
+
+bool Widget::inRect(glm::vec2 pos)
+{
+    return !(pos.x < _renderRect.x || pos.y < _renderRect.y || pos.x >= _renderRect.x + _renderRect.z || pos.y >= _renderRect.y + _renderRect.w);
+}
+
+void Widget::init()
+{
+    updateRenderRect();
+    delegatorInit();
+    buildMesh();
 }
 
 Widget::Widget(WidgetType type, const std::string &deviceName, const std::string &textureName)
@@ -42,9 +100,6 @@ Widget::Widget(WidgetType type, const std::string &deviceName, const std::string
       _fragUBOName(createResource<Vkbase::Buffer>("", deviceName, sizeof(WidgetUBOFragData), vk::BufferUsageFlagBits::eUniformBuffer)->name()), _type(type),
       _textureName(textureName.empty() ? deviceName + "_" + "Empty" : textureName)
 {
-    updateRenderRect();
-    delegatorInit();
-    buildMesh();
 }
 
 Widget::~Widget()
@@ -108,6 +163,11 @@ void Widget::onUpdateUBO(uint32_t frameIndex) const
 
     WidgetUBOFragData fragUBOData;
     fragUBOData.color = _color;
+    if (_mouseState == MouseState::Above)
+        fragUBOData.color *= _aboveColorFactor;
+    if (_mouseState == MouseState::Clicked)
+        fragUBOData.color *= _clickedColorFactor;
+
     fragUBOData.rect = _renderRect;
     fragUBOData.type = glm::u32vec4((uint32_t)_type, 0, 0, 0);
 

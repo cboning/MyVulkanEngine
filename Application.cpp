@@ -3,9 +3,10 @@
 #include "Data.h"
 #include "Engine/EngineLogic.h"
 #include "Engine/Data/Octree.h"
+#include "Engine/Resources/ResourceManager.h"
 
 Application::Application()
-    : _renderer("mainWindow")
+    : _renderer(std::make_unique<Render>("mainWindow"))
 {
     init();
 }
@@ -26,7 +27,11 @@ void Application::mainLoop()
 
     while (Render::shouldEndApplication())
     {
-        _renderer.draw();
+        Render::draw();
     }
     engine.stop();
+
+    _renderer.reset();
+    Resources::ResourceManager::shutDown();
+    Vkbase::VkResourceManager::shutDown();
 }

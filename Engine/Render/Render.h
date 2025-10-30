@@ -1,6 +1,5 @@
 #pragma once
 #include "../Camera/Camera.h"
-#include "../VkGUI/Font.h"
 #include "../VkGUI/Text.h"
 #include "../Vkbase/Vkbase.h"
 #include "RenderFrame.h"
@@ -30,6 +29,7 @@ private:
     std::vector<RenderPassManager> _renderPassManagers;
     std::vector<std::shared_ptr<Vkbase::RenderObjectDelegator>> _renderObjects;
     RenderObjectManager _renderObjectManager;
+    std::weak_ptr<VkGUI::Text> _fps;
 
     inline static float _speed = 10.f;
     Push *_pPush = nullptr;

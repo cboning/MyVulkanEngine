@@ -20,7 +20,14 @@ Character::~Character() {}
 
 void Character::entityInit()
 {
-    _model.createNewInstance("1", {0, 0.0f});
+    for (uint32_t i = 0;; ++i)
+    {
+        _instanceName = std::to_string(i);
+        if (_model.instanceIndex(_instanceName) == -1)
+            break;
+    }
+
+    _model.createNewInstance(_instanceName, {0, 0.0f});
     if (dynamic())
     {
         CollisionObjectDelegator *pCollisionObject =
@@ -37,7 +44,7 @@ void Character::entityInit()
     collisionObject()->collisionObject<CollisionObject>().updateWithObject(object());
 }
 
-void Character::objectExtraUpdate() { _model.instance("1").object().setPosition(object().position()); }
+void Character::objectExtraUpdate() { _model.instance(_instanceName).object().setPosition(object().position()); }
 
 void Character::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
                        uint32_t frameIndex) const
@@ -49,14 +56,14 @@ void Character::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string 
     _model.draw(frameIndex, pCommandBuffer, renderPassName, pipelineName, 0);
 }
 
-void Character::onUpdateUBO(uint32_t frameIndex) const { _model.instance("1").updateUniformBuffers(frameIndex, camera()); }
+void Character::onUpdateUBO(uint32_t frameIndex) const { _model.instance(_instanceName).updateUniformBuffers(frameIndex, camera()); }
 
 void Character::addDescriptorSetsConfig(Vkbase::DescriptorSets &) {}
 
 void Character::writeDescriptorSets(Vkbase::DescriptorSets &) {}
 
-std::vector<vk::DescriptorSetLayout> Character::descriptorSetLayouts() { return _model.descriptorSetLayout("1", "g_buffer"); }
+std::vector<vk::DescriptorSetLayout> Character::descriptorSetLayouts() { return _model.descriptorSetLayout(_instanceName, "g_buffer"); }
 
-Object &Character::modelObject() { return _model.instance("1").object(); }
+Object &Character::modelObject() { return _model.instance(_instanceName).object(); }
 
-const Object &Character::modelObject() const { return _model.instance("1").object(); }
+const Object &Character::modelObject() const { return _model.instance(_instanceName).object(); }

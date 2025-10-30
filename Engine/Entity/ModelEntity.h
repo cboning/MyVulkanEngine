@@ -20,6 +20,7 @@ class ModelEntity : public Entity
 {
 private:
     Modelbase::Model &_model;
+    std::string _instanceName;
 
     void entityInit() override;
     void objectExtraUpdate() override;

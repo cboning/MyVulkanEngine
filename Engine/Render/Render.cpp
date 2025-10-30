@@ -8,7 +8,7 @@
 #include "../Engine/Entity/Motion/Gravity.h"
 #include "../Engine/Entity/Motion/Push.h"
 #include "../Engine/Physical/Collision/CollisionSystem.h"
-#include "../Event/KeyInputEvent.h"
+#include "../InputEvent/KeyInputEvent.h"
 #include "../JsonConfigReader/JsonConfigReader.h"
 #include "../Modelbase/Modelbase.h"
 
@@ -87,21 +87,19 @@ Render::Render(const std::string &windowName)
     _renderObjectManager.addObject("Normal", "g_buffer", _renderObjects.back());
 
     _rootFrameIndex = _renderObjects.size();
-    _renderObjects.push_back(VkGUI::Widget::create<VkGUI::Frame>(deviceName()));
+    _renderObjects.push_back(VkGUI::Widget::create<VkGUI::Frame>(_pWindow, deviceName()));
     _renderObjectManager.addObject("Blend", "Widget", _renderObjects.back());
-    std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())->setRect({50, 50, 100, 100});
+    std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())->setRect({0, 0, 500, 1600});
     std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())->setColor({0.0f, 0.0f, 0.0f, 0.5f});
     std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())
         ->setCommandShouldRecordFunc([this]() { this->_renderPassManagers.back().shouldRecordFor("Widget"); });
-
-    if (auto p = std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())
-                     ->create<VkGUI::Text>(
-                         Resources::ResourceManager::instance().getResource<Resources::FontResource>(deviceName(), "./src/fonts/AaXuanYuanTi-2.ttf", 48).font())
-                     .lock())
+    _fps = std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())
+               ->create<VkGUI::Text>(
+                   Resources::ResourceManager::instance().getResource<Resources::FontResource>(deviceName(), "./src/fonts/AaXuanYuanTi-2.ttf", 48).font());
+    if (auto p = _fps.lock())
     {
         p->setText("测试");
         p->setTextColor(glm::vec4(1.0f));
-        p->setColor(glm::vec4(0.3f));
     }
 
     createDescriptorSets();
@@ -115,7 +113,7 @@ const std::string &Render::deviceName() { return _deviceName; }
 
 void Render::initWindowEvents()
 {
-    Event::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::VkResourceType::Window, "mainWindow"))->keyInputEvent();
+    InputEvent::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::VkResourceType::Window, "mainWindow"))->keyInputEvent();
     Object &Box1 = Entity::entity<Cube>("1")->object();
     event.addPressedKeyEvent(GLFW_KEY_W, [&]() { _camera.moveFront(_speed * (_deltaTime)); });
     event.addPressedKeyEvent(GLFW_KEY_S, [&]() { _camera.moveBack(_speed * (_deltaTime)); });
@@ -140,32 +138,7 @@ void Render::initWindowEvents()
                               event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { _camera.moveUp(_speed * (_deltaTime)); });
                               event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { _camera.moveDown(_speed * (_deltaTime)); });
                           });
-    event.addDownKeyEvent(
-        GLFW_KEY_R,
-        [&]()
-        {
-            event.removeUpKeyEvent(GLFW_KEY_W);
-            event.removeUpKeyEvent(GLFW_KEY_S);
-            event.removeUpKeyEvent(GLFW_KEY_A);
-            event.removeUpKeyEvent(GLFW_KEY_D);
-            event.removeDownKeyEvent(GLFW_KEY_W);
-            event.removeDownKeyEvent(GLFW_KEY_S);
-            event.removeDownKeyEvent(GLFW_KEY_A);
-            event.removeDownKeyEvent(GLFW_KEY_D);
 
-            event.addPressedKeyEvent(GLFW_KEY_W,
-                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(1.0f, 0.0f, 0.0f)) * Box1.rotation()); });
-            event.addPressedKeyEvent(GLFW_KEY_S,
-                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(-1.0f, 0.0f, 0.0f)) * Box1.rotation()); });
-            event.addPressedKeyEvent(GLFW_KEY_A,
-                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, -1.0f, 0.0f)) * Box1.rotation()); });
-            event.addPressedKeyEvent(GLFW_KEY_D,
-                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, 0.0f, 1.0f)) * Box1.rotation()); });
-            event.addPressedKeyEvent(GLFW_KEY_SPACE,
-                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, 1.0f, 0.0f)) * Box1.rotation()); });
-            event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT,
-                                     [&]() { Box1.setRotation(glm::angleAxis(_speed * _deltaTime, glm::vec3(0.0f, -1.0f, 0.0f)) * Box1.rotation()); });
-        });
     event.addDownKeyEvent(
         GLFW_KEY_P,
         [&]()
@@ -187,26 +160,6 @@ void Render::initWindowEvents()
 
             event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
             event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
-        });
-    event.addDownKeyEvent(
-        GLFW_KEY_F,
-        [&]()
-        {
-            event.removeUpKeyEvent(GLFW_KEY_W);
-            event.removeUpKeyEvent(GLFW_KEY_S);
-            event.removeUpKeyEvent(GLFW_KEY_A);
-            event.removeUpKeyEvent(GLFW_KEY_D);
-            event.removeDownKeyEvent(GLFW_KEY_W);
-            event.removeDownKeyEvent(GLFW_KEY_S);
-            event.removeDownKeyEvent(GLFW_KEY_A);
-            event.removeDownKeyEvent(GLFW_KEY_D);
-
-            event.addPressedKeyEvent(GLFW_KEY_W, [&]() { Box1.setScale(Box1.scale() + glm::vec3(1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_S, [&]() { Box1.setScale(Box1.scale() + glm::vec3(-1.0f, 0.0f, 0.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_A, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 0.0f, -1.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_D, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 0.0f, 1.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { Box1.setScale(Box1.scale() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
         });
 
     event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { _camera.moveUp(_speed * (_deltaTime)); });
@@ -325,7 +278,8 @@ void Render::draw()
     glfwPollEvents();
     calcDeltaTime();
     Vkbase::Device::collectAllDelayResource();
-    Event::KeyInputEvent::processing();
+    InputEvent::KeyInputEvent::processing();
+    InputEvent::MouseInputEvent::processing();
 
     if (_resourceManager.resources().count(Vkbase::VkResourceType::RenderDelegator))
     {
@@ -339,13 +293,20 @@ void Render::draw()
 
 void Render::update(uint32_t currentFrame)
 {
-    // std::cout << 1 / _deltaTime << std::endl;
     _camera.updatePerspective();
     for (Modelbase::Model *pModel : Modelbase::Model::models())
         pModel->updateAnimation(_deltaTime);
 
     for (auto object : _renderObjects)
         object->update(currentFrame);
+
+    // if (auto p = _fps.lock())
+    // {
+    //     if (currentFrame == 0)
+    //     {
+    //         p->setText(std::to_string((int)(1 / _deltaTime)));
+    //     }
+    // }
 }
 
 void Render::cleanup() {}

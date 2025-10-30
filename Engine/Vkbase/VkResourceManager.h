@@ -72,6 +72,7 @@ class VkResourceManager
 private:
     vk::Instance _instance;
     VkResourceSet _pResources;
+    inline static VkResourceManager *_pInstance = nullptr;
 
     void createInstance(std::vector<const char *> layers = {"VK_LAYER_KHRONOS_validation"},
                         std::vector<const char *> extensions = {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME,
@@ -91,6 +92,7 @@ public:
     VkResourceBase *resource(VkResourceType type, const std::string &name) const;
     const vk::Instance &vkInstance() const;
     static VkResourceManager &instance();
+    static void shutDown();
     void remove(VkResourceType type, const std::string &name);
 };
 

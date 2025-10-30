@@ -22,11 +22,13 @@ class ResourceManager
 
 public:
     static ResourceManager &instance();
+    static void shutDown();
     template <typename T, typename... Args> T &getResource(Args &&...args) const;
     void removeResource(ResourceBase *pResource);
 
 private:
     std::unordered_map<std::string, ResourceBase *> _pResources;
+    inline static ResourceManager *_pInstance = nullptr;
 
     ~ResourceManager();
     void addResource(ResourceBase *pResource);

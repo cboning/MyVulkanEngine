@@ -21,7 +21,14 @@ ModelEntity::~ModelEntity() {}
 
 void ModelEntity::entityInit()
 {
-    _model.createNewInstance("1", {0, 0.0f});
+    for (uint32_t i = 0;; ++i)
+    {
+        _instanceName = std::to_string(i);
+        if (_model.instanceIndex(_instanceName) == -1)
+            break;
+    }
+
+    _model.createNewInstance(_instanceName, {0, 0.0f});
     if (dynamic())
     {
         for (const auto &mesh : _model.meshes())
@@ -49,7 +56,7 @@ void ModelEntity::entityInit()
     // collisionObject()->collisionObject<CollisionObject>().updateWithObject(object());
 }
 
-void ModelEntity::objectExtraUpdate() { _model.instance("1").object().setPosition(object().position()); }
+void ModelEntity::objectExtraUpdate() { _model.instance(_instanceName).object().setPosition(object().position()); }
 
 void ModelEntity::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
                          uint32_t frameIndex) const
@@ -59,7 +66,7 @@ void ModelEntity::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::strin
 
 void ModelEntity::onUpdateUBO(uint32_t frameIndex) const
 {
-    const Modelbase::ModelInstance &instance = _model.instance("1");
+    const Modelbase::ModelInstance &instance = _model.instance(_instanceName);
     instance.updateUniformBuffers(frameIndex, camera());
 }
 
@@ -67,8 +74,8 @@ void ModelEntity::addDescriptorSetsConfig(Vkbase::DescriptorSets &) {}
 
 void ModelEntity::writeDescriptorSets(Vkbase::DescriptorSets &) {}
 
-std::vector<vk::DescriptorSetLayout> ModelEntity::descriptorSetLayouts() { return _model.descriptorSetLayout("1", "g_buffer"); }
+std::vector<vk::DescriptorSetLayout> ModelEntity::descriptorSetLayouts() { return _model.descriptorSetLayout(_instanceName, "g_buffer"); }
 
-Object &ModelEntity::modelObject() { return _model.instance("1").object(); }
+Object &ModelEntity::modelObject() { return _model.instance(_instanceName).object(); }
 
-const Object &ModelEntity::modelObject() const { return _model.instance("1").object(); }
+const Object &ModelEntity::modelObject() const { return _model.instance(_instanceName).object(); }

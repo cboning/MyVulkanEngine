@@ -1,7 +1,7 @@
 #include "KeyInputEvent.h"
 #include <algorithm>
 
-namespace Event
+namespace InputEvent
 {
 
 KeyInputEvent::KeyInputEvent(GLFWwindow *pWindow) : _pWindow(pWindow)
@@ -33,12 +33,14 @@ void KeyInputEvent::processingEvent()
             {
                 auto it = _keyDownEventMap.find(keyState.first);
                 if (it != _keyDownEventMap.end())
-                    it->second();
+                    for (auto &t : it->second)
+                        t();
             }
 
             auto it = _keyPressedEventMap.find(keyState.first);
             if (it != _keyPressedEventMap.end())
-                it->second();
+                    for (auto &t : it->second)
+                        t();
 
             keyState.second = true;
         }
@@ -48,7 +50,8 @@ void KeyInputEvent::processingEvent()
             {
                 auto it = _keyUpEventMap.find(keyState.first);
                 if (it != _keyUpEventMap.end())
-                    it->second();
+                    for (auto &t : it->second)
+                        t();
             }
             keyState.second = false;
         }
@@ -59,19 +62,19 @@ void KeyInputEvent::addPressedKeyEvent(int key, EventFunc event)
 {
     std::unique_lock<std::mutex> lock(_controlMutex);
     addEvent(key);
-    _keyPressedEventMap[key] = event;
+    _keyPressedEventMap[key].push_back(event);
 }
 void KeyInputEvent::addDownKeyEvent(int key, EventFunc event)
 {
     std::unique_lock<std::mutex> lock(_controlMutex);
     addEvent(key);
-    _keyDownEventMap[key] = event;
+    _keyDownEventMap[key].push_back(event);
 }
 void KeyInputEvent::addUpKeyEvent(int key, EventFunc event)
 {
     std::unique_lock<std::mutex> lock(_controlMutex);
     addEvent(key);
-    _keyUpEventMap[key] = event;
+    _keyUpEventMap[key].push_back(event);
 }
 
 void KeyInputEvent::removePressedKeyEvent(int key)
@@ -130,4 +133,4 @@ void KeyInputEvent::removeEvent(int key)
 
     _keyPressed.erase(key);
 }
-} // namespace Event
+} // namespace InputEvent

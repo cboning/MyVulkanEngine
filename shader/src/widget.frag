@@ -19,8 +19,8 @@ vec4 character() { return ubo.color * vec4(1.0, 1.0, 1.0, texture(image, TexCoor
 void main()
 {
     uvec2 pos = uvec2(gl_FragCoord.xy);
-    if (pos.x < ubo.rect.x || pos.y < ubo.rect.y || pos.x >= ubo.rect.x + ubo.rect.z || pos.y >= ubo.rect.y + ubo.rect.w)
-        discard;
+    // if (pos.x < ubo.rect.x || pos.y < ubo.rect.y || pos.x >= ubo.rect.x + ubo.rect.z || pos.y >= ubo.rect.y + ubo.rect.w)
+    //     discard;
 
     if (ubo.type.x == 0)
         color = character();

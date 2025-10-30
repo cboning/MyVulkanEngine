@@ -1,5 +1,4 @@
 #include "Window.h"
-#include "../Event/KeyInputEvent.h"
 #include "CommandPool.h"
 #include "Device.h"
 #include "Swapchain.h"
@@ -18,15 +17,16 @@ Window::Window(const std::string &resourceName, const std::string &title, uint32
     _surface = _pendingInitData->surface;
     _pendingInitData.reset();
 
-    _pKeyInputEvent = std::unique_ptr<Event::KeyInputEvent, Deleter>(new Event::KeyInputEvent(_pWindow));
+    _pKeyInputEvent = std::unique_ptr<InputEvent::KeyInputEvent, Deleter>(new InputEvent::KeyInputEvent(_pWindow));
+    _pMouseInputEvent = std::unique_ptr<InputEvent::MouseInputEvent, Deleter>(new InputEvent::MouseInputEvent(_pWindow));
+    _pMouseInputEvent->addMoveEvent([this](glm::vec2 pos) { this->mouseMoveCallback(pos); });
+    _pMouseInputEvent->addScrollEvent([this](glm::vec2 offset) { this->mouseScrollCallback(offset); });
 
     cursorCapture(_cursorState);
     // Set the user pointer to this window instance
     glfwSetWindowUserPointer(_pWindow, this);
     // Set the close callback to handle window close events
     glfwSetWindowCloseCallback(_pWindow, windowClosedCallback);
-    glfwSetCursorPosCallback(_pWindow, mouseMoveCallback);
-    glfwSetScrollCallback(_pWindow, mouseScrollCallback);
     glfwSetWindowSizeCallback(_pWindow, windowResizeCallback);
 
     if (_surface)
@@ -46,7 +46,7 @@ Window::InitData Window::createWindow(const std::string &title, uint32_t width, 
         throw std::runtime_error("[Error] Failed to create GLFW window");
 
     VkSurfaceKHR rawSurface{};
-    VkResult result = glfwCreateWindowSurface(resourceManager().vkInstance(), pWindow, nullptr, &rawSurface);
+    VkResult result = glfwCreateWindowSurface(static_cast<VkInstance>(resourceManager().vkInstance()), pWindow, nullptr, &rawSurface);
 
     if (result != VK_SUCCESS)
         throw std::runtime_error("[Error] Failed to create Vulkan surface");
@@ -93,20 +93,18 @@ vk::SurfaceKHR Window::init(uint32_t width, uint32_t height, const std::string &
 
 void Window::windowClosedCallback(GLFWwindow *pWindow) { _delayDestroyWindows.insert(static_cast<Window *>(glfwGetWindowUserPointer(pWindow))); }
 
-void Window::mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos)
+void Window::mouseMoveCallback(glm::vec2 pos)
 {
-    Window &window = *static_cast<Window *>(glfwGetWindowUserPointer(pWindow));
-    if (window._mouseMoveCallback)
-        window._mouseMoveCallback(xPos - window._cursorPosX, yPos - window._cursorPosY);
-    window._cursorPosX = xPos;
-    window._cursorPosY = yPos;
+    if (this->_mouseMoveCallback)
+        this->_mouseMoveCallback(pos.x - this->_cursorPosX, pos.y - this->_cursorPosY);
+    this->_cursorPosX = pos.x;
+    this->_cursorPosY = pos.y;
 }
 
-void Window::mouseScrollCallback(GLFWwindow *pWindow, double xOffset, double yOffset)
+void Window::mouseScrollCallback(glm::vec2 offset)
 {
-    Window &window = *static_cast<Window *>(glfwGetWindowUserPointer(pWindow));
-    if (window._mouseScrollCallback)
-        window._mouseScrollCallback(xOffset, yOffset);
+    if (this->_mouseScrollCallback)
+        this->_mouseScrollCallback(offset.x, offset.y);
 }
 
 void Window::windowResizeCallback(GLFWwindow *pWindow, int width, int height)
@@ -143,5 +141,6 @@ void Window::switchCursorState()
     cursorCapture(_cursorState);
 }
 
-Event::KeyInputEvent &Window::keyInputEvent() { return *_pKeyInputEvent; }
+InputEvent::KeyInputEvent &Window::keyInputEvent() { return *_pKeyInputEvent; }
+InputEvent::MouseInputEvent &Window::mouseInputEvent() { return *_pMouseInputEvent; }
 } // namespace Vkbase

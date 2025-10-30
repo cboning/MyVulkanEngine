@@ -5,7 +5,7 @@
 class Application
 {
 private:
-    Render _renderer;
+    std::unique_ptr<Render> _renderer;
     void init();
     void mainLoop();
 

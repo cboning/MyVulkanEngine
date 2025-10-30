@@ -28,7 +28,16 @@
             "args": [],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
-            "environment": [],
+            "environment": [
+                {
+                    "name": "VK_ICD_FILENAMES",
+                    "value": "${workspaceFolder}/lib/MoltenVK_icd.json"
+                },
+                {
+                    "name": "VK_LAYER_PATH",
+                    "value": "${workspaceFolder}/share/vulkan/explicit_layer.d"
+                }
+            ],
             "externalConsole": false,
             "logging": {
                 "moduleLoad": false,

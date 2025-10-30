@@ -1,12 +1,13 @@
 #pragma once
 #define GLFW_INCLUDE_VULKAN
-#include "../Event/KeyInputEvent.h"
+#include "../InputEvent/KeyInputEvent.h"
+#include "../InputEvent/MouseInputEvent.h"
 #include "VkGpuResourceBase.h"
 #include <GLFW/glfw3.h>
 #include <functional>
 #include <unordered_set>
 
-namespace Event
+namespace InputEvent
 {
 class KeyInputEvent;
 }
@@ -29,7 +30,8 @@ public:
 private:
     struct Deleter
     {
-        void operator()(Event::KeyInputEvent *p) const noexcept { delete p; }
+        void operator()(InputEvent::KeyInputEvent *p) const noexcept { delete p; }
+        void operator()(InputEvent::MouseInputEvent *p) const noexcept { delete p; }
     };
     GLFWwindow *_pWindow = nullptr;
     vk::SurfaceKHR _surface;
@@ -38,7 +40,8 @@ private:
     const Swapchain *_pSwapchain = nullptr;
     double _cursorPosX, _cursorPosY;
     int _cursorState = GLFW_CURSOR_NORMAL;
-    std::unique_ptr<Event::KeyInputEvent, Deleter> _pKeyInputEvent;
+    std::unique_ptr<InputEvent::KeyInputEvent, Deleter> _pKeyInputEvent;
+    std::unique_ptr<InputEvent::MouseInputEvent, Deleter> _pMouseInputEvent;
     std::function<void(double, double)> _mouseMoveCallback;
     std::function<void(double, double)> _mouseScrollCallback;
     inline static std::unordered_set<Window *> _delayDestroyWindows;
@@ -46,9 +49,10 @@ private:
 
     vk::SurfaceKHR init(uint32_t width, uint32_t height, const std::string &title);
     static void windowClosedCallback(GLFWwindow *pWindow);
-    static void mouseMoveCallback(GLFWwindow *pWindow, double xPos, double yPos);
-    static void mouseScrollCallback(GLFWwindow *pWindow, double xOffset, double yOffset);
-    static void windowResizeCallback(GLFWwindow *pWindow, int width, int height);
+    void mouseMoveCallback(glm::vec2 pos);
+    void mouseScrollCallback(glm::vec2 offset);
+    static void windowResizeCallback(GLFWwindow* pWindow, int width,
+                                     int height);
     Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height);
     Window(const std::string &resourceName, Device &device, const std::string &title, uint32_t width, uint32_t height);
     static InitData createWindow(const std::string &title, uint32_t width, uint32_t height);
@@ -66,6 +70,7 @@ public:
     void cursorCapture(int value);
     void switchCursorState();
 
-    Event::KeyInputEvent &keyInputEvent();
+    InputEvent::KeyInputEvent &keyInputEvent();
+    InputEvent::MouseInputEvent &mouseInputEvent();
 };
 } // namespace Vkbase

@@ -26,6 +26,20 @@ enum class WidgetType
     Image
 };
 
+enum class MouseEventType
+{
+    Move,
+    Down,
+    Up
+};
+
+enum class MouseState
+{
+    Normal,
+    Above,
+    Clicked
+};
+
 class Widget : public Vkbase::RenderObjectDelegator, public std::enable_shared_from_this<Widget>
 {
 public:
@@ -53,6 +67,9 @@ public:
     };
 
 protected:
+    MouseState mouseState() const;
+    virtual void onUpdate();
+
 private:
     struct Deleter
     {
@@ -65,7 +82,7 @@ private:
     std::string _vertUBOName = "";
     std::string _fragUBOName = "";
 
-    std::unique_ptr<Vkbase::Mesh<Vertex>> _mesh;
+    std::shared_ptr<Vkbase::Mesh<Vertex>> _mesh;
     glm::vec4 _color = glm::vec4(0.0f);
     const WidgetType _type;
     glm::mat4 _model = glm::mat4(1.0f);
@@ -73,20 +90,30 @@ private:
     glm::u32vec4 _renderRect = glm::u32vec4(0);
     std::function<void()> _commandShouldRecordFunc = {};
 
+    glm::vec4 _clickedColorFactor = glm::vec4(1.0f);
+    glm::vec4 _aboveColorFactor = glm::vec4(1.0f);
+
+    MouseState _mouseState = MouseState::Normal;
+    bool _trigger = false;
+
     std::string _textureName;
 
     template <typename T> std::weak_ptr<T> add(std::shared_ptr<T> &subWidget);
 
     inline static glm::mat4 _projection = glm::mat4(1.0f);
+    inline static std::unordered_map<Vkbase::Window *, std::vector<std::weak_ptr<Widget>>> _rootWidgets = {};
 
     void updateRenderRect();
     void buildMesh();
+    void processMouse(glm::vec2 pos, MouseEventType eventType);
+    bool inRect(glm::vec2 pos);
+    void init();
 
 public:
     Widget(WidgetType type, const std::string &deviceName, const std::string &textureName = "");
     virtual ~Widget();
     template <typename T, typename... Args> std::weak_ptr<T> create(Args &&...args);
-    template <typename T, typename... Args> static std::shared_ptr<T> create(const std::string &deviceName, Args &&...args);
+    template <typename T, typename... Args> static std::shared_ptr<T> create(Vkbase::Window *pWindow, const std::string &deviceName, Args &&...args);
     void destroy();
 
     void setColor(const glm::vec4 &color);
@@ -112,6 +139,7 @@ template <typename T> inline std::weak_ptr<T> Widget::add(std::shared_ptr<T> &su
     subWidget->_superWidget = shared_from_this();
     _subWidgets.push_back(subWidget);
     subWidget->setCommandShouldRecordFunc(_commandShouldRecordFunc);
+    subWidget->init();
     return std::weak_ptr<T>(subWidget);
 }
 
@@ -123,8 +151,51 @@ template <typename T, typename... Args> inline std::weak_ptr<T> Widget::create(A
     return add(subWidget);
 }
 
-template <typename T, typename... Args> inline std::shared_ptr<T> Widget::create(const std::string &deviceName, Args &&...args)
+template <typename T, typename... Args> inline std::shared_ptr<T> Widget::create(Vkbase::Window *pWindow, const std::string &deviceName, Args &&...args)
 {
-    return std::shared_ptr<T>(new T(deviceName, std::forward<Args>(args)...));
+    auto widget = std::shared_ptr<T>(new T(deviceName, std::forward<Args>(args)...));
+    if (!_rootWidgets.count(pWindow))
+    {
+        pWindow->mouseInputEvent().addMoveEvent(
+            [pWindow](glm::vec2)
+            {
+                for (auto &rootWidget : _rootWidgets[pWindow])
+                    if (auto p = rootWidget.lock())
+                    {
+                        int width, height;
+                        glfwGetFramebufferSize(pWindow->window(), &width, &height);
+                        p->processMouse(pWindow->mouseInputEvent().pos() * glm::vec2(width / pWindow->width(), height / pWindow->height()),
+                                        MouseEventType::Move);
+                    }
+            });
+        pWindow->mouseInputEvent().addDownButtonEvent(InputEvent::Button::Left,
+                                                      [pWindow]()
+                                                      {
+                                                          for (auto &rootWidget : _rootWidgets[pWindow])
+                                                              if (auto p = rootWidget.lock())
+                                                              {
+                                                                  int width, height;
+                                                                  glfwGetFramebufferSize(pWindow->window(), &width, &height);
+                                                                  p->processMouse(pWindow->mouseInputEvent().pos() *
+                                                                                      glm::vec2(width / pWindow->width(), height / pWindow->height()),
+                                                                                  MouseEventType::Down);
+                                                              }
+                                                      });
+        pWindow->mouseInputEvent().addUpButtonEvent(
+            InputEvent::Button::Left,
+            [pWindow]()
+            {
+                for (auto &rootWidget : _rootWidgets[pWindow])
+                    if (auto p = rootWidget.lock())
+                    {
+                        int width, height;
+                        glfwGetFramebufferSize(pWindow->window(), &width, &height);
+                        p->processMouse(pWindow->mouseInputEvent().pos() * glm::vec2(width / pWindow->width(), height / pWindow->height()), MouseEventType::Up);
+                    }
+            });
+    }
+    _rootWidgets[pWindow].push_back(std::dynamic_pointer_cast<Widget>(widget));
+    widget->init();
+    return widget;
 }
 } // namespace VkGUI
