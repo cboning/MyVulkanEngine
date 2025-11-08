@@ -1,4 +1,5 @@
 #pragma once
+#include "../Vkbase/VkResourceManagerHolder.h"
 #include <json.hpp>
 #include <string>
 #include <unordered_map>
@@ -6,11 +7,6 @@
 #include <vulkan/vulkan.hpp>
 
 using json = nlohmann::json;
-namespace Vkbase
-{
-class CommandBuffer;
-class CommandPool;
-} // namespace Vkbase
 
 class RenderObjectManager;
 
@@ -25,17 +21,18 @@ private:
     };
     std::vector<RenderPassInfo> _renderPasses;
 
-    std::unordered_map<std::string, std::vector<std::pair<bool, Vkbase::CommandBuffer *>>> _secondaryCommandBuffers;
+    std::unordered_map<std::string, std::vector<std::pair<bool, Vkbase::VkResourceManagerHolder::WeakReference>>> _secondaryCommandBuffers;
 
     static std::vector<RenderPassInfo> processConfig(const json &config);
 
 public:
     RenderPassManager(const json &config);
     ~RenderPassManager();
-    void draw(Vkbase::CommandBuffer *pCommandBuffer, RenderObjectManager *pObjects, uint32_t imageIndex, uint32_t frameIndex);
+    void draw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, RenderObjectManager *pObjects, uint32_t imageIndex, uint32_t frameIndex);
     void registSecondaryBuffer(const std::string &commandPoolName, const std::string &pipelineName, uint32_t frameIndex);
-    Vkbase::CommandBuffer *recordSecondaryBuffer(const std::string &commandPoolName, RenderObjectManager *pObjects, const std::string &framebufferName,
-                                                 const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex);
+    Vkbase::VkResourceManagerHolder::WeakReference recordSecondaryBuffer(const std::string &commandPoolName, RenderObjectManager *pObjects,
+                                                                         const std::string &framebufferName, const std::string &renderPassName,
+                                                                         const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex);
     void shouldRecordFor(const std::string &pipelineName);
     void shouldRecordFor();
 

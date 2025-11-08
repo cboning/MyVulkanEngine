@@ -13,44 +13,39 @@ namespace Vkbase
 {
 Image::Image(const std::string &resourceName, const std::string &deviceName, const std::string &filename, vk::Format format, vk::ImageType type,
              vk::ImageViewType viewType, vk::ImageUsageFlags usage)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
-      _pDevice(&_device), _format(format), _type(type), _viewType(viewType)
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName, resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)), _format(format),
+      _type(type), _viewType(viewType)
 {
     loadImage(filename, usage);
 }
 
 Image::Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
              vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage, const void *pData)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
-      _pDevice(&_device), _format(format), _type(type), _viewType(viewType)
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName, resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)), _format(format),
+      _type(type), _viewType(viewType)
 {
     createImageWithData(width, height, depth, usage, pData);
 }
 
 Image::Image(const std::string &resourceName, const std::string &deviceName, uint32_t width, uint32_t height, uint32_t depth, vk::Format format,
              vk::ImageType type, vk::ImageViewType viewType, vk::ImageUsageFlags usage)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
-      _pDevice(&_device), _format(format), _type(type), _viewType(viewType)
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName, resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)), _format(format),
+      _type(type), _viewType(viewType)
 {
     createImageWithNoData(width, height, depth, usage);
 }
 
 Image::Image(Swapchain &swapchain, uint32_t index)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Image, swapchain.name() + "_" + std::to_string(index), swapchain.device()), _pDevice(nullptr),
-      _image(swapchain.images()[index]), _view(swapchain.imageViews()[index]), _format(swapchain.format()), _type(vk::ImageType::e2D),
-      _viewType(vk::ImageViewType::e2D)
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, swapchain.name() + "_" + std::to_string(index), swapchain.device()), _image(swapchain.images()[index]),
+      _view(swapchain.imageViews()[index]), _format(swapchain.format()), _type(vk::ImageType::e2D), _viewType(vk::ImageViewType::e2D), _destroyDelegate(false)
 {
-    connectTo(&swapchain);
+    connectTo(swapchain.weakReference());
 }
 
 Image::Image(const std::string &resourceName, const std::string &deviceName, json config, const void *pData, const std::string &swapchainName,
              vk::Format depthFormat)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
-      _pDevice(&_device), _format(JsonConfigReader::getFormatWithJson(config["format"], swapchainName, depthFormat)),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Image, resourceName, resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)),
+      _format(JsonConfigReader::getFormatWithJson(config["format"], swapchainName, depthFormat)),
       _type(JsonConfigReader::getImageTypeWithJson(config["imageType"])), _viewType(JsonConfigReader::getImageViewTypeWithJson(config["viewType"]))
 {
     vk::ImageUsageFlags usage = JsonConfigReader::getImageUsageFlagsWithJson(config["usage"]);
@@ -66,23 +61,24 @@ Image::Image(const std::string &resourceName, const std::string &deviceName, jso
 
 Image::~Image()
 {
-    if (!_pDevice)
-        return;
+    if (_destroyDelegate)
+        if (auto p = _device.lock<Device>())
+        {
+            vk::Device device = p->device();
+            vk::ImageView view = _view;
+            vk::Image image = _image;
+            vk::DeviceMemory memory = _memory;
 
-    vk::Device device = _device.device();
-    vk::ImageView view = _view;
-    vk::Image image = _image;
-    vk::DeviceMemory memory = _memory;
-
-    _onDelayDestroy = [device, view, image, memory]()
-    {
-        if (view)
-            device.destroy(view);
-        if (image)
-            device.destroy(image);
-        if (memory)
-            device.freeMemory(memory);
-    };
+            _onDelayDestroy = [device, view, image, memory]()
+            {
+                if (view)
+                    device.destroy(view);
+                if (image)
+                    device.destroy(image);
+                if (memory)
+                    device.freeMemory(memory);
+            };
+        }
 }
 
 void Image::createImageWithNoData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage)
@@ -99,16 +95,22 @@ void Image::createImageWithNoData(uint32_t width, uint32_t height, uint32_t dept
 
 void Image::createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData)
 {
-    vk::DeviceSize imageSize = width * height * depth * getPixelSize(_format);
-    Buffer *buffer = createResource<Buffer>("temp", _pDevice->name(), imageSize, vk::BufferUsageFlagBits::eTransferSrc, nullptr);
-    buffer->updateBufferData(pData);
+    if (auto p = _device.lock())
+    {
+        vk::DeviceSize imageSize = width * height * depth * getPixelSize(_format);
+        Vkbase::VkResourceManagerHolder::WeakReference buffer =
+            createResource<Buffer>("temp", p->name(), imageSize, vk::BufferUsageFlagBits::eTransferSrc, nullptr);
+        if (auto p1 = buffer.lock<Buffer>())
+            p1->updateBufferData(pData);
 
-    createImage(width, height, depth, vk::ImageUsageFlagBits::eTransferDst | usage);
-    transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
-    copyBufferDataToImage(*buffer, width, height, depth);
-    transitionImageLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
+        createImage(width, height, depth, vk::ImageUsageFlagBits::eTransferDst | usage);
+        transitionImageLayout(vk::ImageLayout::eUndefined, vk::ImageLayout::eTransferDstOptimal);
+        copyBufferDataToImage(buffer, width, height, depth);
+        transitionImageLayout(vk::ImageLayout::eTransferDstOptimal, vk::ImageLayout::eShaderReadOnlyOptimal);
 
-    buffer->destroy();
+        if (auto p1 = buffer.lock<Buffer>())
+            p1->destroy();
+    }
     createImageView();
 }
 
@@ -130,21 +132,30 @@ void Image::loadImage(std::string fileName, vk::ImageUsageFlags usage)
     stbi_image_free(pData);
 }
 
-void Image::copyBufferDataToImage(const Buffer &buffer, uint32_t width, uint32_t height, uint32_t depth)
+void Image::copyBufferDataToImage(const VkResourceManagerHolder::WeakReference &buffer, uint32_t width, uint32_t height, uint32_t depth)
 {
-    const CommandPool &commandPool = CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Graphics);
-    CommandBuffer *pCommandBuffer = commandPool.allocateOnceCommandBuffer();
-    pCommandBuffer->commandBuffer().copyBufferToImage(
-        buffer.buffer(), _image, vk::ImageLayout::eTransferDstOptimal,
-        vk::BufferImageCopy()
-            .setBufferRowLength(width)
-            .setBufferImageHeight(height)
-            .setBufferOffset(0)
-            .setImageExtent({width, height, depth})
-            .setImageOffset({0, 0, 0})
-            .setImageSubresource(
-                vk::ImageSubresourceLayers().setAspectMask(vk::ImageAspectFlagBits::eColor).setBaseArrayLayer(0).setLayerCount(1).setMipLevel(0)));
-    commandPool.endOnceCommandBuffer(pCommandBuffer);
+    if (auto p = _device.lock())
+    {
+        if (auto p1 = CommandPool::getCommandPool(p->name(), Vkbase::CommandPoolQueueType::Graphics).lock<CommandPool>())
+        {
+            const VkResourceManagerHolder::WeakReference commandBuffer = p1->allocateOnceCommandBuffer();
+            if (auto p2 = buffer.lock<Buffer>())
+                if (auto p3 = commandBuffer.lock<CommandBuffer>())
+                    p3->commandBuffer().copyBufferToImage(p2->buffer(), _image, vk::ImageLayout::eTransferDstOptimal,
+                                                          vk::BufferImageCopy()
+                                                              .setBufferRowLength(width)
+                                                              .setBufferImageHeight(height)
+                                                              .setBufferOffset(0)
+                                                              .setImageExtent({width, height, depth})
+                                                              .setImageOffset({0, 0, 0})
+                                                              .setImageSubresource(vk::ImageSubresourceLayers()
+                                                                                       .setAspectMask(vk::ImageAspectFlagBits::eColor)
+                                                                                       .setBaseArrayLayer(0)
+                                                                                       .setLayerCount(1)
+                                                                                       .setMipLevel(0)));
+            p1->endOnceCommandBuffer(commandBuffer);
+        }
+    }
 }
 
 void Image::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout newLayout)
@@ -201,13 +212,19 @@ void Image::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout new
     {
         srcStage = vk::PipelineStageFlagBits::eTopOfPipe;
         dstStage = vk::PipelineStageFlagBits::eComputeShader;
-        const CommandPool &commandPool = CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Compute);
-        CommandBuffer *pCommandBuffer = commandPool.allocateOnceCommandBuffer();
-        barrier.setSrcAccessMask(vk::AccessFlagBits::eNone).setDstAccessMask(vk::AccessFlagBits::eShaderWrite);
+        Vkbase::VkResourceManagerHolder::WeakReference commandPool, commandBuffer;
+        if (auto p = _device.lock<Device>())
+            commandPool = CommandPool::getCommandPool(p->name(), Vkbase::CommandPoolQueueType::Compute);
 
-        pCommandBuffer->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
+        if (auto p = commandPool.lock<CommandPool>())
+        {
+            commandBuffer = p->allocateOnceCommandBuffer();
+            barrier.setSrcAccessMask(vk::AccessFlagBits::eNone).setDstAccessMask(vk::AccessFlagBits::eShaderWrite);
+            if (auto p1 = commandBuffer.lock<CommandBuffer>())
+                p1->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
 
-        commandPool.endOnceCommandBuffer(pCommandBuffer);
+            p->endOnceCommandBuffer(commandBuffer);
+        }
         return;
     }
     else
@@ -215,43 +232,54 @@ void Image::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout new
         throw std::runtime_error("Unsupported layout transition!");
     }
 
-    const CommandPool &commandPool = CommandPool::getCommandPool(_pDevice->name(), Vkbase::CommandPoolQueueType::Graphics);
-    CommandBuffer *pCommandBuffer = commandPool.allocateOnceCommandBuffer();
+    Vkbase::VkResourceManagerHolder::WeakReference commandPool, commandBuffer;
+    if (auto p = _device.lock<Device>())
+        commandPool = CommandPool::getCommandPool(p->name(), Vkbase::CommandPoolQueueType::Graphics);
 
-    pCommandBuffer->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
+    if (auto p = commandPool.lock<CommandPool>())
+    {
+        commandBuffer = p->allocateOnceCommandBuffer();
+        if (auto p1 = commandBuffer.lock<CommandBuffer>())
+            p1->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
 
-    commandPool.endOnceCommandBuffer(pCommandBuffer);
+        p->endOnceCommandBuffer(commandBuffer);
+    }
 }
 
 void Image::createImage(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, uint32_t mipLevels, uint32_t arrayLayers)
 {
-    vk::Extent3D extent;
-    extent.setWidth(width).setHeight(height).setDepth(depth);
-    vk::ImageCreateInfo createInfo;
-    createInfo.setFormat(_format)
-        .setSamples(vk::SampleCountFlagBits::e1)
-        .setImageType(_type)
-        .setInitialLayout(vk::ImageLayout::eUndefined)
-        .setSharingMode(vk::SharingMode::eExclusive)
-        .setTiling(vk::ImageTiling::eOptimal)
-        .setUsage(usage)
-        .setMipLevels(mipLevels)
-        .setExtent(extent)
-        .setArrayLayers(arrayLayers);
-    _image = _pDevice->device().createImage(createInfo);
+    if (auto p = _device.lock<Device>())
+    {
+        vk::Extent3D extent;
+        extent.setWidth(width).setHeight(height).setDepth(depth);
+        vk::ImageCreateInfo createInfo;
+        createInfo.setFormat(_format)
+            .setSamples(vk::SampleCountFlagBits::e1)
+            .setImageType(_type)
+            .setInitialLayout(vk::ImageLayout::eUndefined)
+            .setSharingMode(vk::SharingMode::eExclusive)
+            .setTiling(vk::ImageTiling::eOptimal)
+            .setUsage(usage)
+            .setMipLevels(mipLevels)
+            .setExtent(extent)
+            .setArrayLayers(arrayLayers);
+        _image = p->device().createImage(createInfo);
 
-    vk::MemoryRequirements requirements = _pDevice->device().getImageMemoryRequirements(_image);
-    vk::MemoryAllocateInfo allocateInfo;
-    allocateInfo.setAllocationSize(requirements.size).setMemoryTypeIndex(findMemoryType(requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
-    _memory = _pDevice->device().allocateMemory(allocateInfo);
+        vk::MemoryRequirements requirements = p->device().getImageMemoryRequirements(_image);
+        vk::MemoryAllocateInfo allocateInfo;
+        allocateInfo.setAllocationSize(requirements.size)
+            .setMemoryTypeIndex(findMemoryType(requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
+        _memory = p->device().allocateMemory(allocateInfo);
 
-    _pDevice->device().bindImageMemory(_image, _memory, 0);
+        p->device().bindImageMemory(_image, _memory, 0);
+    }
 }
 
 uint32_t Image::findMemoryType(uint32_t filterType, vk::MemoryPropertyFlags properties)
 {
     vk::PhysicalDeviceMemoryProperties physicalDeviceMemoryProperties;
-    physicalDeviceMemoryProperties = _pDevice->physicalDevice().getMemoryProperties();
+    if (auto p = _device.lock<Device>())
+        physicalDeviceMemoryProperties = p->physicalDevice().getMemoryProperties();
     for (uint32_t i = 0; i < physicalDeviceMemoryProperties.memoryTypeCount; ++i)
     {
         if (filterType & (1 << i) && (properties & physicalDeviceMemoryProperties.memoryTypes[i].propertyFlags) == properties)
@@ -272,7 +300,8 @@ void Image::createImageView()
 
     createInfo.setViewType(_viewType).setImage(_image).setFormat(_format).setSubresourceRange(subresource);
 
-    _view = _pDevice->device().createImageView(createInfo);
+    if (auto p = _device.lock<Device>())
+        _view = p->device().createImageView(createInfo);
 }
 
 bool Image::isDepthImage() { return vk::Format::eD32Sfloat == _format || vk::Format::eD32SfloatS8Uint == _format || vk::Format::eD24UnormS8Uint == _format; }

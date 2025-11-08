@@ -10,7 +10,6 @@ using json = nlohmann::json;
 
 namespace Vkbase
 {
-class Device;
 class Image;
 class Buffer;
 class DescriptorSets : public VkGpuResourceBase
@@ -21,8 +20,8 @@ class DescriptorSets : public VkGpuResourceBase
 private:
     struct DescriptorSetsResource
     {
-        Image *pImage = nullptr;
-        Buffer *pBuffer = nullptr;
+        VkResourceManagerHolder::WeakReference image;
+        VkResourceManagerHolder::WeakReference buffer;
     };
 
     vk::DescriptorPool _descriptorPool;
@@ -45,9 +44,9 @@ private:
 
 public:
     const std::string addDescriptorSetCreateConfig(std::string name, std::vector<std::pair<vk::DescriptorType, vk::ShaderStageFlags>> descriptorTypes,
-                                                   uint32_t count, const std::pair<const DescriptorSets *, std::string> &layout = {nullptr, ""});
-    void writeSets(const std::string &name, uint32_t binding, std::vector<std::pair<vk::DescriptorBufferInfo, Buffer *>> bufferInfos,
-                   std::vector<std::pair<vk::DescriptorImageInfo, Image *>> imageInfos, uint32_t count);
+                                                   uint32_t count, const std::pair<VkResourceManagerHolder::WeakReference, std::string> &layout = {{}, ""});
+    void writeSets(const std::string &name, uint32_t binding, std::vector<std::pair<vk::DescriptorBufferInfo, VkResourceManagerHolder::WeakReference>> bufferInfos,
+                   std::vector<std::pair<vk::DescriptorImageInfo, VkResourceManagerHolder::WeakReference>> imageInfos, uint32_t count);
     void addDescriptorSetCreateConfigWithJson(const json &config);
     void writeSetsWithJson(const json &config);
     const vk::DescriptorSetLayout &layout(const std::string &name) const;

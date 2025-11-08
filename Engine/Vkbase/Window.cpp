@@ -7,7 +7,7 @@
 namespace Vkbase
 {
 Window::Window(const std::string &resourceName, const std::string &title, uint32_t width, uint32_t height)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Window, resourceName, *Device::getSuitableDevice(createWindow(title, width, height).surface)), _width(width),
+    : VkGpuResourceBase(Vkbase::VkResourceType::Window, resourceName, Device::getSuitableDevice(createWindow(title, width, height).surface)), _width(width),
       _height(height), _title(title)
 {
     if (!_pendingInitData.has_value())
@@ -31,11 +31,14 @@ Window::Window(const std::string &resourceName, const std::string &title, uint32
 
     if (_surface)
     {
-        connectTo(&CommandPool::getCommandPool(_device.name(), Vkbase::CommandPoolQueueType::Graphics));
-        connectTo(&CommandPool::getCommandPool(_device.name(), Vkbase::CommandPoolQueueType::Compute));
-        connectTo(&CommandPool::getCommandPool(_device.name(), Vkbase::CommandPoolQueueType::Present));
+        std::string deviceName;
+        if (auto p = _device.lock())
+            deviceName = p->name();
+        _commandPools.push_back(connectTo(CommandPool::getCommandPool(deviceName, Vkbase::CommandPoolQueueType::Graphics)));
+        _commandPools.push_back(connectTo(CommandPool::getCommandPool(deviceName, Vkbase::CommandPoolQueueType::Compute)));
+        _commandPools.push_back(connectTo(CommandPool::getCommandPool(deviceName, Vkbase::CommandPoolQueueType::Present)));
 
-        _pSwapchain = createResource<Swapchain>(name(), _device.name(), name());
+        _swapchain = createResource<Swapchain>(name(), deviceName, name());
     }
 }
 

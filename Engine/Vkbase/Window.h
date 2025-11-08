@@ -37,7 +37,8 @@ private:
     vk::SurfaceKHR _surface;
     uint32_t _width, _height;
     std::string _title;
-    const Swapchain *_pSwapchain = nullptr;
+    VkResourceManagerHolder::WeakReference _swapchain;
+    std::vector<VkResourceManagerHolder::WeakReference> _commandPools;
     double _cursorPosX, _cursorPosY;
     int _cursorState = GLFW_CURSOR_NORMAL;
     std::unique_ptr<InputEvent::KeyInputEvent, Deleter> _pKeyInputEvent;

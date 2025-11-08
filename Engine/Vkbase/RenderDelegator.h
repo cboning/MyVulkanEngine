@@ -5,10 +5,6 @@
 
 namespace Vkbase
 {
-class Device;
-class Swapchain;
-class CommandPool;
-class CommandBuffer;
 class RenderDelegator : public VkResourceBase
 {
     friend class VkResourceManager;
@@ -16,7 +12,8 @@ class RenderDelegator : public VkResourceBase
 public:
     void draw();
     void sizeChanged();
-    void setCommandRecordFunc(const std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
+    void
+    setCommandRecordFunc(const std::function<void(const VkResourceManagerHolder::WeakReference &pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> &func);
     void setUpdateFunc(const std::function<void(uint32_t currentFrame)> &func);
     void setRenderPassCreateFunc(const std::function<void()> &func);
     void setSwapchainRecreatePrefunc(const std::function<void()> &func);
@@ -28,16 +25,16 @@ private:
     ~RenderDelegator() override;
     void init();
     void createSyncObjects();
-    const Device &_device;
+    VkResourceManagerHolder::WeakReference _device;
     inline static uint32_t _maxFlightCount = MAX_FLIGHT_COUNT;
-    Swapchain *_pSwapchain = nullptr;
-    const CommandPool &_commandPool;
-    std::vector<CommandBuffer *> _pCommandBuffers;
+    VkResourceManagerHolder::WeakReference _swapchain;
+    VkResourceManagerHolder::WeakReference _commandPool;
+    std::vector<VkResourceManagerHolder::WeakReference> _commandBuffers;
     std::vector<vk::Semaphore> _imageAvailableSemaphores;
     std::vector<vk::Semaphore> _renderFinishSemaphores;
     uint32_t _currentFrame = 0;
     bool _isSizeChanged = false;
-    std::function<void(CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)> _commandRecordFunc;
+    std::function<void(const VkResourceManagerHolder::WeakReference &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)> _commandRecordFunc;
     std::function<void(uint32_t currentFrame)> _updateFunc;
     std::function<void()> _renderPassCreateFunc;
     std::function<void()> _swapchainRecreatePrefunc;

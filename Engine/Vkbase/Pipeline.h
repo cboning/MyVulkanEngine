@@ -163,7 +163,6 @@ struct PipelineCreateInfo
     {
     }
 };
-class Device;
 class Pipeline : public VkGpuResourceBase
 {
     friend class VkResourceManager;

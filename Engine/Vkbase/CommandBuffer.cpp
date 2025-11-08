@@ -11,16 +11,19 @@
 namespace Vkbase
 {
 
-CommandBuffer::CommandBuffer(const std::string &name, const CommandPool &pool, vk::CommandBuffer handle, bool oneTimeSubmit, bool primary)
-    : VkGpuResourceBase(VkResourceType::CommandBuffer, name, pool._device), _pool(*connectTo(&pool)), _commandBuffer(handle),
-      _oneTimeSubmit(oneTimeSubmit), _fence(_device.device().createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled})), _primary(primary)
+CommandBuffer::CommandBuffer(const std::string &name, const VkResourceManagerHolder::WeakReference &pool, vk::CommandBuffer handle, bool oneTimeSubmit,
+                             bool primary)
+    : VkGpuResourceBase(VkResourceType::CommandBuffer, name, pool.lock<CommandPool>()->_device), _pool(connectTo(pool)), _commandBuffer(handle),
+      _oneTimeSubmit(oneTimeSubmit), _primary(primary)
 {
+    if (auto p = _device.lock<Device>())
+        _fence = p->device().createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled});
 }
 
 void CommandBuffer::cleanCounter()
 {
     for (uint32_t *pCounter : _pCounters)
-        (*pCounter)--;
+        --(*pCounter);
     _pCounters.clear();
 }
 
@@ -39,10 +42,14 @@ CommandBuffer::~CommandBuffer()
     waitForFence();
     cleanCounter();
 
-    auto device = _device.device();
+    vk::Device device;
+    if (auto p = _device.lock<Device>())
+        device = p->device();
     auto fence = _fence;
     auto commandBuffer = _commandBuffer;
-    auto commandPool = _pool._commandPool;
+    vk::CommandPool commandPool;
+    if (auto p = _pool.lock<CommandPool>())
+        commandPool = p->_commandPool;
 
     _onDelayDestroy = [device, fence, commandBuffer, commandPool]()
     {
@@ -77,18 +84,16 @@ void CommandBuffer::begin(const std::string &renderPassName, uint32_t subpassInd
         throw std::runtime_error("[ERROR] CommandBuffer already in recording state.");
 
     vk::CommandBufferInheritanceInfo inherit = {};
-    Vkbase::RenderPass *pRenderPass =
-        dynamic_cast<Vkbase::RenderPass *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::RenderPass, renderPassName));
-
-    inherit.renderPass = pRenderPass->renderPass();
     inherit.subpass = subpassIndex;
-
     vk::CommandBufferBeginInfo beginInfo = {};
     beginInfo.flags = vk::CommandBufferUsageFlagBits::eRenderPassContinue;
-    beginInfo.pInheritanceInfo = &inherit;
-
-    _commandBuffer.begin(beginInfo);
-    insertCounters(pRenderPass->counters());
+    if (auto p = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::RenderPass, renderPassName).lock<RenderPass>())
+    {
+        inherit.renderPass = p->renderPass();
+        beginInfo.pInheritanceInfo = &inherit;
+        _commandBuffer.begin(beginInfo);
+        insertCounters(p->counters());
+    }
     _inRecording = true;
 }
 
@@ -106,110 +111,159 @@ void CommandBuffer::submit(const std::vector<vk::Semaphore> &waitSemaphores, con
 {
     if (_inRecording)
         throw std::runtime_error("[ERROR] Cannot submit CommandBuffer while still recording.");
-    _device.device().resetFences(_fence);
+
+    if (auto p = _device.lock<Device>())
+        p->device().resetFences(_fence);
 
     vk::SubmitInfo submitInfo;
     submitInfo.setCommandBuffers(_commandBuffer).setWaitSemaphores(waitSemaphores).setWaitDstStageMask(waitDstStageMask).setSignalSemaphores(signalSemaphores);
-    _pool._queue.submit(submitInfo, _fence);
+    if (auto p = _pool.lock<CommandPool>())
+        p->_queue.submit(submitInfo, _fence);
 }
 
 void CommandBuffer::reset()
 {
     if (_oneTimeSubmit)
         throw std::runtime_error("[ERROR] Cannot reset a one-time CommandBuffer.");
-    _pPipeline = nullptr;
-    _pIndiceBuffer = nullptr;
+    _pipeline = {};
+    _indiceBuffer = {};
     _commandBuffer.reset({});
     _inRecording = false;
     cleanCounter();
 }
 
-const Device &CommandBuffer::device() { return _device; }
+const VkResourceManagerHolder::WeakReference &CommandBuffer::device() const { return _device; }
 
-void CommandBuffer::bindPipeline(Pipeline *pPipeline)
+void CommandBuffer::bindPipeline(const VkResourceManagerHolder::WeakReference &pipeline)
 {
-    if (!_inRecording)
+    if (!_inRecording || _pipeline == pipeline || !pipeline.lock<Pipeline>())
         return;
 
-    if (_pPipeline == pPipeline)
-        return;
+    if (auto p = pipeline.lock<Pipeline>())
+    {
+        if (auto p1 = _device.lock())
+            if (auto p2 = p->device().lock())
+                if (p2->name() != p1->name())
+                    throw std::runtime_error("Pipeline device mismatch with command buffer device");
 
-    if (pPipeline->device().name() != _device.name())
-        throw std::runtime_error("");
-
-    _commandBuffer.bindPipeline(pPipeline->pipelineBindPoint(), pPipeline->pipeline());
-    _pPipeline = pPipeline;
-    insertCounters(pPipeline->counters());
+        _commandBuffer.bindPipeline(p->pipelineBindPoint(), p->pipeline());
+        insertCounters(p->counters());
+    }
+    _pipeline = pipeline;
 }
 
-void CommandBuffer::bindDescriptorSets(uint32_t firstSet, const std::vector<std::pair<DescriptorSets *, std::pair<std::string, uint32_t>>> &pDescriptorSets,
+void CommandBuffer::bindDescriptorSets(uint32_t firstSet,
+                                       const std::vector<std::pair<VkResourceManagerHolder::WeakReference, std::pair<std::string, uint32_t>>> &pDescriptorSets,
                                        const vk::ArrayProxy<const uint32_t> &dynamicOffsets)
 {
-    if (!_pPipeline)
+    if (!_pipeline.lock())
         throw std::runtime_error("You should bind pipeline first.");
 
     std::vector<vk::DescriptorSet> descriptorSets;
     descriptorSets.reserve(pDescriptorSets.size());
 
-    for (auto pDescriptorSet : pDescriptorSets)
+    for (const auto &[DescriptorSet, indexPair] : pDescriptorSets) // Using structured bindings
     {
-        descriptorSets.push_back(pDescriptorSet.first->sets(pDescriptorSet.second.first)[pDescriptorSet.second.second]);
-        insertCounters(pDescriptorSet.first->counters());
+        const auto &[setName, setIndex] = indexPair;
+        if (auto p = DescriptorSet.lock<DescriptorSets>())
+        {
+            descriptorSets.push_back(p->sets(setName)[setIndex]);
+            insertCounters(p->counters());
+        }
     }
 
-    _commandBuffer.bindDescriptorSets(_pPipeline->pipelineBindPoint(), _pPipeline->layout(), firstSet, descriptorSets, dynamicOffsets);
+    if (auto p = _pipeline.lock<Pipeline>())
+        _commandBuffer.bindDescriptorSets(p->pipelineBindPoint(), p->layout(), firstSet, descriptorSets, dynamicOffsets);
 }
 
-void CommandBuffer::bindVertexBuffers(uint32_t firstBinding, const vk::ArrayProxy<Buffer *> &buffers, const vk::ArrayProxy<const vk::DeviceSize> &offsets)
+void CommandBuffer::bindVertexBuffers(uint32_t firstBinding, const vk::ArrayProxy<VkResourceManagerHolder::WeakReference> &buffers,
+                                      const vk::ArrayProxy<const vk::DeviceSize> &offsets)
 {
     std::vector<vk::Buffer> vkBuffers;
-    for (auto *pBuffer : buffers)
-        if (pBuffer == nullptr)
-            throw std::runtime_error("Exist Empty Buffer.");
-
     vkBuffers.reserve(buffers.size());
-    for (auto *pBuffer : buffers)
+
+    for (auto buffer : buffers)
     {
-        vkBuffers.push_back(pBuffer->buffer());
-        insertCounters(pBuffer->counters());
+        if (auto p = buffer.lock<Buffer>())
+        {
+            vkBuffers.push_back(p->buffer());
+            insertCounters(p->counters());
+        }
+        else
+            throw std::runtime_error("Null buffer detected in bindVertexBuffers");
     }
 
     _commandBuffer.bindVertexBuffers(firstBinding, vkBuffers, offsets);
 }
 
-void CommandBuffer::bindIndexBuffer(Buffer *pBuffer, vk::DeviceSize offset, vk::IndexType indexType)
+void CommandBuffer::bindIndexBuffer(const VkResourceManagerHolder::WeakReference &buffer, vk::DeviceSize offset, vk::IndexType indexType)
 {
-    if (_pIndiceBuffer == pBuffer)
+    if (_indiceBuffer == buffer)
         return;
-    _commandBuffer.bindIndexBuffer(pBuffer->buffer(), offset, indexType);
-    _pIndiceBuffer = pBuffer;
-    insertCounters(pBuffer->counters());
+    if (auto p = buffer.lock<Buffer>())
+    {
+        _commandBuffer.bindIndexBuffer(p->buffer(), offset, indexType);
+        insertCounters(p->counters());
+    }
+    _indiceBuffer = buffer;
 }
 
-void CommandBuffer::beginRenderPass(RenderPass *pRenderPass, Framebuffer *pFramebuffer, vk::RenderPassBeginInfo info, vk::SubpassContents subpassContents)
+void CommandBuffer::beginRenderPass(const VkResourceManagerHolder::WeakReference &renderPass, const VkResourceManagerHolder::WeakReference &framebuffer,
+                                    vk::RenderPassBeginInfo info, vk::SubpassContents subpassContents)
 {
-    insertCounters(pRenderPass->counters());
-    insertCounters(pFramebuffer->counters());
+    if (auto p = renderPass.lock<VkGpuResourceBase>())
+        insertCounters(p->counters());
+    if (auto p = framebuffer.lock<VkGpuResourceBase>())
+        insertCounters(p->counters());
 
-    info.setFramebuffer(pFramebuffer->framebuffer()).setRenderPass(pRenderPass->renderPass());
+    if (auto p = renderPass.lock<RenderPass>())
+        if (auto p1 = framebuffer.lock<Framebuffer>())
+            info.setFramebuffer(p1->framebuffer()).setRenderPass(p->renderPass());
 
     _commandBuffer.beginRenderPass(info, subpassContents);
 }
 
-void CommandBuffer::executeCommands(const std::vector<CommandBuffer *> &pCommandBuffers)
+void CommandBuffer::executeCommands(const std::vector<VkResourceManagerHolder::WeakReference> &commandBuffers)
 {
-    std::vector<vk::CommandBuffer> commandBuffers;
-    commandBuffers.reserve(pCommandBuffers.size());
-    for (const CommandBuffer *pCommandBuffer : pCommandBuffers)
+    if (commandBuffers.empty())
+        return;
+
+    std::vector<vk::CommandBuffer> vkCommandBuffers;
+    vkCommandBuffers.reserve(commandBuffers.size());
+
+    for (const auto &commandBuffer : commandBuffers)
     {
-        commandBuffers.push_back(pCommandBuffer->commandBuffer());
-        insertCounters(pCommandBuffer->_pCounters);
+        if (!commandBuffer.lock() || commandBuffer == weakReference())
+            continue;
+
+        if (auto p = _device.lock())
+            if (auto p1 = commandBuffer.lock<CommandBuffer>())
+                if (auto p2 = p1->device().lock())
+                    if (p2->name() != p->name())
+                        throw std::runtime_error("CommandBuffer device mismatch");
+
+        if (auto p = commandBuffer.lock<CommandBuffer>())
+        {
+            vkCommandBuffers.push_back(p->commandBuffer());
+            insertCounters(p->_pCounters);
+        }
     }
-    _commandBuffer.executeCommands(commandBuffers);
+
+    if (!vkCommandBuffers.empty())
+        _commandBuffer.executeCommands(vkCommandBuffers);
 }
 
-void CommandBuffer::waitForFence() { (void)_device.device().waitForFences(_fence, vk::True, UINT64_MAX); }
+void CommandBuffer::waitForFence()
+{
+    if (auto p = _device.lock<Device>())
+        (void)p->device().waitForFences(_fence, vk::True, UINT64_MAX);
+}
 
-const std::string &CommandBuffer::commandPoolName() const { return _pool.name(); }
+const std::string &CommandBuffer::commandPoolName() const
+{
+    if (auto p = _pool.lock())
+        return p->name();
+    throw std::runtime_error("CommandPool already destroyed.");
+}
 
 } // namespace Vkbase

@@ -30,7 +30,7 @@ class ModelInstance : public Vkbase::VkResourcesDelegator
 private:
     float _animationProgress;
     bool _isAnimationIndexStackLock = false;
-    Vkbase::DescriptorSets &_descriptorSets;
+    const Vkbase::VkResourceManagerHolder::WeakReference _descriptorSets;
     std::vector<AnimationIndex> _animationIndexStack = std::vector<AnimationIndex>(1);
     Object _object;
     Model &_model;
@@ -42,8 +42,7 @@ private:
 public:
     Object &object();
     const Object &object() const;
-    Vkbase::DescriptorSets &descriptorSets();
-    const Vkbase::DescriptorSets &descriptorSets() const;
+    Vkbase::VkResourceManagerHolder::WeakReference descriptorSets() const;
     void updateUniformBuffers(uint32_t currentFrame, const Camera &camera) const;
     bool canAddAnimationToStack() const;
     void setBasicAnimation(const AnimationIndex &animationIndex);

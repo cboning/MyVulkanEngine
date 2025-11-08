@@ -36,6 +36,10 @@
                 {
                     "name": "VK_LAYER_PATH",
                     "value": "${workspaceFolder}/share/vulkan/explicit_layer.d"
+                },
+                {
+                    "name": "ASAN_OPTIONS",
+                    "value": "abort_on_error=1:disable_coredump=0:unmap_shadow_on_exit=1:handle_segv=1:handle_abort=1:handle_sigbus=1:handle_sigill=1"
                 }
             ],
             "externalConsole": false,

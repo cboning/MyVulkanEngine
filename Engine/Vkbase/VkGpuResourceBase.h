@@ -11,26 +11,25 @@ class Device;
 class VkGpuResourceBase : public VkResourceBase
 {
     friend class CommandBuffer;
-
 private:
     std::unique_ptr<uint32_t> _submitCounter = std::make_unique<uint32_t>(0);
     std::unordered_set<uint32_t *> counters();
-    std::unordered_set<VkGpuResourceBase *> _pExtraSubresources;
-    std::unordered_set<VkGpuResourceBase *> _pExtraSuperresources;
+    std::unordered_set<VkResourceManagerHolder::WeakReference> _pExtraSubresources;
+    std::unordered_set<VkResourceManagerHolder::WeakReference> _pExtraSuperresources;
 
 protected:
-    Device &_device;
+    VkResourceManagerHolder::WeakReference _device;
     bool _pendingDestroy = false;
     std::function<void()> _onDelayDestroy;
     void deferDestroy();
-    void addExtraSubresource(VkGpuResourceBase *pResource);
-    void removeExtraSubresource(VkGpuResourceBase *pResource);
+    void addExtraSubresource(const VkResourceManagerHolder::WeakReference &pResource);
+    void removeExtraSubresource(const VkResourceManagerHolder::WeakReference &pResource);
 
 public:
-    VkGpuResourceBase(VkResourceType type, const std::string &name, Device &device);
+    VkGpuResourceBase(VkResourceType type, const std::string &name, const VkResourceManagerHolder::WeakReference &device);
     virtual ~VkGpuResourceBase();
 
-    Device &device();
+    VkResourceManagerHolder::WeakReference &device();
     bool isPendingDestroy() const;
 };
 } // namespace Vkbase

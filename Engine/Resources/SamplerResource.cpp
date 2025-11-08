@@ -22,10 +22,15 @@ std::string SamplerResource::getNameByArgument(const std::string &deviceName, co
 }
 
 SamplerResource::Sampler::Sampler(const std::string &deviceName, const vk::SamplerCreateInfo &info)
-    : _pSampler(createResource<Vkbase::Sampler>("", deviceName, info))
+    : _sampler(createResource<Vkbase::Sampler>("", deviceName, info))
 {
 }
 
-const vk::Sampler &SamplerResource::Sampler::sampler() { return _pSampler->sampler(); }
+const vk::Sampler &SamplerResource::Sampler::sampler()
+{
+    if (auto p = _sampler.lock<Vkbase::Sampler>())
+        return p->sampler();
+    return nullptr;
+}
 
 } // namespace Resources

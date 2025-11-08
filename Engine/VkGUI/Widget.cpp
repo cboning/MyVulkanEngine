@@ -96,9 +96,9 @@ void Widget::init()
 
 Widget::Widget(WidgetType type, const std::string &deviceName, const std::string &textureName)
     : RenderObjectDelegator(deviceName, 0, 0),
-      _vertUBOName(createResource<Vkbase::Buffer>("", deviceName, sizeof(WidgetUBOData), vk::BufferUsageFlagBits::eUniformBuffer)->name()),
-      _fragUBOName(createResource<Vkbase::Buffer>("", deviceName, sizeof(WidgetUBOFragData), vk::BufferUsageFlagBits::eUniformBuffer)->name()), _type(type),
-      _textureName(textureName.empty() ? deviceName + "_" + "Empty" : textureName)
+      _vertUBOName(createResource<Vkbase::Buffer>("", deviceName, sizeof(WidgetUBOData), vk::BufferUsageFlagBits::eUniformBuffer).lock()->name()),
+      _fragUBOName(createResource<Vkbase::Buffer>("", deviceName, sizeof(WidgetUBOFragData), vk::BufferUsageFlagBits::eUniformBuffer).lock()->name()),
+      _type(type), _textureName(textureName.empty() ? deviceName + "_" + "Empty" : textureName)
 {
 }
 
@@ -133,100 +133,106 @@ const glm::u32vec4 &Widget::rect() const { return _rect; }
 
 void Widget::setScreenSize(const glm::u32vec2 &screenSize) { _projection = glm::ortho(0.0f, (float)screenSize.x, 0.0f, (float)screenSize.y); }
 
-void Widget::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
-                    uint32_t frameIndex) const
+void Widget::onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName,
+                    uint32_t imageIndex, uint32_t frameIndex) const
 {
     if (!_mesh)
         return;
 
-    Vkbase::DescriptorSets *pDescriptorSets =
-        dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()));
-    _mesh->draw(pCommandBuffer, {{pDescriptorSets, {"UBO", 0}}});
+    _mesh->draw(commandBuffer, {{Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()), {"UBO", 0}}});
 
     for (auto &subWidget : _subWidgets)
-        subWidget->draw(pCommandBuffer, renderPassName, pipelineName, imageIndex, frameIndex);
+        subWidget->draw(commandBuffer, renderPassName, pipelineName, imageIndex, frameIndex);
 }
 
 void Widget::onUpdateUBO(uint32_t frameIndex) const
 {
-    Vkbase::Buffer *pVertUBO = dynamic_cast<Vkbase::Buffer *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _vertUBOName));
-    Vkbase::Buffer *pFragUBO = dynamic_cast<Vkbase::Buffer *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _fragUBOName));
-    if (!pVertUBO || !pFragUBO)
-    {
-        std::cerr << "[Warning] The UBO is not exist." << std::endl;
-        return;
-    }
+    auto vertUBO = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _vertUBOName);
+    auto fragUBO = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _fragUBOName);
+    if (auto p = vertUBO.lock<Vkbase::Buffer>())
+        if (auto p1 = fragUBO.lock<Vkbase::Buffer>())
+        {
+            WidgetUBOData vertUBOData;
+            vertUBOData.projection = _projection;
+            vertUBOData.model = _model;
 
-    WidgetUBOData vertUBOData;
-    vertUBOData.projection = _projection;
-    vertUBOData.model = _model;
+            WidgetUBOFragData fragUBOData;
+            fragUBOData.color = _color;
+            if (_mouseState == MouseState::Above)
+                fragUBOData.color *= _aboveColorFactor;
+            if (_mouseState == MouseState::Clicked)
+                fragUBOData.color *= _clickedColorFactor;
 
-    WidgetUBOFragData fragUBOData;
-    fragUBOData.color = _color;
-    if (_mouseState == MouseState::Above)
-        fragUBOData.color *= _aboveColorFactor;
-    if (_mouseState == MouseState::Clicked)
-        fragUBOData.color *= _clickedColorFactor;
+            fragUBOData.rect = _renderRect;
+            fragUBOData.type = glm::u32vec4((uint32_t)_type, 0, 0, 0);
 
-    fragUBOData.rect = _renderRect;
-    fragUBOData.type = glm::u32vec4((uint32_t)_type, 0, 0, 0);
+            p->updateBufferData(&vertUBOData);
+            p1->updateBufferData(&fragUBOData);
 
-    pVertUBO->updateBufferData(&vertUBOData);
-    pFragUBO->updateBufferData(&fragUBOData);
-
-    for (auto &subWidget : _subWidgets)
-        subWidget->update(frameIndex);
+            for (auto &subWidget : _subWidgets)
+                subWidget->update(frameIndex);
+            return;
+        }
+    std::cerr << "[Warning] The UBO is not exist." << std::endl;
 }
 
-void Widget::addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets)
+void Widget::addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets)
 {
-    descriptorSets.addDescriptorSetCreateConfig("UBO",
-                                                {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex},
-                                                 {vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment},
-                                                 {vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}},
-                                                1);
+    if (auto p = descriptorSets.lock<Vkbase::DescriptorSets>())
+        p->addDescriptorSetCreateConfig("UBO",
+                                        {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex},
+                                         {vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eFragment},
+                                         {vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}},
+                                        1);
 }
 
-void Widget::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
+void Widget::writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets)
 {
-    Vkbase::Buffer *pVertUBO = dynamic_cast<Vkbase::Buffer *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _vertUBOName));
-    Vkbase::Buffer *pFragUBO = dynamic_cast<Vkbase::Buffer *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _fragUBOName));
-    vk::DescriptorBufferInfo bufferInfo;
-    bufferInfo.setOffset(0).setRange(pVertUBO->size());
-    descriptorSets.writeSets("UBO", 0, {{bufferInfo, pVertUBO}}, {}, 1);
-
-    bufferInfo.setOffset(0).setRange(pFragUBO->size());
-    descriptorSets.writeSets("UBO", 1, {{bufferInfo, pFragUBO}}, {}, 1);
-
-    if (Vkbase::Image *pImage = dynamic_cast<Vkbase::Image *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Image, _textureName)))
-        descriptorSets.writeSets("UBO", 2, {},
-                                 {{vk::DescriptorImageInfo()
-                                       .setSampler(Resources::ResourceManager::instance()
-                                                       .getResource<Resources::SamplerResource>(deviceName(), Vkbase::Sampler::getDefaultCreateInfo())
-                                                       .sampler())
-                                       .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal),
-                                   pImage}},
-                                 1);
-    else
+    if (auto p = descriptorSets.lock<Vkbase::DescriptorSets>())
     {
-        descriptorSets.writeSets("UBO", 2, {},
-                                 {{vk::DescriptorImageInfo()
-                                       .setSampler(Resources::ResourceManager::instance()
-                                                       .getResource<Resources::SamplerResource>(deviceName(), Vkbase::Sampler::getDefaultCreateInfo())
-                                                       .sampler())
-                                       .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal),
-                                   Resources::ResourceManager::instance().getResource<Resources::EmptyTextureResource>(deviceName()).texture()}},
-                                 1);
+        auto vertUBO = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _vertUBOName);
+        auto fragUBO = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Buffer, _fragUBOName);
+        vk::DescriptorBufferInfo bufferInfo;
+
+        if (auto p1 = vertUBO.lock<Vkbase::Buffer>())
+            bufferInfo.setOffset(0).setRange(p1->size());
+        p->writeSets("UBO", 0, {{bufferInfo, vertUBO}}, {}, 1);
+
+        if (auto p1 = fragUBO.lock<Vkbase::Buffer>())
+            bufferInfo.setOffset(0).setRange(p1->size());
+        p->writeSets("UBO", 1, {{bufferInfo, fragUBO}}, {}, 1);
+
+        auto image = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Image, _textureName);
+        if (image.lock())
+            p->writeSets("UBO", 2, {},
+                         {{vk::DescriptorImageInfo()
+                               .setSampler(Resources::ResourceManager::instance()
+                                               .getResource<Resources::SamplerResource>(deviceName(), Vkbase::Sampler::getDefaultCreateInfo())
+                                               .sampler())
+                               .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal),
+                           image}},
+                         1);
+        else
+        {
+            p->writeSets("UBO", 2, {},
+                         {{vk::DescriptorImageInfo()
+                               .setSampler(Resources::ResourceManager::instance()
+                                               .getResource<Resources::SamplerResource>(deviceName(), Vkbase::Sampler::getDefaultCreateInfo())
+                                               .sampler())
+                               .setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal),
+                           Resources::ResourceManager::instance().getResource<Resources::EmptyTextureResource>(deviceName()).texture()}},
+                         1);
+        }
     }
 }
 
 const vk::DescriptorSetLayout &Widget::descriptorSetsLayout()
 {
-    Vkbase::DescriptorSets *pDescriptorSets =
-        dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()));
-
-    return pDescriptorSets->layout("UBO");
+    if (auto p = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()).lock<Vkbase::DescriptorSets>())
+        return p->layout("UBO");
+    throw std::runtime_error("The DescriptorSet already destroyed.");
 }
+
 void Widget::setCommandShouldRecordFunc(const std::function<void()> &func)
 {
     _commandShouldRecordFunc = func;

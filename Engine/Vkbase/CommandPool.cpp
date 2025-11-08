@@ -5,8 +5,7 @@
 namespace Vkbase
 {
 CommandPool::CommandPool(const std::string &resourceName, const std::string &deviceName, CommandPoolQueueType queueType)
-    : VkGpuResourceBase(VkResourceType::CommandPool, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(VkResourceType::Device, deviceName))),
+    : VkGpuResourceBase(VkResourceType::CommandPool, resourceName, resourceManager().resource(VkResourceType::Device, deviceName)),
       _queueIndex(determineQueueIndex(queueType)), _queue(determineQueue(queueType))
 {
     determineQueue(queueType);
@@ -15,35 +14,43 @@ CommandPool::CommandPool(const std::string &resourceName, const std::string &dev
 
 CommandPool::~CommandPool()
 {
-    auto device = _device.device();
+    vk::Device device;
+    if (auto p = _device.lock<Device>())
+        device = p->device();
     auto commandPool = _commandPool;
     _onDelayDestroy = [device, commandPool]() { device.destroyCommandPool(commandPool); };
 }
 
 const vk::Queue &CommandPool::determineQueue(CommandPoolQueueType queueType) const
 {
-    switch (queueType)
+    if (auto p = _device.lock<Device>())
     {
-    case CommandPoolQueueType::Graphics:
-        return _device.graphicsQueue();
-    case CommandPoolQueueType::Compute:
-        return _device.computeQueue();
-    case CommandPoolQueueType::Present:
-        return _device.presentQueue();
+        switch (queueType)
+        {
+        case CommandPoolQueueType::Graphics:
+            return p->graphicsQueue();
+        case CommandPoolQueueType::Compute:
+            return p->computeQueue();
+        case CommandPoolQueueType::Present:
+            return p->presentQueue();
+        }
     }
     throw std::runtime_error("[ERROR] Unknown queue type.");
 }
 
 uint32_t CommandPool::determineQueueIndex(CommandPoolQueueType queueType) const
 {
-    switch (queueType)
+    if (auto p = _device.lock<Device>())
     {
-    case CommandPoolQueueType::Graphics:
-        return _device.queueFamilyIndices().graphicsFamilyIndex;
-    case CommandPoolQueueType::Compute:
-        return _device.queueFamilyIndices().computeFamilyIndex;
-    case CommandPoolQueueType::Present:
-        return _device.queueFamilyIndices().presentFamilyIndex;
+        switch (queueType)
+        {
+        case CommandPoolQueueType::Graphics:
+            return p->queueFamilyIndices().graphicsFamilyIndex;
+        case CommandPoolQueueType::Compute:
+            return p->queueFamilyIndices().computeFamilyIndex;
+        case CommandPoolQueueType::Present:
+            return p->queueFamilyIndices().presentFamilyIndex;
+        }
     }
     throw std::runtime_error("[ERROR] Unknown queue type.");
 }
@@ -52,67 +59,84 @@ void CommandPool::createCommandPool()
 {
     vk::CommandPoolCreateInfo createInfo;
     createInfo.setQueueFamilyIndex(_queueIndex).setFlags(vk::CommandPoolCreateFlagBits::eResetCommandBuffer);
-    _commandPool = _device.device().createCommandPool(createInfo);
+    if (auto p = _device.lock<Device>())
+        _commandPool = p->device().createCommandPool(createInfo);
 }
 
-std::vector<CommandBuffer *> CommandPool::allocateFlightCommandBuffers(uint32_t count) const
+std::vector<VkResourceManagerHolder::WeakReference> CommandPool::allocateFlightCommandBuffers(uint32_t count) const
 {
     vk::CommandBufferAllocateInfo allocateInfo;
     allocateInfo.setCommandPool(_commandPool).setCommandBufferCount(count).setLevel(vk::CommandBufferLevel::ePrimary);
 
-    auto commandBuffers = _device.device().allocateCommandBuffers(allocateInfo);
-    std::vector<CommandBuffer *> pCommandBuffers;
+    std::vector<vk::CommandBuffer> commandBuffers;
+    if (auto p = _device.lock<Device>())
+        commandBuffers = p->device().allocateCommandBuffers(allocateInfo);
+    std::vector<VkResourceManagerHolder::WeakReference> pCommandBuffers;
     pCommandBuffers.reserve(commandBuffers.size());
+    auto thisReference = weakReference();
     for (const vk::CommandBuffer &commandBuffer : commandBuffers)
-        pCommandBuffers.push_back(createResource<CommandBuffer>(std::string(""), *this, commandBuffer, false, true));
+        pCommandBuffers.push_back(createResource<CommandBuffer>(std::string(""), thisReference, commandBuffer, false, true));
 
     return pCommandBuffers;
 }
 
-std::vector<CommandBuffer *> CommandPool::allocateSecondaryCommandBuffers(uint32_t count) const
+std::vector<VkResourceManagerHolder::WeakReference> CommandPool::allocateSecondaryCommandBuffers(uint32_t count) const
 {
     vk::CommandBufferAllocateInfo allocateInfo;
     allocateInfo.setCommandPool(_commandPool).setCommandBufferCount(count).setLevel(vk::CommandBufferLevel::eSecondary);
 
-    auto commandBuffers = _device.device().allocateCommandBuffers(allocateInfo);
-    std::vector<CommandBuffer *> pCommandBuffers;
+    std::vector<vk::CommandBuffer> commandBuffers;
+    if (auto p = _device.lock<Device>())
+        commandBuffers = p->device().allocateCommandBuffers(allocateInfo);
+    std::vector<VkResourceManagerHolder::WeakReference> pCommandBuffers;
     pCommandBuffers.reserve(commandBuffers.size());
+    auto thisReference = weakReference();
     for (const vk::CommandBuffer &commandBuffer : commandBuffers)
-        pCommandBuffers.push_back(createResource<CommandBuffer>(std::string(""), *this, commandBuffer, false, false));
+        pCommandBuffers.push_back(createResource<CommandBuffer>(std::string(""), thisReference, commandBuffer, false, false));
 
     return pCommandBuffers;
 }
 
-CommandBuffer *CommandPool::allocateOnceCommandBuffer() const
+VkResourceManagerHolder::WeakReference CommandPool::allocateOnceCommandBuffer() const
 {
-    CommandBuffer *pCommandBuffer = createResource<CommandBuffer>(
-        std::string(""), *this,
-        _device.device().allocateCommandBuffers(
-            vk::CommandBufferAllocateInfo().setCommandPool(_commandPool).setCommandBufferCount(1).setLevel(vk::CommandBufferLevel::ePrimary))[0],
-        true, true);
-    pCommandBuffer->begin();
-    return pCommandBuffer;
+    VkResourceManagerHolder::WeakReference commandBuffer;
+    auto thisReference = weakReference();
+    if (auto p = _device.lock<Device>())
+        commandBuffer = createResource<CommandBuffer>(
+            std::string(""), thisReference,
+            p->device().allocateCommandBuffers(
+                vk::CommandBufferAllocateInfo().setCommandPool(_commandPool).setCommandBufferCount(1).setLevel(vk::CommandBufferLevel::ePrimary))[0],
+            true, true);
+
+    if (auto p = commandBuffer.lock<CommandBuffer>())
+        p->begin();
+    return commandBuffer;
 }
 
-void CommandPool::endOnceCommandBuffer(CommandBuffer *pCommandBuffer) const
+void CommandPool::endOnceCommandBuffer(const VkResourceManagerHolder::WeakReference &commandBuffer) const
 {
-    pCommandBuffer->end();
-    pCommandBuffer->submit();
-    freeCommandBuffers(pCommandBuffer);
+    if (auto p = commandBuffer.lock<CommandBuffer>())
+    {
+        p->end();
+        p->submit();
+    }
+    freeCommandBuffers(commandBuffer);
 }
 
-void CommandPool::freeCommandBuffers(const vk::ArrayProxy<CommandBuffer *> &pCommandBuffers) const
+void CommandPool::freeCommandBuffers(const vk::ArrayProxy<VkResourceManagerHolder::WeakReference> &commandBuffers) const
 {
-    for (const CommandBuffer *pCommandBuffer : pCommandBuffers)
-        pCommandBuffer->destroy();
+    for (VkResourceManagerHolder::WeakReference commandBuffer : commandBuffers)
+        if (auto p = commandBuffer.lock())
+            p->destroy();
 }
 
-CommandPool &CommandPool::getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType)
+VkResourceManagerHolder::WeakReference CommandPool::getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType)
 {
-    CommandPool *pCommandPool = dynamic_cast<CommandPool *>(resourceManager().resource(Vkbase::VkResourceType::CommandPool, toString(queueType) + deviceName));
-    if (pCommandPool)
-        return *pCommandPool;
+    VkResourceManagerHolder::WeakReference commandPool = resourceManager().resource(Vkbase::VkResourceType::CommandPool, toString(queueType) + deviceName);
+
+    if (commandPool.lock())
+        return commandPool;
     else
-        return *(new CommandPool(toString(queueType) + deviceName, deviceName, queueType));
+        return createResource<CommandPool>(toString(queueType) + deviceName, deviceName, queueType);
 }
 }; // namespace Vkbase

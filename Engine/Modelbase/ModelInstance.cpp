@@ -8,14 +8,12 @@
 namespace Modelbase
 {
 ModelInstance::ModelInstance(const std::string &deviceName, Model &model)
-    : _descriptorSets(*(createResource<Vkbase::DescriptorSets>("", deviceName))), _model(model) {};
+    : _descriptorSets(createResource<Vkbase::DescriptorSets>("", deviceName)), _model(model) {};
 
 Object &ModelInstance::object() { return _object; }
 const Object &ModelInstance::object() const { return _object; }
 
-Vkbase::DescriptorSets &ModelInstance::descriptorSets() { return _descriptorSets; }
-
-const Vkbase::DescriptorSets &ModelInstance::descriptorSets() const { return _descriptorSets; }
+Vkbase::VkResourceManagerHolder::WeakReference ModelInstance::descriptorSets() const { return _descriptorSets; }
 
 void ModelInstance::updateAnimation(float deltaTick)
 {
@@ -55,10 +53,12 @@ void ModelInstance::updateUniformBuffers(uint32_t currentFrame, const Camera &ca
     uniformData.model = _object.matModel();
     uniformData.view = camera.view();
     uniformData.proj = camera.perspective();
+    if (auto p = _descriptorSets.lock())
+        if (auto p1 = Vkbase::VkResourceBase::resourceManager()
+                          .resource(Vkbase::VkResourceType::Buffer, p->name() + "_UBO_" + std::to_string(currentFrame))
+                          .lock<Vkbase::Buffer>())
 
-    const Vkbase::Buffer &UBO = *dynamic_cast<const Vkbase::Buffer *>(
-        Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Buffer, _descriptorSets.name() + "_UBO_" + std::to_string(currentFrame)));
-    UBO.updateBufferData(&uniformData);
+            p1->updateBufferData(&uniformData);
 }
 
 bool ModelInstance::canAddAnimationToStack() const { return !_isAnimationIndexStackLock; }

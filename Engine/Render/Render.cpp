@@ -24,23 +24,27 @@
 
 Render::Render(const std::string &windowName)
 {
-    _pWindow = createResource<Vkbase::Window>(windowName, windowName, 800, 600);
-    _deviceName = _pWindow->device().name();
+    _window = createResource<Vkbase::Window>(windowName, windowName, 800, 600);
+    if (auto pWindow = _window.lock<Vkbase::Window>())
+    {
+        if (auto pDevice = pWindow->device().lock())
+            _deviceName = pDevice->name();
+        pWindow->setMouseMoveCallback([this](double x, double y) { _camera.addViewBy(x, -y); });
+        pWindow->setMouseScrollCallback([](double, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
+    }
 
     _cameraLight.movePosTo(50, 300, 40);
     _cameraLight.lookAt(glm::vec3(0.0f));
     _cameraLight.setLight(true);
     _cameraLight.setNearFar(-1000, 1000);
     _cameraLight.setFrameSize(glm::vec2(300.0f));
-    _pWindow->setMouseMoveCallback([this](double x, double y) { _camera.addViewBy(x, -y); });
-    _pWindow->setMouseScrollCallback([](double, double y) { _speed = std::min(std::max(_speed + y * 0.1, 0.0), 30.0); });
 
     json renderPassConfig = JsonConfigReader::load("./config/renderPass.json")[0];
     _renderPassManagers.emplace_back(renderPassConfig);
     _renderPassManagers.back().clearValue("Normal")[4].depthStencil.setDepth(1.0f);
     _renderPassManagers.back().clearValue("Shadow")[0].depthStencil.setDepth(1.0f);
 
-    if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, "Empty"))
+    if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, "Empty").lock())
         createResource<Vkbase::Image>("Empty", deviceName(), 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
                                       vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
@@ -87,7 +91,7 @@ Render::Render(const std::string &windowName)
     _renderObjectManager.addObject("Normal", "g_buffer", _renderObjects.back());
 
     _rootFrameIndex = _renderObjects.size();
-    _renderObjects.push_back(VkGUI::Widget::create<VkGUI::Frame>(_pWindow, deviceName()));
+    _renderObjects.push_back(VkGUI::Widget::create<VkGUI::Frame>(_window, deviceName()));
     _renderObjectManager.addObject("Blend", "Widget", _renderObjects.back());
     std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())->setRect({0, 0, 500, 1600});
     std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects.back())->setColor({0.0f, 0.0f, 0.0f, 0.5f});
@@ -113,69 +117,79 @@ const std::string &Render::deviceName() { return _deviceName; }
 
 void Render::initWindowEvents()
 {
-    InputEvent::KeyInputEvent &event = dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::VkResourceType::Window, "mainWindow"))->keyInputEvent();
-    Object &Box1 = Entity::entity<Cube>("1")->object();
-    event.addPressedKeyEvent(GLFW_KEY_W, [&]() { _camera.moveFront(_speed * (_deltaTime)); });
-    event.addPressedKeyEvent(GLFW_KEY_S, [&]() { _camera.moveBack(_speed * (_deltaTime)); });
-    event.addPressedKeyEvent(GLFW_KEY_A, [&]() { _camera.moveLeft(_speed * (_deltaTime)); });
-    event.addPressedKeyEvent(GLFW_KEY_D, [&]() { _camera.moveRight(_speed * (_deltaTime)); });
-    event.addDownKeyEvent(GLFW_KEY_C,
-                          [&]()
-                          {
-                              event.removeUpKeyEvent(GLFW_KEY_W);
-                              event.removeUpKeyEvent(GLFW_KEY_S);
-                              event.removeUpKeyEvent(GLFW_KEY_A);
-                              event.removeUpKeyEvent(GLFW_KEY_D);
-                              event.removeDownKeyEvent(GLFW_KEY_W);
-                              event.removeDownKeyEvent(GLFW_KEY_S);
-                              event.removeDownKeyEvent(GLFW_KEY_A);
-                              event.removeDownKeyEvent(GLFW_KEY_D);
+    if (auto pWindow = _resourceManager.resource(Vkbase::VkResourceType::Window, "mainWindow").lock<Vkbase::Window>())
+    {
+        InputEvent::KeyInputEvent &event = pWindow->keyInputEvent();
+        Object &Box1 = Entity::entity<Cube>("1")->object();
+        event.addPressedKeyEvent(GLFW_KEY_W, [&]() { _camera.moveFront(_speed * (_deltaTime)); });
+        event.addPressedKeyEvent(GLFW_KEY_S, [&]() { _camera.moveBack(_speed * (_deltaTime)); });
+        event.addPressedKeyEvent(GLFW_KEY_A, [&]() { _camera.moveLeft(_speed * (_deltaTime)); });
+        event.addPressedKeyEvent(GLFW_KEY_D, [&]() { _camera.moveRight(_speed * (_deltaTime)); });
+        event.addDownKeyEvent(GLFW_KEY_C,
+                              [&]()
+                              {
+                                  event.removeUpKeyEvent(GLFW_KEY_W);
+                                  event.removeUpKeyEvent(GLFW_KEY_S);
+                                  event.removeUpKeyEvent(GLFW_KEY_A);
+                                  event.removeUpKeyEvent(GLFW_KEY_D);
+                                  event.removeDownKeyEvent(GLFW_KEY_W);
+                                  event.removeDownKeyEvent(GLFW_KEY_S);
+                                  event.removeDownKeyEvent(GLFW_KEY_A);
+                                  event.removeDownKeyEvent(GLFW_KEY_D);
 
-                              event.addPressedKeyEvent(GLFW_KEY_W, [&]() { _camera.moveFront(_speed * (_deltaTime)); });
-                              event.addPressedKeyEvent(GLFW_KEY_S, [&]() { _camera.moveBack(_speed * (_deltaTime)); });
-                              event.addPressedKeyEvent(GLFW_KEY_A, [&]() { _camera.moveLeft(_speed * (_deltaTime)); });
-                              event.addPressedKeyEvent(GLFW_KEY_D, [&]() { _camera.moveRight(_speed * (_deltaTime)); });
-                              event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { _camera.moveUp(_speed * (_deltaTime)); });
-                              event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { _camera.moveDown(_speed * (_deltaTime)); });
-                          });
+                                  event.addPressedKeyEvent(GLFW_KEY_W, [&]() { _camera.moveFront(_speed * (_deltaTime)); });
+                                  event.addPressedKeyEvent(GLFW_KEY_S, [&]() { _camera.moveBack(_speed * (_deltaTime)); });
+                                  event.addPressedKeyEvent(GLFW_KEY_A, [&]() { _camera.moveLeft(_speed * (_deltaTime)); });
+                                  event.addPressedKeyEvent(GLFW_KEY_D, [&]() { _camera.moveRight(_speed * (_deltaTime)); });
+                                  event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { _camera.moveUp(_speed * (_deltaTime)); });
+                                  event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { _camera.moveDown(_speed * (_deltaTime)); });
+                              });
 
-    event.addDownKeyEvent(
-        GLFW_KEY_P,
-        [&]()
-        {
-            event.removePressedKeyEvent(GLFW_KEY_W);
-            event.removePressedKeyEvent(GLFW_KEY_S);
-            event.removePressedKeyEvent(GLFW_KEY_A);
-            event.removePressedKeyEvent(GLFW_KEY_D);
+        event.addDownKeyEvent(
+            GLFW_KEY_P,
+            [&]()
+            {
+                event.removePressedKeyEvent(GLFW_KEY_W);
+                event.removePressedKeyEvent(GLFW_KEY_S);
+                event.removePressedKeyEvent(GLFW_KEY_A);
+                event.removePressedKeyEvent(GLFW_KEY_D);
 
-            event.addDownKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
-            event.addDownKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(-1.0f, 0.0f, 0.0f)); });
-            event.addDownKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, -1.0f)); });
-            event.addDownKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
+                event.addDownKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
+                event.addDownKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(-1.0f, 0.0f, 0.0f)); });
+                event.addDownKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, -1.0f)); });
+                event.addDownKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() + _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
 
-            event.addUpKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
-            event.addUpKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(-1.0f, 0.0f, 0.0f)); });
-            event.addUpKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, -1.0f)); });
-            event.addUpKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
+                event.addUpKeyEvent(GLFW_KEY_W, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(1.0f, 0.0f, 0.0f)); });
+                event.addUpKeyEvent(GLFW_KEY_S, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(-1.0f, 0.0f, 0.0f)); });
+                event.addUpKeyEvent(GLFW_KEY_A, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, -1.0f)); });
+                event.addUpKeyEvent(GLFW_KEY_D, [&]() { _pPush->setAcceleration(_pPush->acceleration() - _speed * glm::vec3(0.0f, 0.0f, 1.0f)); });
 
-            event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
-            event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
-        });
+                event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, 1.0f, 0.0f) * _speed * (_deltaTime)); });
+                event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT,
+                                         [&]() { Box1.setPosition(Box1.position() + glm::vec3(0.0f, -1.0f, 0.0f) * _speed * (_deltaTime)); });
+            });
 
-    event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { _camera.moveUp(_speed * (_deltaTime)); });
-    event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { _camera.moveDown(_speed * (_deltaTime)); });
-    event.addDownKeyEvent(GLFW_KEY_ESCAPE, []()
-                          { dynamic_cast<Vkbase::Window *>(_resourceManager.resource(Vkbase::VkResourceType::Window, "mainWindow"))->switchCursorState(); });
+        event.addPressedKeyEvent(GLFW_KEY_SPACE, [&]() { _camera.moveUp(_speed * (_deltaTime)); });
+        event.addPressedKeyEvent(GLFW_KEY_LEFT_SHIFT, [&]() { _camera.moveDown(_speed * (_deltaTime)); });
+        event.addDownKeyEvent(GLFW_KEY_ESCAPE,
+                              []()
+                              {
+                                  if (auto pWindow = _resourceManager.resource(Vkbase::VkResourceType::Window, "mainWindow").lock<Vkbase::Window>())
+                                      pWindow->switchCursorState();
+                              });
+    }
 }
 
 void Render::createRenderPass()
 {
-    const Vkbase::Device &device = *(dynamic_cast<const Vkbase::Device *>(_resourceManager.resource(Vkbase::VkResourceType::Device, deviceName())));
-    vk::Format depthFormat = device.findSupportedFormat({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
-                                                        vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
-    const std::string &windowName = _pWindow->name();
-
-    vk::Extent2D extent = dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::VkResourceType::Swapchain, windowName))->extent();
+    vk::Format depthFormat;
+    vk::Extent2D extent;
+    if (auto pDevice = _resourceManager.resource(Vkbase::VkResourceType::Device, deviceName()).lock<Vkbase::Device>())
+        depthFormat = pDevice->findSupportedFormat({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint},
+                                                   vk::ImageTiling::eOptimal, vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+    if (auto pWindow = _window.lock<Vkbase::Window>())
+        if (auto p = _resourceManager.resource(Vkbase::VkResourceType::Swapchain, pWindow->name()).lock<Vkbase::Swapchain>())
+            extent = p->extent();
 
     json renderPassConfigs = JsonConfigReader::load("config/render.json");
     std::vector<std::string> renderPassNames;
@@ -212,23 +226,30 @@ void Render::createRenderPass()
         {"GeometryPipeline", Entity::entity<Cube>("1")->descriptorSetLayouts()},
         {"GeometryOutlinePipeline", Entity::entity<Cube>("1")->descriptorSetLayouts()},
         {"GeometryShadow", Entity::entity<Cube>("1")->descriptorSetLayouts()}};
+    if (auto pWindow = _window.lock())
+        for (const auto &config : renderPassConfigs.items())
+        {
+            if (auto pRenderPass = createResource<Vkbase::RenderPass>(config.key(), deviceName(), config.value()["renderPass"], pWindow->name(), depthFormat)
+                                       .lock<Vkbase::RenderPass>())
+            {
+                renderPassNames.push_back(pRenderPass->name());
+                pRenderPass->createFramebuffer(config.key(), config.value()["framebuffers"], extent.width, extent.height, pWindow->name(), depthFormat);
+            }
+        }
 
     for (const auto &config : renderPassConfigs.items())
     {
-        Vkbase::RenderPass &renderPass =
-            *(createResource<Vkbase::RenderPass>(config.key(), deviceName(), config.value()["renderPass"], windowName, depthFormat));
-        renderPassNames.push_back(renderPass.name());
-        renderPass.createFramebuffer(config.key(), config.value()["framebuffers"], extent.width, extent.height, windowName, depthFormat);
-    }
-
-    for (const auto &config : renderPassConfigs.items())
-    {
-        Vkbase::RenderPass &renderPass = *dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::VkResourceType::RenderPass, config.key()));
-        Vkbase::DescriptorSets &descriptorSets = renderPass.descriptorSets();
-        descriptorSets.addDescriptorSetCreateConfigWithJson(config.value()["descriptorSets"]["sets"]);
-        descriptorSets.init();
-        descriptorSets.writeSetsWithJson(config.value()["descriptorSets"]["write"]);
-        renderPass.createPipelines(config.value()["pipelines"], vertexInfos, descriptorSetLayouts, viewportInfos);
+        if (auto pRenderPass = _resourceManager.resource(Vkbase::VkResourceType::RenderPass, config.key()).lock<Vkbase::RenderPass>())
+        {
+            Vkbase::VkResourceManagerHolder::WeakReference descriptorSets = pRenderPass->descriptorSets();
+            if (auto pDescriptorSets = pRenderPass->descriptorSets().lock<Vkbase::DescriptorSets>())
+            {
+                pDescriptorSets->addDescriptorSetCreateConfigWithJson(config.value()["descriptorSets"]["sets"]);
+                pDescriptorSets->init();
+                pDescriptorSets->writeSetsWithJson(config.value()["descriptorSets"]["write"]);
+            }
+            pRenderPass->createPipelines(config.value()["pipelines"], vertexInfos, descriptorSetLayouts, viewportInfos);
+        }
     }
 
     for (auto &[pipelineName, renderPassName, descriptorSetName] : std::vector<std::array<std::string, 3>>{{"light", "G_Buffer", "G_BufferAttachments"},
@@ -239,9 +260,9 @@ void Render::createRenderPass()
     {
         std::vector<std::vector<std::pair<std::string, std::pair<std::string, uint32_t>>>> frameDescriptorSets(MAX_FLIGHT_COUNT);
         for (uint32_t i = 0; i < MAX_FLIGHT_COUNT; ++i)
-            frameDescriptorSets[i] = {
-                {dynamic_cast<Vkbase::RenderPass *>(_resourceManager.resource(Vkbase::VkResourceType::RenderPass, renderPassName))->descriptorSets().name(),
-                 {descriptorSetName, i}}};
+            if (auto pRenderPass = _resourceManager.resource(Vkbase::VkResourceType::RenderPass, renderPassName).lock<Vkbase::RenderPass>())
+                if (auto pDescriptorSets = pRenderPass->descriptorSets().lock())
+                    frameDescriptorSets[i] = {{pDescriptorSets->name(), {descriptorSetName, i}}};
         _renderObjects.push_back(std::make_shared<RenderFrame>(deviceName(), frameDescriptorSets));
 
         _renderObjectManager.addObject(renderPassName, pipelineName, _renderObjects.back());
@@ -252,25 +273,28 @@ void Render::createRenderPass()
 
 void Render::createDescriptorSets()
 {
-    Vkbase::DescriptorSets *pDescriptorSets = createResource<Vkbase::DescriptorSets>("MainDescriptorSets", deviceName());
-    pDescriptorSets->init();
+    if (auto p = createResource<Vkbase::DescriptorSets>("MainDescriptorSets", deviceName()).lock<Vkbase::DescriptorSets>())
+        p->init();
 }
 
 void Render::createRenderDelegator()
 {
-    const Vkbase::Swapchain &swapchain = *dynamic_cast<const Vkbase::Swapchain *>(_resourceManager.resource(Vkbase::VkResourceType::Swapchain, "mainWindow"));
-
-    _pRenderDelegator = createResource<Vkbase::RenderDelegator>("", deviceName(), swapchain.name(), "Graphics" + _deviceName);
-    _pRenderDelegator->setCommandRecordFunc([this](Vkbase::CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)
-                                            { this->recordCommand(pCommandBuffer, imageIndex, currentFrame); });
-    _pRenderDelegator->setRenderPassCreateFunc([spRender = std::shared_ptr<Render>(this, [](Render *) {})]() { spRender->createRenderPass(); });
-    _pRenderDelegator->setUpdateFunc([this](uint32_t currentFrame) { this->update(currentFrame); });
-    _pRenderDelegator->setSwapchainRecreatePrefunc(
-        [this]()
-        {
-            for (auto &renderPassManager : this->_renderPassManagers)
-                renderPassManager.shouldRecordFor();
-        });
+    Vkbase::VkResourceManagerHolder::WeakReference swapchain = _resourceManager.resource(Vkbase::VkResourceType::Swapchain, "mainWindow");
+    if (auto p = swapchain.lock())
+        _renderDelegator = createResource<Vkbase::RenderDelegator>("", deviceName(), p->name(), "Graphics" + _deviceName);
+    if (auto pRenderDelegator = _renderDelegator.lock<Vkbase::RenderDelegator>())
+    {
+        pRenderDelegator->setCommandRecordFunc([this](const Vkbase::VkResourceManagerHolder::WeakReference commandBuffer, uint32_t imageIndex,
+                                                      uint32_t currentFrame) { this->recordCommand(commandBuffer, imageIndex, currentFrame); });
+        pRenderDelegator->setRenderPassCreateFunc([spRender = std::shared_ptr<Render>(this, [](Render *) {})]() { spRender->createRenderPass(); });
+        pRenderDelegator->setUpdateFunc([this](uint32_t currentFrame) { this->update(currentFrame); });
+        pRenderDelegator->setSwapchainRecreatePrefunc(
+            [this]()
+            {
+                for (auto &renderPassManager : this->_renderPassManagers)
+                    renderPassManager.shouldRecordFor();
+            });
+    }
 }
 
 void Render::draw()
@@ -283,9 +307,11 @@ void Render::draw()
 
     if (_resourceManager.resources().count(Vkbase::VkResourceType::RenderDelegator))
     {
-        const std::unordered_map<std::string, Vkbase::VkResourceBase *> resources = _resourceManager.resources().at(Vkbase::VkResourceType::RenderDelegator);
-        for (auto renderDelegator : resources)
-            dynamic_cast<Vkbase::RenderDelegator *>(renderDelegator.second)->draw();
+        const std::unordered_map<std::string, Vkbase::VkResourceManagerHolder> &resources =
+            _resourceManager.resources().at(Vkbase::VkResourceType::RenderDelegator);
+        for (auto &renderDelegator : resources)
+            if (auto p = Vkbase::VkResourceManagerHolder::WeakReference(renderDelegator.second).lock())
+                dynamic_cast<Vkbase::RenderDelegator *>(p)->draw();
     }
 
     Vkbase::Window::delayDestroy();
@@ -311,10 +337,13 @@ void Render::update(uint32_t currentFrame)
 
 void Render::cleanup() {}
 
-void Render::recordCommand(Vkbase::CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame)
+void Render::recordCommand(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, uint32_t imageIndex, uint32_t currentFrame)
 {
     for (auto &renderPassManager : _renderPassManagers)
-        renderPassManager.draw(pCommandBuffer, &_renderObjectManager, imageIndex, currentFrame);
+    {
+        renderPassManager.shouldRecordFor("g_buffer");
+        renderPassManager.draw(commandBuffer, &_renderObjectManager, imageIndex, currentFrame);
+    }
 }
 
 void Render::calcDeltaTime()

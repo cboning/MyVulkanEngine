@@ -40,11 +40,11 @@ private:
     ~CommandPool();
 
 public:
-    std::vector<CommandBuffer *> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const;
-    std::vector<CommandBuffer *> allocateSecondaryCommandBuffers(uint32_t count) const;
-    CommandBuffer *allocateOnceCommandBuffer() const;
-    void endOnceCommandBuffer(CommandBuffer *pCommandBuffer) const;
-    void freeCommandBuffers(const vk::ArrayProxy<CommandBuffer *> &pCommandBuffers) const;
-    static CommandPool &getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType);
+    std::vector<VkResourceManagerHolder::WeakReference> allocateFlightCommandBuffers(uint32_t maxFlightFrameCount) const;
+    std::vector<VkResourceManagerHolder::WeakReference> allocateSecondaryCommandBuffers(uint32_t count) const;
+    VkResourceManagerHolder::WeakReference allocateOnceCommandBuffer() const;
+    void endOnceCommandBuffer(const VkResourceManagerHolder::WeakReference &commandBuffer) const;
+    void freeCommandBuffers(const vk::ArrayProxy<VkResourceManagerHolder::WeakReference> &commandBuffers) const;
+    static VkResourceManagerHolder::WeakReference getCommandPool(const std::string &deviceName, CommandPoolQueueType queueType);
 };
 } // namespace Vkbase

@@ -3,8 +3,6 @@
 
 namespace Vkbase
 {
-class Device;
-class DescriptorSets;
 class Buffer : public VkGpuResourceBase
 {
     friend class VkResourceManager;
@@ -16,7 +14,6 @@ private:
     vk::DeviceMemory _memory;
     vk::Buffer _buffer;
     vk::DeviceSize _size;
-    DescriptorSets *_pDescriptorSets = nullptr;
 
     Buffer(const std::string &resourceName, const std::string &deviceName, vk::DeviceSize size, vk::BufferUsageFlags usage, void *pData = nullptr);
     ~Buffer() override;

@@ -357,8 +357,10 @@ vk::Format JsonConfigReader::getFormatWithJson(const std::string &format, const 
     else
     {
         if (format == "SWAPCHAIN_FORMAT")
-            return dynamic_cast<Vkbase::Swapchain *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName))
-                ->format();
+            if (auto p = Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName).lock<Vkbase::Swapchain>())
+                return p->format();
+            else
+                throw std::runtime_error("Config Error: Not found the swapchain named: " + swapchainName);
         else if (format == "DEPTH_FORMAT")
             return depthFormat;
         else

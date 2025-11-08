@@ -16,7 +16,7 @@ class EmptyTextureResource : public ResourceBase, public Vkbase::VkResourcesDele
     friend class ResourceManager;
 
 public:
-    Vkbase::Image *texture() const;
+    Vkbase::VkResourceManagerHolder::WeakReference texture() const;
 
 
 private:

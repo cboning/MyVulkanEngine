@@ -12,8 +12,8 @@ Device::Device(const std::string &resourceName, const vk::SurfaceKHR &surface) :
 
 Device::~Device()
 {
-    _garbageCollector.forceCollect();
     _device.waitIdle();
+    _garbageCollector.forceCollect();
     _device.destroy();
 }
 
@@ -132,7 +132,8 @@ void Device::collectAllDelayResource()
 {
     for (auto iter = resourceManager().resources().at(VkResourceType::Device).begin(); iter != resourceManager().resources().at(VkResourceType::Device).end();
          ++iter)
-        dynamic_cast<Device *>(iter->second)->gpuResourceGarbageCollector().collect();
+        if (auto p = VkResourceManagerHolder::WeakReference(iter->second).lock())
+            dynamic_cast<Device *>(p)->gpuResourceGarbageCollector().collect();
 }
 
 const vk::Device &Device::device() const { return _device; }
@@ -147,15 +148,18 @@ const vk::Queue &Device::computeQueue() const { return _computeQueue; }
 
 const Device::QueueFamilyIndices &Device::queueFamilyIndices() const { return _queueFamilyIndices; }
 
-Device *Device::getSuitableDevice(const vk::SurfaceKHR &surface)
+Vkbase::VkResourceManagerHolder::WeakReference Device::getSuitableDevice(const vk::SurfaceKHR &surface)
 {
     if (resourceManager().resources().count(VkResourceType::Device))
-        for (const std::pair<const std::string, Vkbase::VkResourceBase *> &device : resourceManager().resources().at(VkResourceType::Device))
+        for (const std::pair<const std::string, VkResourceManagerHolder> &device : resourceManager().resources().at(VkResourceType::Device))
         {
-            Device &targetDevice = *dynamic_cast<Device *>(device.second);
-            if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) &&
-                targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
-                return &targetDevice;
+            if (auto p = VkResourceManagerHolder::WeakReference(device.second).lock())
+            {
+                Device &targetDevice = *dynamic_cast<Device *>(p);
+                if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) &&
+                    targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
+                    return VkResourceManagerHolder::WeakReference(device.second);
+            }
         }
     return createResource<Device>("", surface);
 }

@@ -71,7 +71,8 @@ void Cube::entityInit()
 
 void Cube::objectExtraUpdate() {}
 
-void Cube::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &, const std::string &pipelineName, uint32_t, uint32_t frameIndex) const
+void Cube::onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &, const std::string &pipelineName, uint32_t,
+                  uint32_t frameIndex) const
 {
     std::string setsName;
 
@@ -80,19 +81,26 @@ void Cube::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &, co
     if (!_isOutline && pipelineName == "GeometryOutlinePipeline")
         return;
 
-    auto *pDescriptorSets = dynamic_cast<Vkbase::DescriptorSets *>(
-        Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()));
+    auto descriptorSets = Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName());
+    if (auto pDescriptorSets = descriptorSets.lock<Vkbase::DescriptorSets>())
+    {
+        if (pipelineName == "GeometryPipeline")
+        {
+            setsName = "UBO";
+        }
+        else if (pipelineName == "GeometryShadow")
+        {
+            setsName = "ShadowUBO";
+        }
+        else
+        {
+            return;
+        }
 
-    if (!pDescriptorSets)
-        throw std::runtime_error("[Cube::draw] Missing required resources.");
-    if (pipelineName == "GeometryPipeline")
-        setsName = "UBO";
-    else if (pipelineName == "GeometryShadow")
-        setsName = "ShadowUBO";
+        _pCubeMesh->draw(commandBuffer, {{descriptorSets, {setsName, frameIndex}}});
+    }
     else
-        return;
-
-    _pCubeMesh->draw(pCommandBuffer, {{pDescriptorSets, {setsName, frameIndex}}});
+        throw std::runtime_error("[Cube::draw] Missing required resources.");
 }
 
 void Cube::onUpdateUBO(uint32_t frameIndex) const
@@ -112,13 +120,17 @@ void Cube::onUpdateUBO(uint32_t frameIndex) const
     }
 }
 
-void Cube::addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets)
+void Cube::addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets)
 {
-    descriptorSets.addDescriptorSetCreateConfig("UBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, flightFrameCount() / 2);
-    descriptorSets.addDescriptorSetCreateConfig("ShadowUBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, flightFrameCount() / 2);
+    if (auto pDescriptor = descriptorSets.lock<Vkbase::DescriptorSets>())
+    {
+        pDescriptor->addDescriptorSetCreateConfig("UBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, flightFrameCount() / 2);
+        pDescriptor->addDescriptorSetCreateConfig("ShadowUBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}},
+                                                  flightFrameCount() / 2);
+    }
 }
 
-void Cube::writeDescriptorSets(Vkbase::DescriptorSets &)
+void Cube::writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &)
 {
     writeUBODescriptorSets("UBO", 0, 0, flightFrameCount() / 2);
     writeUBODescriptorSets("ShadowUBO", 0, flightFrameCount() / 2, flightFrameCount());
@@ -126,7 +138,8 @@ void Cube::writeDescriptorSets(Vkbase::DescriptorSets &)
 
 std::vector<vk::DescriptorSetLayout> Cube::descriptorSetLayouts()
 {
-    return {
-        dynamic_cast<Vkbase::DescriptorSets *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()))
-            ->layout("UBO")};
+    if (auto pDescriptorSets =
+            Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSetsName()).lock<Vkbase::DescriptorSets>())
+        return {pDescriptorSets->layout("UBO")};
+    throw std::runtime_error("Failed found the descriptorSets");
 }

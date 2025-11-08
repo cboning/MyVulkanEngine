@@ -6,6 +6,8 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
+#include "VkResourceManagerHolder.h"
+
 namespace Vkbase
 {
 enum class VkResourceType
@@ -28,7 +30,7 @@ enum class VkResourceType
 
 class VkResourceBase;
 
-typedef std::unordered_map<VkResourceType, std::unordered_map<std::string, VkResourceBase *>> VkResourceSet;
+typedef std::unordered_map<VkResourceType, std::unordered_map<std::string, VkResourceManagerHolder>> VkResourceSet;
 
 inline std::string toString(VkResourceType type)
 {
@@ -64,6 +66,7 @@ inline std::string toString(VkResourceType type)
         return "CommandBuffer";
     }
 }
+
 class VkResourceManager
 {
     friend class VkResourceBase;
@@ -82,19 +85,23 @@ private:
                         },
                         std::string appName = "Vulkan");
     void addResource(VkResourceBase *pResource);
-    template <typename T, typename... Args> T *create(Args &&...args);
+    template <typename T, typename... Args> VkResourceManagerHolder::WeakReference create(Args &&...args);
     VkResourceManager();
     ~VkResourceManager();
 
 public:
     const VkResourceSet &resources() const;
 
-    VkResourceBase *resource(VkResourceType type, const std::string &name) const;
+    VkResourceManagerHolder::WeakReference resource(VkResourceType type, const std::string &name) const;
     const vk::Instance &vkInstance() const;
     static VkResourceManager &instance();
     static void shutDown();
     void remove(VkResourceType type, const std::string &name);
 };
 
-template <typename T, typename... Args> T *VkResourceManager::create(Args &&...args) { return new T(args...); }
+template <typename T, typename... Args> VkResourceManagerHolder::WeakReference VkResourceManager::create(Args &&...args)
+{
+    T *pResource = new T(args...);
+    return resource(pResource->type(), pResource->name());
+}
 } // namespace Vkbase

@@ -22,7 +22,7 @@ private:
     class Sampler : public Vkbase::VkResourcesDelegator
     {
     public:
-        Vkbase::Sampler *_pSampler;
+        const Vkbase::VkResourceManagerHolder::WeakReference _sampler;
         Sampler(const std::string &deviceName, const vk::SamplerCreateInfo &info);
 
         const vk::Sampler &sampler();

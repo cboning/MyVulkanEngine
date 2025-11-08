@@ -7,14 +7,16 @@ namespace Vkbase
 {
 Pipeline::Pipeline(const std::string &resourceName, const std::string &deviceName, const std::string &renderPassName, const PipelineCreateInfo &createInfo,
                    bool computePipeline)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Pipeline, resourceName, *dynamic_cast<Device *>(resourceManager().resource(VkResourceType::Device, deviceName)))
+    : VkGpuResourceBase(Vkbase::VkResourceType::Pipeline, resourceName, resourceManager().resource(VkResourceType::Device, deviceName))
 {
     createPipeline(renderPassName, createInfo, computePipeline);
 }
 
 Pipeline::~Pipeline()
 {
-    vk::Device device = _device.device();
+    vk::Device device;
+    if (auto p = _device.lock<Device>())
+        device = p->device();
     std::vector<vk::ShaderModule> shaderModules = _shaderModules;
     vk::Pipeline pipeline = _pipeline;
     vk::PipelineLayout pipelineLayout = _pipelineLayout;
@@ -35,19 +37,23 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
     vk::PipelineLayoutCreateInfo pipelineLayoutInfo;
     pipelineLayoutInfo.setSetLayouts(createInfo.descriptorSetLayouts);
 
-    _pipelineLayout = _device.device().createPipelineLayout(pipelineLayoutInfo);
+    if (auto p = _device.lock<Device>())
+        _pipelineLayout = p->device().createPipelineLayout(pipelineLayoutInfo);
     if (computePipeline)
     {
         _pipelineBindPoint = vk::PipelineBindPoint::eCompute;
         vk::ComputePipelineCreateInfo pipelineInfo;
         pipelineInfo.setStage(stages[0]).setLayout(_pipelineLayout);
 
-        vk::ResultValue result = _device.device().createComputePipeline(nullptr, pipelineInfo);
+        if (auto p = _device.lock<Device>())
+        {
+            vk::ResultValue result = p->device().createComputePipeline(nullptr, pipelineInfo);
 
-        if (result.result != vk::Result::eSuccess)
-            throw std::runtime_error("Failed to create compute pipeline!");
+            if (result.result != vk::Result::eSuccess)
+                throw std::runtime_error("Failed to create compute pipeline!");
 
-        _pipeline = result.value;
+            _pipeline = result.value;
+        }
         return;
     }
 
@@ -62,20 +68,22 @@ void Pipeline::createPipeline(const std::string &renderPassName, const PipelineC
 
     if (!renderPassName.empty())
     {
-        const RenderPass *renderPassResource =
-            dynamic_cast<const RenderPass *>(connectTo(resourceManager().resource(VkResourceType::RenderPass, renderPassName)));
-        if (!renderPassResource)
+        auto renderPassResource = connectTo(resourceManager().resource(VkResourceType::RenderPass, renderPassName));
+        if (auto p = renderPassResource.lock<RenderPass>())
+            pipelineInfo.setRenderPass(p->renderPass());
+        else
             throw std::runtime_error("RenderPass resource not found: " + renderPassName);
-        const vk::RenderPass &renderPass = renderPassResource->renderPass();
-        pipelineInfo.setRenderPass(renderPass);
     }
 
-    vk::ResultValue result = _device.device().createGraphicsPipeline(nullptr, pipelineInfo);
+    if (auto p = _device.lock<Device>())
+    {
+        vk::ResultValue result = p->device().createGraphicsPipeline(nullptr, pipelineInfo);
 
-    if (result.result != vk::Result::eSuccess)
-        throw std::runtime_error("Failed to create graphics pipeline!");
+        if (result.result != vk::Result::eSuccess)
+            throw std::runtime_error("Failed to create graphics pipeline!");
 
-    _pipeline = result.value;
+        _pipeline = result.value;
+    }
 }
 
 vk::ShaderModule Pipeline::createShaderModule(std::string filename)
@@ -93,7 +101,12 @@ vk::ShaderModule Pipeline::createShaderModule(std::string filename)
     vk::ShaderModuleCreateInfo createInfo;
     createInfo.setCodeSize(fileSize).setPCode(reinterpret_cast<const uint32_t *>(vertexBuffer.data()));
 
-    vk::ShaderModule shaderModule = _device.device().createShaderModule(createInfo);
+    vk::ShaderModule shaderModule;
+
+    if (auto p = _device.lock<Device>())
+        shaderModule = p->device().createShaderModule(createInfo);
+    else
+        throw std::runtime_error("Device already destroyed.");
     _shaderModules.push_back(shaderModule);
     return shaderModule;
 }

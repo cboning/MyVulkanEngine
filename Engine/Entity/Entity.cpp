@@ -124,16 +124,3 @@ void Entity::eraseMotion(const std::string &name)
 
     delete _pMotions.extract(name).mapped();
 }
-
-void Entity::drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
-                          uint32_t frameIndex)
-{
-    for (auto &entity : _pEntities)
-        entity.second->draw(pCommandBuffer, renderPassName, pipelineName, imageIndex, frameIndex);
-}
-
-void Entity::updateEntities(uint32_t frameIndex)
-{
-    for (auto &entity : _pEntities)
-        entity.second->update(frameIndex);
-}

@@ -10,12 +10,6 @@ using json = nlohmann::json;
 
 class Camera;
 
-namespace Vkbase
-{
-class Buffer;
-class CommandBuffer;
-} // namespace Vkbase
-
 class ModelEntity : public Entity
 {
 private:
@@ -29,11 +23,11 @@ public:
     ModelEntity(const std::string &name, const std::string &deviceName, const Camera &camera, Modelbase::Model &model, bool dynamic = true,
                 const Object &object = {});
     ~ModelEntity();
-    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+    void onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
                 uint32_t frameIndex) const override;
     void onUpdateUBO(uint32_t frameIndex) const override;
-    void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
-    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
+    void addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) override;
+    void writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) override;
 
     std::vector<vk::DescriptorSetLayout> descriptorSetLayouts() override;
     Object &modelObject();

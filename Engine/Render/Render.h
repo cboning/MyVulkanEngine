@@ -3,8 +3,8 @@
 #include "../VkGUI/Text.h"
 #include "../Vkbase/Vkbase.h"
 #include "RenderFrame.h"
-#include "RenderPassManager.h"
 #include "RenderObjectManager.h"
+#include "RenderPassManager.h"
 
 class Push;
 class RenderPassManager;
@@ -18,13 +18,13 @@ private:
 
     inline static Vkbase::VkResourceManager &_resourceManager = Vkbase::VkResourceBase::resourceManager();
 
-    Vkbase::RenderDelegator *_pRenderDelegator = nullptr;
+    Vkbase::VkResourceManagerHolder::WeakReference _renderDelegator = {};
 
     inline static float _lastTime = glfwGetTime();
     inline static float _currentTime = glfwGetTime();
     inline static float _deltaTime = 0.1f;
 
-    Vkbase::Window *_pWindow;
+    Vkbase::VkResourceManagerHolder::WeakReference _window;
 
     std::vector<RenderPassManager> _renderPassManagers;
     std::vector<std::shared_ptr<Vkbase::RenderObjectDelegator>> _renderObjects;
@@ -38,7 +38,7 @@ private:
     void createRenderPass();
     void createDescriptorSets();
     void createRenderDelegator();
-    void recordCommand(Vkbase::CommandBuffer *pCommandBuffer, uint32_t imageIndex, uint32_t currentFrame);
+    void recordCommand(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, uint32_t imageIndex, uint32_t currentFrame);
     void cleanup();
     void initWindowEvents();
     static void calcDeltaTime();

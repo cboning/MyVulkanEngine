@@ -58,10 +58,10 @@ void ModelEntity::entityInit()
 
 void ModelEntity::objectExtraUpdate() { _model.instance(_instanceName).object().setPosition(object().position()); }
 
-void ModelEntity::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
+void ModelEntity::onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
                          uint32_t frameIndex) const
 {
-    _model.draw(frameIndex, pCommandBuffer, renderPassName, pipelineName, 0);
+    _model.draw(frameIndex, commandBuffer, renderPassName, pipelineName, 0);
 }
 
 void ModelEntity::onUpdateUBO(uint32_t frameIndex) const
@@ -70,9 +70,9 @@ void ModelEntity::onUpdateUBO(uint32_t frameIndex) const
     instance.updateUniformBuffers(frameIndex, camera());
 }
 
-void ModelEntity::addDescriptorSetsConfig(Vkbase::DescriptorSets &) {}
+void ModelEntity::addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &) {}
 
-void ModelEntity::writeDescriptorSets(Vkbase::DescriptorSets &) {}
+void ModelEntity::writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &) {}
 
 std::vector<vk::DescriptorSetLayout> ModelEntity::descriptorSetLayouts() { return _model.descriptorSetLayout(_instanceName, "g_buffer"); }
 

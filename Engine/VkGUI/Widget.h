@@ -101,7 +101,7 @@ private:
     template <typename T> std::weak_ptr<T> add(std::shared_ptr<T> &subWidget);
 
     inline static glm::mat4 _projection = glm::mat4(1.0f);
-    inline static std::unordered_map<Vkbase::Window *, std::vector<std::weak_ptr<Widget>>> _rootWidgets = {};
+    inline static std::unordered_map<Vkbase::VkResourceManagerHolder::WeakReference, std::vector<std::weak_ptr<Widget>>> _rootWidgets = {};
 
     void updateRenderRect();
     void buildMesh();
@@ -113,7 +113,8 @@ public:
     Widget(WidgetType type, const std::string &deviceName, const std::string &textureName = "");
     virtual ~Widget();
     template <typename T, typename... Args> std::weak_ptr<T> create(Args &&...args);
-    template <typename T, typename... Args> static std::shared_ptr<T> create(Vkbase::Window *pWindow, const std::string &deviceName, Args &&...args);
+    template <typename T, typename... Args>
+    static std::shared_ptr<T> create(const Vkbase::VkResourceManagerHolder::WeakReference &window, const std::string &deviceName, Args &&...args);
     void destroy();
 
     void setColor(const glm::vec4 &color);
@@ -122,12 +123,12 @@ public:
 
     const glm::u32vec4 &rect() const;
 
-    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
-                uint32_t frameIndex) const override;
+    void onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName,
+                uint32_t imageIndex, uint32_t frameIndex) const override;
 
     void onUpdateUBO(uint32_t frameIndex) const override;
-    void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
-    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
+    void addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) override;
+    void writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) override;
     const vk::DescriptorSetLayout &descriptorSetsLayout();
     void setCommandShouldRecordFunc(const std::function<void()> &func);
 
@@ -151,50 +152,55 @@ template <typename T, typename... Args> inline std::weak_ptr<T> Widget::create(A
     return add(subWidget);
 }
 
-template <typename T, typename... Args> inline std::shared_ptr<T> Widget::create(Vkbase::Window *pWindow, const std::string &deviceName, Args &&...args)
+template <typename T, typename... Args>
+inline std::shared_ptr<T> Widget::create(const Vkbase::VkResourceManagerHolder::WeakReference &window, const std::string &deviceName, Args &&...args)
 {
     auto widget = std::shared_ptr<T>(new T(deviceName, std::forward<Args>(args)...));
-    if (!_rootWidgets.count(pWindow))
+    if (auto pWindow = window.lock<Vkbase::Window>())
     {
-        pWindow->mouseInputEvent().addMoveEvent(
-            [pWindow](glm::vec2)
-            {
-                for (auto &rootWidget : _rootWidgets[pWindow])
-                    if (auto p = rootWidget.lock())
-                    {
-                        int width, height;
-                        glfwGetFramebufferSize(pWindow->window(), &width, &height);
-                        p->processMouse(pWindow->mouseInputEvent().pos() * glm::vec2(width / pWindow->width(), height / pWindow->height()),
-                                        MouseEventType::Move);
-                    }
-            });
-        pWindow->mouseInputEvent().addDownButtonEvent(InputEvent::Button::Left,
-                                                      [pWindow]()
-                                                      {
-                                                          for (auto &rootWidget : _rootWidgets[pWindow])
-                                                              if (auto p = rootWidget.lock())
-                                                              {
-                                                                  int width, height;
-                                                                  glfwGetFramebufferSize(pWindow->window(), &width, &height);
-                                                                  p->processMouse(pWindow->mouseInputEvent().pos() *
-                                                                                      glm::vec2(width / pWindow->width(), height / pWindow->height()),
-                                                                                  MouseEventType::Down);
-                                                              }
-                                                      });
-        pWindow->mouseInputEvent().addUpButtonEvent(
-            InputEvent::Button::Left,
-            [pWindow]()
-            {
-                for (auto &rootWidget : _rootWidgets[pWindow])
-                    if (auto p = rootWidget.lock())
-                    {
-                        int width, height;
-                        glfwGetFramebufferSize(pWindow->window(), &width, &height);
-                        p->processMouse(pWindow->mouseInputEvent().pos() * glm::vec2(width / pWindow->width(), height / pWindow->height()), MouseEventType::Up);
-                    }
-            });
+        if (!_rootWidgets.count(window))
+        {
+            pWindow->mouseInputEvent().addMoveEvent(
+                [pWindow, window](glm::vec2)
+                {
+                    for (auto &rootWidget : _rootWidgets[window])
+                        if (auto p = rootWidget.lock())
+                        {
+                            int width, height;
+                            glfwGetFramebufferSize(pWindow->window(), &width, &height);
+                            p->processMouse(pWindow->mouseInputEvent().pos() * glm::vec2(width / pWindow->width(), height / pWindow->height()),
+                                            MouseEventType::Move);
+                        }
+                });
+            pWindow->mouseInputEvent().addDownButtonEvent(InputEvent::Button::Left,
+                                                          [pWindow, window]()
+                                                          {
+                                                              for (auto &rootWidget : _rootWidgets[window])
+                                                                  if (auto p = rootWidget.lock())
+                                                                  {
+                                                                      int width, height;
+                                                                      glfwGetFramebufferSize(pWindow->window(), &width, &height);
+                                                                      p->processMouse(pWindow->mouseInputEvent().pos() *
+                                                                                          glm::vec2(width / pWindow->width(), height / pWindow->height()),
+                                                                                      MouseEventType::Down);
+                                                                  }
+                                                          });
+            pWindow->mouseInputEvent().addUpButtonEvent(InputEvent::Button::Left,
+                                                        [pWindow, window]()
+                                                        {
+                                                            for (auto &rootWidget : _rootWidgets[window])
+                                                                if (auto p = rootWidget.lock())
+                                                                {
+                                                                    int width, height;
+                                                                    glfwGetFramebufferSize(pWindow->window(), &width, &height);
+                                                                    p->processMouse(pWindow->mouseInputEvent().pos() *
+                                                                                        glm::vec2(width / pWindow->width(), height / pWindow->height()),
+                                                                                    MouseEventType::Up);
+                                                                }
+                                                        });
+        }
+        _rootWidgets[window].push_back(std::dynamic_pointer_cast<Widget>(widget));
     }
-    _rootWidgets[pWindow].push_back(std::dynamic_pointer_cast<Widget>(widget));
     widget->init();
     return widget;
 }

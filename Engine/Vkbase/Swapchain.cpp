@@ -11,14 +11,17 @@
 namespace Vkbase
 {
 Swapchain::Swapchain(const std::string &resourceName, const std::string &deviceName, const std::string &windowName)
-    : VkGpuResourceBase(VkResourceType::Swapchain, resourceName, *dynamic_cast<Device *>(resourceManager().resource(VkResourceType::Device, deviceName))),
-      _window(*dynamic_cast<Window *>(connectTo(resourceManager().resource(Vkbase::VkResourceType::Window, windowName)))), _surface(_window.surface())
+    : VkGpuResourceBase(VkResourceType::Swapchain, resourceName, resourceManager().resource(VkResourceType::Device, deviceName)),
+      _window(connectTo(resourceManager().resource(Vkbase::VkResourceType::Window, windowName))), _surface(_window.lock<Window>()->surface())
 {
     try
     {
-        _extent.setWidth(_window.width()).setHeight(_window.height());
+        if (auto p = _window.lock<Window>())
+            _extent.setWidth(p->width()).setHeight(p->height());
 
-        SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
+        SurfaceSupportDetails supportDetails;
+        if (auto p = _device.lock<Device>())
+            supportDetails = p->querySwapChainSupport(p->physicalDevice(), _surface);
 
         determineExtent(supportDetails);
         determineFormat(supportDetails);
@@ -41,12 +44,15 @@ Swapchain::Swapchain(const std::string &resourceName, const std::string &deviceN
 
 Swapchain::~Swapchain()
 {
-    auto device = _device.device();
+    vk::Device device;
+    if (auto p = _device.lock<Device>())
+        device = p->device();
     auto swapchain = _swapchain;
     auto imageViews = _imageViews;
 
     _onDelayDestroy = [device, swapchain, imageViews]() mutable
     {
+        std::cout << "Swapchain delay destroyed." << std::endl;
         for (const auto &imageView : imageViews)
             if (imageView)
                 device.destroy(imageView);
@@ -57,33 +63,41 @@ Swapchain::~Swapchain()
     };
 }
 
-Swapchain *Swapchain::recreate()
+Vkbase::VkResourceManagerHolder::WeakReference Swapchain::recreate()
 {
     try
     {
-        Window &window = _window;
+        VkResourceManagerHolder::WeakReference window = std::move(_window);
         const std::string resourceName = name();
-        const std::string deviceName = _device.name();
-        const std::string windowName = window.name();
+        std::string windowName, deviceName;
+        if (auto p = _device.lock())
+            deviceName = p->name();
 
-        window.setLock();
+        if (auto p = window.lock())
+            windowName = p->name();
+
+        if (auto p = window.lock())
+            p->setLock();
         destroy();
         Vkbase::Device::collectAllDelayResource();
-        Swapchain *pNewSwapchain = new Swapchain(resourceName, deviceName, windowName);
-        window.setUnlock();
+        auto newSwapchain = createResource<Swapchain>(resourceName, deviceName, windowName);
+        if (auto p = window.lock())
+            p->setUnlock();
 
-        return pNewSwapchain;
+        return newSwapchain;
     }
     catch (const std::exception &e)
     {
-        _window.setUnlock();
+        if (auto p = _window.lock())
+            p->setUnlock();
         std::stringstream ss;
         ss << "Failed to recreate Swapchain '" << name() << "': " << e.what();
         throw std::runtime_error(ss.str());
     }
     catch (...)
     {
-        _window.setUnlock();
+        if (auto p = _window.lock())
+            p->setUnlock();
         throw std::runtime_error("Unknown error occurred during Swapchain recreation");
     }
 }
@@ -95,7 +109,10 @@ void Swapchain::init()
 
     try
     {
-        SurfaceSupportDetails supportDetails = _device.querySwapChainSupport(_device.physicalDevice(), _surface);
+        SurfaceSupportDetails supportDetails;
+        Device::QueueFamilyIndices deviceQueueFamilyIndice;
+        if (auto p = _device.lock<Device>())
+            supportDetails = p->querySwapChainSupport(p->physicalDevice(), _surface);
         uint32_t desiredImageCount = 5;
         if (supportDetails.capabilities.maxImageCount)
             desiredImageCount = std::min(desiredImageCount, supportDetails.capabilities.maxImageCount);
@@ -121,7 +138,8 @@ void Swapchain::init()
             .setPresentMode(_presentMode)
             .setClipped(vk::True);
 
-        Device::QueueFamilyIndices deviceQueueFamilyIndice = _device.queueFamilyIndices();
+        if (auto p = _device.lock<Device>())
+            deviceQueueFamilyIndice = p->queueFamilyIndices();
         uint32_t queueFamilyIndice[3];
         uint32_t queueFamilyIndiceCount = 0;
 
@@ -139,9 +157,12 @@ void Swapchain::init()
                 .setQueueFamilyIndexCount(queueFamilyIndiceCount)
                 .setImageSharingMode(vk::SharingMode::eConcurrent);
 
-        tempSwapchain = _device.device().createSwapchainKHR(createInfo);
+        if (auto p = _device.lock<Device>())
+        {
+            tempSwapchain = p->device().createSwapchainKHR(createInfo);
 
-        _images = _device.device().getSwapchainImagesKHR(tempSwapchain);
+            _images = p->device().getSwapchainImagesKHR(tempSwapchain);
+        }
         std::cout << "Swapchain image count: " << _images.size() << std::endl;
 
         if (_images.empty())
@@ -164,7 +185,8 @@ void Swapchain::init()
 
             try
             {
-                tempImageViews.push_back(_device.device().createImageView(viewInfo));
+                if (auto p = _device.lock<Device>())
+                    tempImageViews.push_back(p->device().createImageView(viewInfo));
             }
             catch (const std::exception &e)
             {
@@ -204,19 +226,14 @@ void Swapchain::cleanupTemporary(vk::SwapchainKHR tempSwapchain, const std::vect
 {
     try
     {
-
         for (const auto &imageView : tempImageViews)
-        {
             if (imageView)
-            {
-                _device.device().destroy(imageView);
-            }
-        }
+                if (auto p = _device.lock<Device>())
+                    p->device().destroy(imageView);
 
         if (tempSwapchain)
-        {
-            _device.device().destroy(tempSwapchain);
-        }
+            if (auto p = _device.lock<Device>())
+                p->device().destroy(tempSwapchain);
     }
     catch (const std::exception &e)
     {
@@ -325,12 +342,14 @@ void Swapchain::cleanup()
 
         for (const auto &imageView : _imageViews)
             if (imageView)
-                _device.device().destroy(imageView);
+                if (auto p = _device.lock<Device>())
+                    p->device().destroy(imageView);
         _imageViews.clear();
 
         if (_swapchain)
         {
-            _device.device().destroy(_swapchain);
+            if (auto p = _device.lock<Device>())
+                p->device().destroy(_swapchain);
             _swapchain = VK_NULL_HANDLE;
         }
     }

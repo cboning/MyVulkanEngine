@@ -20,24 +20,23 @@ public:
     void setDestroyCallback(std::function<void()> destroyCallback);
 
 private:
-    std::unordered_set<VkResourceBase *> _pResources;
+    std::unordered_set<VkResourceManagerHolder::WeakReference> _resources;
     std::function<void()> _destroyCallback = {};
-    std::unordered_set<VkResourceBase *> _pKeyResources;
     bool _destroying = false;
 
-    void removeResource(VkResourceBase *pResource);
+    void removeResource(const VkResourceManagerHolder::WeakReference &pResource);
 
 protected:
-    template <typename T, typename... Args> T *createResource(Args &&...args);
-    void addKeyResource(VkResourceBase *pResource);
+    template <typename T, typename... Args> VkResourceManagerHolder::WeakReference createResource(Args &&...args);
 };
 
-template <typename T, typename... Args> inline T *VkResourcesDelegator::createResource(Args &&...args)
+template <typename T, typename... Args> inline VkResourceManagerHolder::WeakReference VkResourcesDelegator::createResource(Args &&...args)
 {
-    T *pResource = VkResourceBase::resourceManager().create<T>(args...);
-    _pResources.insert(pResource);
-    pResource->_pResourcesDelegator = this;
+    VkResourceManagerHolder::WeakReference resource = VkResourceBase::resourceManager().create<T>(args...);
+    _resources.insert(resource);
+    if (auto p = resource.lock())
+        p->_pResourcesDelegator = this;
 
-    return pResource;
+    return resource;
 }
 } // namespace Vkbase

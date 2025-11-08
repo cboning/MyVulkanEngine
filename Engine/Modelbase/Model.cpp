@@ -12,12 +12,12 @@ Model::Model(const std::string &deviceName, const vk::Sampler &sampler, const st
              const std::unordered_map<std::string, std::vector<aiTextureType>> &textureTypeFeatures,
              const std::unordered_map<std::string, std::string> &meshPipelineNames)
     : _deviceName(deviceName), _sampler(sampler), _textureTypeFeatures(textureTypeFeatures), _meshPipelineNames(meshPipelineNames),
-      _descriptorSets(*(createResource<Vkbase::DescriptorSets>("", deviceName)))
+      _descriptorSets(createResource<Vkbase::DescriptorSets>("", deviceName))
 {
-    addKeyResource(&_descriptorSets);
-    _descriptorSets.setLock();
+    if (auto p = _descriptorSets.lock())
+        p->setLock();
     _models.insert(this);
-    if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, "Empty"))
+    if (!Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, "Empty").lock())
         createResource<Vkbase::Image>("Empty", deviceName, 1, 1, 1, vk::Format::eR8G8B8A8Srgb, vk::ImageType::e2D, vk::ImageViewType::e2D,
                                       vk::ImageUsageFlagBits::eSampled, (uint32_t[]){0xFFFF00FF});
 
@@ -25,9 +25,12 @@ Model::Model(const std::string &deviceName, const vk::Sampler &sampler, const st
 
     ModelLoader::loadModel(*this, fileName);
 
-    _descriptorSets.addDescriptorSetCreateConfig("UBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, 0);
-    applyTextureDescriptorSetConfig();
-    _descriptorSets.init();
+    if (auto p = _descriptorSets.lock<Vkbase::DescriptorSets>())
+    {
+        p->addDescriptorSetCreateConfig("UBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, 0);
+        applyTextureDescriptorSetConfig();
+        p->init();
+    }
 
     writeTextureDescriptorSets(_sampler);
 }
@@ -44,29 +47,38 @@ Model::~Model()
     _models.erase(this);
 }
 
-void Model::createDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
+void Model::createDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets)
 {
     addUBODescriptorSetsConfig(descriptorSets);
-    descriptorSets.init();
+    if (auto p = descriptorSets.lock<Vkbase::DescriptorSets>())
+        p->init();
     writeDescriptorSets(descriptorSets);
 }
 
-void Model::draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, const std::string &, const std::string &pipelineName, uint32_t instanceIndex) const
+void Model::draw(uint32_t currentFrame, const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &,
+                 const std::string &pipelineName, uint32_t instanceIndex) const
 {
+    std::vector<std::pair<Vkbase::VkResourceManagerHolder::WeakReference, std::pair<std::string, uint32_t>>> descriptorSets;
+    descriptorSets.reserve(_textureTypeFeatures.at(pipelineName).size() + 1);
+    descriptorSets.push_back({_pInstances[instanceIndex]->descriptorSets(), {"UBO", currentFrame}});
+
     for (const std::unique_ptr<Vkbase::Mesh<ModelData::Vertex>> &mesh : _pMeshes)
     {
-        std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets;
-        const std::vector<std::vector<std::string>> &textureNames = mesh->textureNames();
+        const std::string &meshPipeline = _meshPipelineNames.count(mesh->name()) ? _meshPipelineNames.at(mesh->name()) : _meshPipelineNames.at("default");
 
-        descriptorSets.reserve(textureNames.size() + 1);
-        descriptorSets.push_back({&_pInstances[instanceIndex]->descriptorSets(), {"UBO", currentFrame}});
-
-        for (const std::vector<std::string> &textureName : textureNames)
-            descriptorSets.push_back({&_descriptorSets, {textureName[0], 0}});
-        if (pipelineName != (_meshPipelineNames.count(mesh->name()) ? _meshPipelineNames.at(mesh->name()) : _meshPipelineNames.at("default")))
+        if (pipelineName != meshPipeline)
             continue;
-        
-        mesh->draw(pCommandBuffer, descriptorSets);
+
+        // Reset descriptorSets to initial size of 1 (keeping UBO)
+        descriptorSets.resize(1);
+
+        // Add texture descriptors
+        for (const auto &textureName : mesh->textureNames())
+        {
+            descriptorSets.push_back({_descriptorSets, {textureName[0], 0}});
+        }
+
+        mesh->draw(commandBuffer, descriptorSets);
     }
 }
 
@@ -96,46 +108,53 @@ void Model::applyTextureDescriptorSetConfig()
     uint32_t count = 0;
     for (const std::string &textureFile : _textureFiles)
     {
-        _descriptorSets.addDescriptorSetCreateConfig(textureFile, {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, 1,
-                                                     count ? std::pair<const Vkbase::DescriptorSets *, std::string>{&_descriptorSets, _textureFiles[0]}
-                                                           : std::pair<const Vkbase::DescriptorSets *, std::string>{nullptr, ""});
-        ++count;
+        if (auto p = _descriptorSets.lock<Vkbase::DescriptorSets>())
+        {
+            p->addDescriptorSetCreateConfig(textureFile, {{vk::DescriptorType::eCombinedImageSampler, vk::ShaderStageFlagBits::eFragment}}, 1,
+                                            count ? std::pair<Vkbase::VkResourceManagerHolder::WeakReference, std::string>{_descriptorSets, _textureFiles[0]}
+                                                  : std::pair<Vkbase::VkResourceManagerHolder::WeakReference, std::string>{{}, ""});
+            ++count;
+        }
     }
 }
 
-void Model::addUBODescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) const
+void Model::addUBODescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) const
 {
-    descriptorSets.addDescriptorSetCreateConfig("UBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, MAX_FLIGHT_COUNT,
-                                                std::pair<const Vkbase::DescriptorSets *, std::string>{&_descriptorSets, "UBO"});
+    if (auto p = descriptorSets.lock<Vkbase::DescriptorSets>())
+        p->addDescriptorSetCreateConfig("UBO", {{vk::DescriptorType::eUniformBuffer, vk::ShaderStageFlagBits::eVertex}}, MAX_FLIGHT_COUNT,
+                                        std::pair<Vkbase::VkResourceManagerHolder::WeakReference, std::string>{_descriptorSets, "UBO"});
 }
 
 void Model::writeTextureDescriptorSets(const vk::Sampler &sampler) const
 {
-    std::vector<std::pair<vk::DescriptorImageInfo, Vkbase::Image *>> imageInfo(1);
+    std::vector<std::pair<vk::DescriptorImageInfo, Vkbase::VkResourceManagerHolder::WeakReference>> imageInfo(1);
     imageInfo[0].first.setSampler(sampler);
-    for (const std::string &file : _textureFiles)
-    {
-        Vkbase::Image &image = *dynamic_cast<Vkbase::Image *>(Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, file));
-        imageInfo[0].first.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
-        imageInfo[0].second = &image;
-        _descriptorSets.writeSets(file, 0, {}, imageInfo, 1);
-    }
+    if (auto p = _descriptorSets.lock<Vkbase::DescriptorSets>())
+        for (const std::string &file : _textureFiles)
+        {
+            imageInfo[0].first.setImageLayout(vk::ImageLayout::eShaderReadOnlyOptimal);
+            imageInfo[0].second = Vkbase::VkResourceBase::resourceManager().resource(Vkbase::VkResourceType::Image, file);
+            p->writeSets(file, 0, {}, imageInfo, 1);
+        }
 }
 
-void Model::writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets)
+void Model::writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets)
 {
-    std::vector<std::pair<vk::DescriptorBufferInfo, Vkbase::Buffer *>> bufferInfos(
-        MAX_FLIGHT_COUNT, {vk::DescriptorBufferInfo().setOffset(0).setRange(sizeof(ModelUniformData)), nullptr});
-    uint32_t count = 0;
-    for (auto &bufferInfo : bufferInfos)
+    if (auto p = descriptorSets.lock<Vkbase::DescriptorSets>())
     {
-        bufferInfo.second = createResource<Vkbase::Buffer>(descriptorSets.name() + "_UBO_" + std::to_string(count), _deviceName, sizeof(ModelUniformData),
-                                                           vk::BufferUsageFlagBits::eUniformBuffer);
+        std::vector<std::pair<vk::DescriptorBufferInfo, Vkbase::VkResourceManagerHolder::WeakReference>> bufferInfos(
+            MAX_FLIGHT_COUNT, {vk::DescriptorBufferInfo().setOffset(0).setRange(sizeof(ModelUniformData)), {}});
+        uint32_t count = 0;
+        for (auto &bufferInfo : bufferInfos)
+        {
+            bufferInfo.second = createResource<Vkbase::Buffer>(p->name() + "_UBO_" + std::to_string(count), _deviceName, sizeof(ModelUniformData),
+                                                               vk::BufferUsageFlagBits::eUniformBuffer);
 
-        ++count;
+            ++count;
+        }
+
+        p->writeSets("UBO", 0, bufferInfos, {}, MAX_FLIGHT_COUNT);
     }
-
-    descriptorSets.writeSets("UBO", 0, bufferInfos, {}, MAX_FLIGHT_COUNT);
 }
 
 std::unordered_map<std::string, std::vector<aiTextureType>> Model::getTextureFeaturesWithConfig(const json &config)
@@ -206,9 +225,11 @@ ModelData::AssimpNodeData *Model::rootNode() { return &_rootNode; }
 std::vector<vk::DescriptorSetLayout> Model::descriptorSetLayout(uint32_t instanceIndex, const std::string &pipelineName) const
 {
     std::vector<vk::DescriptorSetLayout> layouts;
-    layouts.push_back(_pInstances[instanceIndex]->descriptorSets().layout("UBO"));
+    if (auto p = _pInstances[instanceIndex]->descriptorSets().lock<Vkbase::DescriptorSets>())
+        layouts.push_back(p->layout("UBO"));
     for (uint32_t i = 0; i < _textureTypeFeatures.at(pipelineName).size(); ++i)
-        layouts.push_back(_descriptorSets.layout(_textureFiles[0]));
+        if (auto p = _descriptorSets.lock<Vkbase::DescriptorSets>())
+            layouts.push_back(p->layout(_textureFiles[0]));
     return layouts;
 }
 

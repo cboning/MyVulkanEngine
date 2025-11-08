@@ -13,12 +13,6 @@ class CommandBuffer;
 class DescriptorSetLayout;
 } // namespace vk
 
-namespace Vkbase
-{
-class Buffer;
-class CommandBuffer;
-} // namespace Vkbase
-
 class Motion;
 class Camera;
 class CollisionObjectDelegator;
@@ -84,8 +78,4 @@ public:
     Motion *addMotion(const std::string &name, Motion *pMotion);
     Motion *motion(const std::string &name);
     void eraseMotion(const std::string &name);
-
-    static void drawEntities(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
-                             uint32_t frameIndex);
-    static void updateEntities(uint32_t frameIndex);
 };

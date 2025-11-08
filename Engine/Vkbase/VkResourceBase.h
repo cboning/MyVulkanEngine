@@ -19,8 +19,8 @@ private:
     bool _killing = false;
     VkResourcesDelegator *_pResourcesDelegator = nullptr;
 
-    void useSuperresource(VkResourceBase *pResource);
-    void disuseSuperresource(VkResourceBase *pResource);
+    void useSuperresource(const VkResourceManagerHolder::WeakReference &pResource);
+    void disuseSuperresource(const VkResourceManagerHolder::WeakReference &pResource);
     void preDestroy();
     bool killingSelf();
 
@@ -28,43 +28,18 @@ protected:
     VkResourceBase(VkResourceType resourceType, const std::string &resourceName);
     const std::string _name;
     const VkResourceType _resourceType;
-    std::vector<VkResourceBase *> _pSubresources;
-    std::vector<VkResourceBase *> _pSuperresources;
-    void useSubresource(VkResourceBase *pResource);
-    void destroySubresource(VkResourceBase *pResource);
-    void disuseSubresource(VkResourceBase *pResource);
+    std::vector<VkResourceManagerHolder::WeakReference> _pSubresources;
+    std::vector<VkResourceManagerHolder::WeakReference> _pSuperresources;
+    void useSubresource(const VkResourceManagerHolder::WeakReference &pResource);
+    void destroySubresource(const VkResourceManagerHolder::WeakReference &pResource);
+    void disuseSubresource(const VkResourceManagerHolder::WeakReference &pResource);
     static std::string getSuitableName(const VkResourceType &type, std::string name);
-    template <typename T, typename... Args> static T *createResource(Args &&...args);
+    template <typename T, typename... Args> static VkResourceManagerHolder::WeakReference createResource(Args &&...args);
 
-    template <typename T> T *connectTo(T *pResource)
-    {
-        if (pResource == this)
-            return pResource;
-        VkResourceBase *pBase = (VkResourceBase *)pResource;
-        if (!pBase)
-            throw std::runtime_error("Invalid type: not the expected derived class");
-        pBase->useSuperresource(this);
-        useSubresource(pBase);
-        return pResource;
-    }
-
-    template <typename T> T *disconnectTo(T *pResource)
-    {
-        if (pResource == this)
-            return pResource;
-        VkResourceBase *pBase = (VkResourceBase *)pResource;
-        if (!pBase)
-            throw std::runtime_error("Invalid type: not the expected derived class");
-        pBase->disuseSuperresource(this);
-        disuseSubresource(pBase);
-        return pResource;
-    }
-    template <typename T> T *checkResource(T *pResource)
-    {
-        if (pResource)
-            return pResource;
-        throw std::runtime_error("It porint to an empty resource.");
-    }
+    VkResourceManagerHolder::WeakReference &&connectTo(VkResourceManagerHolder::WeakReference &&pResource);
+    VkResourceManagerHolder::WeakReference &&disconnectTo(VkResourceManagerHolder::WeakReference &&pResource);
+    const VkResourceManagerHolder::WeakReference &connectTo(const VkResourceManagerHolder::WeakReference &pResource);
+    const VkResourceManagerHolder::WeakReference &disconnectTo(const VkResourceManagerHolder::WeakReference &pResource);
 
 public:
     virtual ~VkResourceBase();
@@ -74,6 +49,7 @@ public:
     void setLock();
     void setUnlock();
     void destroy() const;
+    VkResourceManagerHolder::WeakReference weakReference() const;
 };
-template <typename T, typename... Args> inline T *VkResourceBase::createResource(Args &&...args) { return resourceManager().create<T>(args...); }
+template <typename T, typename... Args> inline VkResourceManagerHolder::WeakReference VkResourceBase::createResource(Args &&...args) { return resourceManager().create<T>(args...); }
 } // namespace Vkbase

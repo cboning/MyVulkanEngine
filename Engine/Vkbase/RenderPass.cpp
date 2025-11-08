@@ -15,15 +15,15 @@
 namespace Vkbase
 {
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo)
-    : VkGpuResourceBase(Vkbase::VkResourceType::RenderPass, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))),
-      _descriptorSets(*connectTo(createResource<DescriptorSets>(resourceName, deviceName)))
+    : VkGpuResourceBase(Vkbase::VkResourceType::RenderPass, resourceName, resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)),
+      _descriptorSets(connectTo(createResource<DescriptorSets>(resourceName, deviceName)))
 {
     _attachmentCount = createInfo.attachmentCount;
     _attachmentFormats.reserve(_attachmentCount);
     for (uint32_t i = 0; i < _attachmentCount; ++i)
         _attachmentFormats.push_back(createInfo.pAttachments[i].format);
-    _renderPass = _device.device().createRenderPass(createInfo);
+    if (auto p = _device.lock<Device>())
+        _renderPass = p->device().createRenderPass(createInfo);
 }
 
 RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config, const std::string &swapchainName = "",
@@ -37,7 +37,9 @@ RenderPass::RenderPass(const std::string &resourceName, const std::string &devic
 
 RenderPass::~RenderPass()
 {
-    auto device = _device.device();
+    vk::Device device;
+    if (auto p = _device.lock<Device>())
+        device = p->device();
     auto renderPass = _renderPass;
     _onDelayDestroy = [device, renderPass]() mutable { device.destroy(renderPass); };
 }
@@ -48,25 +50,28 @@ uint32_t RenderPass::attachmentCount() const { return _attachmentCount; }
 
 const std::vector<vk::Format> &RenderPass::attachmentFormats() const { return _attachmentFormats; }
 
-const Framebuffer &RenderPass::createFramebuffer(const std::string &resourceName, const std::vector<std::string> &attachmentNames, uint32_t width,
-                                                 uint32_t height) const
+VkResourceManagerHolder::WeakReference RenderPass::createFramebuffer(const std::string &resourceName, const std::vector<std::string> &attachmentNames,
+                                                                     uint32_t width, uint32_t height) const
 {
-    return *createResource<Framebuffer>(resourceName, _device.name(), name(), attachmentNames, width, height);
+    if (auto p = _device.lock<Device>())
+        return createResource<Framebuffer>(resourceName, p->name(), name(), attachmentNames, width, height);
+    throw std::runtime_error("Device already destroyed.");
 }
 
 std::vector<std::string> RenderPass::createFramebuffer(const std::string &resourceName, const json &config, uint32_t width, uint32_t height,
                                                        const std::string &swapchainName, vk::Format depthFormat) const
 {
     std::vector<std::string> framebufferNames;
-    uint32_t count;
+    uint32_t count = 0;
     {
         const json &countJson = config["count"];
         if (countJson.is_string() && std::string(countJson) == "auto")
-            count = dynamic_cast<Vkbase::Swapchain *>(resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName))->imageNames().size();
-        else if (countJson.is_number_integer())
-            count = countJson;
-        else
-            throw std::runtime_error("Config Error: The count of framebuffer must be setting.");
+            if (auto p = resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName).lock<Swapchain>())
+                count = p->imageNames().size();
+            else if (countJson.is_number_integer())
+                count = countJson;
+            else
+                throw std::runtime_error("Config Error: The count of framebuffer must be setting.");
     }
 
     for (uint32_t i = 0; i < count; ++i)
@@ -81,21 +86,26 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
                 imageConfig["width"] = width;
                 imageConfig["height"] = height;
                 imageConfig["depth"] = 1;
-                attachmentNames.push_back(createResource<Vkbase::Image>("Framebuffer_Image_" + std::string(attachment["name"]) + "_" + std::to_string(i),
-                                                                        _device.name(), imageConfig, nullptr, swapchainName, depthFormat)
-                                              ->name());
+                if (auto p = _device.lock<Device>())
+                    attachmentNames.push_back(createResource<Vkbase::Image>("Framebuffer_Image_" + std::string(attachment["name"]) + "_" + std::to_string(i),
+                                                                            p->name(), imageConfig, nullptr, swapchainName, depthFormat)
+                                                  .lock()
+                                                  ->name());
             }
             else if (type == "use")
                 attachmentNames.push_back(std::string(attachment["name"]) + "_" + std::to_string(i));
         }
-        framebufferNames.push_back(createFramebuffer(resourceName + "_" + std::to_string(i), attachmentNames, width, height).name());
+        framebufferNames.push_back(createFramebuffer(resourceName + "_" + std::to_string(i), attachmentNames, width, height).lock()->name());
     }
     return framebufferNames;
 }
 
-const Pipeline &RenderPass::createPipeline(const std::string &resourceName, const PipelineCreateInfo &createInfo) const
+VkResourceManagerHolder::WeakReference RenderPass::createPipeline(const std::string &resourceName, const PipelineCreateInfo &createInfo) const
 {
-    return *createResource<Pipeline>(resourceName, _device.name(), name(), createInfo);
+
+    if (auto p = _device.lock<Device>())
+        return createResource<Pipeline>(resourceName, p->name(), name(), createInfo);
+    throw std::runtime_error("Device already destroyed.");
 }
 
 void RenderPass::createPipelines(const json &config, const std::unordered_map<std::string, VertexInfo> &vertexInfos,
@@ -111,28 +121,34 @@ void RenderPass::createPipelines(const json &config, const std::unordered_map<st
 
         if (pipelineCreateInfoJson.count("descriptorSetsNames"))
             for (const json &name : pipelineCreateInfoJson["descriptorSetsNames"])
-                pipelineDescriptorSetLayouts.push_back(_descriptorSets.layout(name));
+                if (auto p = _descriptorSets.lock<DescriptorSets>())
+                    pipelineDescriptorSetLayouts.push_back(p->layout(name));
 
         createPipeline(pipelineCreateInfoJson["name"], PipelineCreateInfo{ShaderInfo::getShaderInfosWithJson(pipelineCreateInfoJson["shaderInfos"]),
                                                                           vertexInfos.at(pipelineName), pipelineDescriptorSetLayouts, renderInfo});
     }
 }
 
-void RenderPass::begin(CommandBuffer *pCommandBuffer, const std::string &framebufferName, const std::vector<vk::ClearValue> &clearValues, vk::SubpassContents subpassContents)
+void RenderPass::begin(const VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &framebufferName,
+                       const std::vector<vk::ClearValue> &clearValues, vk::SubpassContents subpassContents)
 {
-    Vkbase::Framebuffer *pFramebuffer = dynamic_cast<Vkbase::Framebuffer *>(resourceManager().resource(Vkbase::VkResourceType::Framebuffer, framebufferName));
-    const vk::Extent2D &extent = pFramebuffer->extent();
+    VkResourceManagerHolder::WeakReference framebuffer = resourceManager().resource(Vkbase::VkResourceType::Framebuffer, framebufferName);
+    vk::Extent2D extent;
+    if (auto p = framebuffer.lock<Framebuffer>())
+        extent = p->extent();
 
-    setViewportScissor(pCommandBuffer, extent);
+    setViewportScissor(commandBuffer, extent);
 
     vk::Rect2D renderArea;
     renderArea.setExtent(extent).setOffset({0, 0});
     vk::RenderPassBeginInfo beginInfo;
     beginInfo.setClearValues(clearValues).setRenderArea(renderArea);
-    pCommandBuffer->beginRenderPass(this, pFramebuffer, beginInfo, subpassContents);
+    auto thisReference = weakReference();
+    if (auto pCommandBuffer = commandBuffer.lock<CommandBuffer>())
+        pCommandBuffer->beginRenderPass(thisReference, framebuffer, beginInfo, subpassContents);
 }
 
-void RenderPass::setViewportScissor(CommandBuffer *pCommandBuffer, const vk::Extent2D &extent)
+void RenderPass::setViewportScissor(const VkResourceManagerHolder::WeakReference &commandBuffer, const vk::Extent2D &extent)
 {
     vk::Viewport viewport;
     viewport.setX(0.0f).setY(0.0f).setWidth(extent.width).setHeight(extent.height).setMinDepth(0.0f).setMaxDepth(1.0f);
@@ -141,12 +157,19 @@ void RenderPass::setViewportScissor(CommandBuffer *pCommandBuffer, const vk::Ext
     scissor.setExtent(extent);
     scissor.setOffset({0, 0});
 
-    pCommandBuffer->commandBuffer().setViewport(0, viewport);
-    pCommandBuffer->commandBuffer().setScissor(0, scissor);
+    if (auto pCommandBuffer = commandBuffer.lock<CommandBuffer>())
+    {
+        pCommandBuffer->commandBuffer().setViewport(0, viewport);
+        pCommandBuffer->commandBuffer().setScissor(0, scissor);
+    }
 }
 
-void RenderPass::end(CommandBuffer *pCommandBuffer) { pCommandBuffer->commandBuffer().endRenderPass(); }
+void RenderPass::end(const VkResourceManagerHolder::WeakReference &commandBuffer)
+{
+    if (auto pCommandBuffer = commandBuffer.lock<CommandBuffer>())
+        pCommandBuffer->commandBuffer().endRenderPass();
+}
 
-DescriptorSets &RenderPass::descriptorSets() { return _descriptorSets; }
+VkResourceManagerHolder::WeakReference RenderPass::descriptorSets() const { return _descriptorSets; }
 
 } // namespace Vkbase

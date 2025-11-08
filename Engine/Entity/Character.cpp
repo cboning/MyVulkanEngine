@@ -46,21 +46,25 @@ void Character::entityInit()
 
 void Character::objectExtraUpdate() { _model.instance(_instanceName).object().setPosition(object().position()); }
 
-void Character::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t,
-                       uint32_t frameIndex) const
+void Character::onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName,
+                       uint32_t, uint32_t frameIndex) const
 {
-    uint32_t subpass =
-        dynamic_cast<const Vkbase::Pipeline *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Pipeline, pipelineName))->subpass();
-    if (subpass != 0)
-        return;
-    _model.draw(frameIndex, pCommandBuffer, renderPassName, pipelineName, 0);
+    if (auto pPipeline = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Pipeline, pipelineName).lock<Vkbase::Pipeline>())
+    {
+        uint32_t subpass = pPipeline->subpass();
+        if (subpass != 0)
+            return;
+        _model.draw(frameIndex, commandBuffer, renderPassName, pipelineName, 0);
+    }
+    else
+        throw std::runtime_error("Failed to get the pipeline.");
 }
 
 void Character::onUpdateUBO(uint32_t frameIndex) const { _model.instance(_instanceName).updateUniformBuffers(frameIndex, camera()); }
 
-void Character::addDescriptorSetsConfig(Vkbase::DescriptorSets &) {}
+void Character::addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &) {}
 
-void Character::writeDescriptorSets(Vkbase::DescriptorSets &) {}
+void Character::writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &) {}
 
 std::vector<vk::DescriptorSetLayout> Character::descriptorSetLayouts() { return _model.descriptorSetLayout(_instanceName, "g_buffer"); }
 

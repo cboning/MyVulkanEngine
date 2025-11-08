@@ -9,8 +9,6 @@ using json = nlohmann::json;
 
 namespace Vkbase
 {
-class Device;
-class Buffer;
 class Swapchain;
 class Image : public VkGpuResourceBase
 {
@@ -34,20 +32,20 @@ private:
           vk::Format depthFormat = vk::Format());
     Image(Swapchain &swapchain, uint32_t index);
     ~Image() override;
-    const Device *_pDevice = nullptr;
     vk::Image _image;
     vk::DeviceMemory _memory;
     vk::ImageView _view;
     const vk::Format _format;
     const vk::ImageType _type;
     const vk::ImageViewType _viewType;
+    const bool _destroyDelegate = true;
 
     void loadImage(std::string fileName, vk::ImageUsageFlags usage);
     void createImageView();
     void createImage(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, uint32_t mipLevels = 1, uint32_t arrayLayers = 1);
     void createImageWithNoData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage);
     void createImageWithData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage, const void *pData);
-    void copyBufferDataToImage(const Buffer &buffer, uint32_t width, uint32_t height, uint32_t depth);
+    void copyBufferDataToImage(const VkResourceManagerHolder::WeakReference &buffer, uint32_t width, uint32_t height, uint32_t depth);
     uint32_t findMemoryType(uint32_t filterType, vk::MemoryPropertyFlags properties);
     bool isDepthImage();
     static size_t getPixelSize(vk::Format format);

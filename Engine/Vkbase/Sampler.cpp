@@ -4,23 +4,27 @@
 namespace Vkbase
 {
 Sampler::Sampler(const std::string &resourceName, const std::string &deviceName, const vk::SamplerCreateInfo &createInfo)
-    : VkGpuResourceBase(Vkbase::VkResourceType::Sampler, resourceName,
-                        *dynamic_cast<Device *>(resourceManager().resource(Vkbase::VkResourceType::Device, deviceName)))
+    : VkGpuResourceBase(Vkbase::VkResourceType::Sampler, resourceName, resourceManager().resource(Vkbase::VkResourceType::Device, deviceName))
 {
     createSampler(createInfo);
 }
 
 Sampler::~Sampler()
 {
-    auto device = _device.device();
+    vk::Device device;
+    if (auto p = _device.lock<Device>())
+        device = p->device();
     auto sampler = _sampler;
     _onDelayDestroy = [device, sampler]() mutable { device.destroy(sampler); };
 }
 
 void Sampler::createSampler(vk::SamplerCreateInfo createInfo)
 {
-    createInfo.setMaxAnisotropy(_device.physicalDevice().getProperties().limits.maxSamplerAnisotropy);
-    _sampler = _device.device().createSampler(createInfo);
+    if (auto p = _device.lock<Device>())
+    {
+        createInfo.setMaxAnisotropy(p->physicalDevice().getProperties().limits.maxSamplerAnisotropy);
+        _sampler = p->device().createSampler(createInfo);
+    }
 }
 
 vk::SamplerCreateInfo Sampler::getDefaultCreateInfo()

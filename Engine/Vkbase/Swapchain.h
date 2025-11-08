@@ -3,10 +3,7 @@
 
 namespace Vkbase
 {
-class Device;                 // Forward declaration of Device class
 struct SurfaceSupportDetails; // Forward declaration of SurfaceSupportDetails struct
-class Image;
-class Window;
 
 class Swapchain : public VkGpuResourceBase
 {
@@ -20,7 +17,7 @@ private:
     std::vector<vk::Image> _images;
     std::vector<vk::ImageView> _imageViews;
     std::vector<std::string> _imageNames;
-    Window &_window;
+    VkResourceManagerHolder::WeakReference _window;
     const vk::SurfaceKHR &_surface;
     bool _cleaned = false;
 
@@ -36,7 +33,7 @@ private:
 public:
     vk::Format format() const;
     vk::Extent2D extent() const;
-    Swapchain *recreate();
+    Vkbase::VkResourceManagerHolder::WeakReference recreate();
     const vk::SwapchainKHR &swapchain() const;
     const std::vector<vk::Image> &images() const;
     const std::vector<std::string> &imageNames() const;

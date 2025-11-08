@@ -12,27 +12,31 @@ RenderFrame::RenderFrame(const std::string &deviceName,
 {
     ScreenVertexData frameVertices[] = {{{-1.0f, -1.0f, 0.0f}, {0.0f, 0.0f}}, {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},
                                         {{1.0f, -1.0f, 0.0f}, {1.0f, 0.0f}},  {{-1.0f, 1.0f, 0.0f}, {0.0f, 1.0f}}, {{1.0f, 1.0f, 0.0f}, {1.0f, 1.0f}}};
-    _pFrameVerticesBuffer = createResource<Vkbase::Buffer>("", deviceName, sizeof(ScreenVertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
+    _frameVerticesBuffer = createResource<Vkbase::Buffer>("", deviceName, sizeof(ScreenVertexData) * 6, vk::BufferUsageFlagBits::eVertexBuffer, frameVertices);
 }
 
-void RenderFrame::onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &, const std::string &, uint32_t imageIndex, uint32_t) const
+void RenderFrame::onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &, const std::string &, uint32_t imageIndex,
+                         uint32_t) const
 {
-    if (pCommandBuffer->device().device() != _pFrameVerticesBuffer->device().device())
-        throw std::runtime_error("Device mismatch");
-    std::vector<std::pair<Vkbase::DescriptorSets *, std::pair<std::string, uint32_t>>> descriptorSets;
-    descriptorSets.reserve(_descriptorSets[imageIndex].size());
-    for (auto descriptorSet : _descriptorSets[imageIndex])
+    if (auto pCommandBuffer = commandBuffer.lock<Vkbase::CommandBuffer>())
     {
-        descriptorSets.push_back({dynamic_cast<Vkbase::DescriptorSets *>(
-                                      Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSet.first)),
-                                  descriptorSet.second});
+        if (auto pFrameVerticesBuffer = _frameVerticesBuffer.lock<Vkbase::Buffer>())
+            if (pCommandBuffer->device() != pFrameVerticesBuffer->device())
+                throw std::runtime_error("Device mismatch");
+        std::vector<std::pair<Vkbase::VkResourceManagerHolder::WeakReference, std::pair<std::string, uint32_t>>> descriptorSets;
+        descriptorSets.reserve(_descriptorSets[imageIndex].size());
+        for (auto descriptorSet : _descriptorSets[imageIndex])
+        {
+            descriptorSets.push_back(
+                {Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::DescriptorSets, descriptorSet.first), descriptorSet.second});
+        }
+        pCommandBuffer->bindDescriptorSets(0, descriptorSets, {});
+        pCommandBuffer->bindVertexBuffers(0, {_frameVerticesBuffer}, {0});
+        pCommandBuffer->commandBuffer().draw(6, 1, 0, 0);
     }
-    pCommandBuffer->bindDescriptorSets(0, descriptorSets, {});
-    pCommandBuffer->bindVertexBuffers(0, {_pFrameVerticesBuffer}, {0});
-    pCommandBuffer->commandBuffer().draw(6, 1, 0, 0);
 }
 void RenderFrame::onUpdateUBO(uint32_t) const {}
 
-void RenderFrame::addDescriptorSetsConfig(Vkbase::DescriptorSets &) {}
+void RenderFrame::addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &) {}
 
-void RenderFrame::writeDescriptorSets(Vkbase::DescriptorSets &) {}
+void RenderFrame::writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &) {}

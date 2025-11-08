@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../Vkbase/VkResourceManagerHolder.h"
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
@@ -8,7 +9,6 @@
 namespace Vkbase
 {
 class RenderObjectDelegator;
-class CommandBuffer;
 } // namespace Vkbase
 
 class RenderObjectManager
@@ -45,6 +45,6 @@ public:
     void addObject(const std::string &renderPassName, const std::string &pipelineName, const std::shared_ptr<Vkbase::RenderObjectDelegator> &object);
     void addObject(const std::string &renderPassName, const std::string &pipelineName, const std::weak_ptr<Vkbase::RenderObjectDelegator> &object);
 
-    void draw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
-              uint32_t frameIndex);
+    void draw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName,
+              uint32_t imageIndex, uint32_t frameIndex);
 };

@@ -59,13 +59,13 @@ private:
 
     const std::unordered_map<std::string, std::string> _meshPipelineNames;
 
-    Vkbase::DescriptorSets &_descriptorSets; // 用于描述纹理与采样器，也提供UBO的layout，但不描述UBO
+    const Vkbase::VkResourceManagerHolder::WeakReference _descriptorSets; // 用于描述纹理与采样器，也提供UBO的layout，但不描述UBO
 
     std::unordered_map<std::string, uint32_t> _instanceIndexMap;
 
-    void createDescriptorSets(Vkbase::DescriptorSets &descriptorSets);
-    void addUBODescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) const;
-    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets);
+    void createDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets);
+    void addUBODescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) const;
+    void writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets);
     void applyTextureDescriptorSetConfig();
     void writeTextureDescriptorSets(const vk::Sampler &sampler) const;
     static std::unordered_map<std::string, std::vector<aiTextureType>> getTextureFeaturesWithConfig(const json &config);
@@ -80,7 +80,7 @@ public:
           const std::unordered_map<std::string, std::string> &meshPipelineNames);
     Model(const std::string &deviceName, const vk::Sampler &sampler, json config);
     ~Model();
-    void draw(uint32_t currentFrame, Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t instanceIndex) const;
+    void draw(uint32_t currentFrame, const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t instanceIndex) const;
     std::unordered_map<std::string, ModelData::BoneInfo> &boneInfoMap();
     int &boneCount();
     ModelData::AssimpNodeData *rootNode();

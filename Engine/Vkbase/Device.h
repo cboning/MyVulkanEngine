@@ -35,7 +35,7 @@ public:
         }
     };
 
-    static Device *getSuitableDevice(const vk::SurfaceKHR &surface);
+    static Vkbase::VkResourceManagerHolder::WeakReference getSuitableDevice(const vk::SurfaceKHR &surface);
     static SurfaceSupportDetails querySwapChainSupport(const vk::PhysicalDevice &device, const vk::SurfaceKHR &surface);
     static void collectAllDelayResource();
 

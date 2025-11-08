@@ -46,10 +46,10 @@ public:
     ~RenderFrame() = default;
 
 private:
-    Vkbase::Buffer *_pFrameVerticesBuffer;
+    Vkbase::VkResourceManagerHolder::WeakReference _frameVerticesBuffer;
     std::vector<std::vector<std::pair<std::string, std::pair<std::string, uint32_t>>>> _descriptorSets;
-    void onDraw(Vkbase::CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const override;
+    void onDraw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex) const override;
     void onUpdateUBO(uint32_t frameIndex) const override;
-    void addDescriptorSetsConfig(Vkbase::DescriptorSets &descriptorSets) override;
-    void writeDescriptorSets(Vkbase::DescriptorSets &descriptorSets) override;
+    void addDescriptorSetsConfig(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) override;
+    void writeDescriptorSets(const Vkbase::VkResourceManagerHolder::WeakReference &descriptorSets) override;
 };

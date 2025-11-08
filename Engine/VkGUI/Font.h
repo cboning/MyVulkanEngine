@@ -25,8 +25,6 @@ private:
         {
         }
 
-        Vkbase::Image &image() { return *dynamic_cast<Vkbase::Image *>(Vkbase::Image::resourceManager().resource(Vkbase::VkResourceType::Image, imageName)); }
-
         const std::string imageName;
         glm::ivec2 size;
         glm::ivec2 bearing;
@@ -41,9 +39,10 @@ private:
                 return "Empty";
             }
 
-            return (createResource<Vkbase::Image>(deviceName + std::string(face->style_name) + std::string((const char *)&character), deviceName,
-                                                  face->glyph->bitmap.width, face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D,
-                                                  vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer))
+            return createResource<Vkbase::Image>(deviceName + std::string(face->style_name) + std::string((const char *)&character), deviceName,
+                                                 face->glyph->bitmap.width, face->glyph->bitmap.rows, 1, vk::Format::eR8Unorm, vk::ImageType::e2D,
+                                                 vk::ImageViewType::e2D, vk::ImageUsageFlagBits::eSampled, face->glyph->bitmap.buffer)
+                .lock()
                 ->name();
         }
     };
@@ -60,7 +59,7 @@ public:
     Font(const std::string &deviceName, const std::string &filename, uint32_t fontSize);
     ~Font();
     const std::string &deviceName() const;
-    const Font::Character& character(FT_ULong character);
-    const std::string& characterTextureName(FT_ULong character);
+    const Font::Character &character(FT_ULong character);
+    const std::string &characterTextureName(FT_ULong character);
 };
 } // namespace VkGUI

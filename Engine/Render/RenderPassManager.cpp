@@ -21,30 +21,50 @@ RenderPassManager::~RenderPassManager()
 {
     for (auto pipeline : _secondaryCommandBuffers)
         for (auto &[shouldRecord, secondaryCommandBuffer] : pipeline.second)
-            secondaryCommandBuffer->destroy();
+            if (auto p = secondaryCommandBuffer.lock<Vkbase::CommandBuffer>())
+                p->destroy();
 }
 
-void RenderPassManager::draw(Vkbase::CommandBuffer *pCommandBuffer, RenderObjectManager *pObjects, uint32_t imageIndex, uint32_t frameIndex)
+void RenderPassManager::draw(const Vkbase::VkResourceManagerHolder::WeakReference &commandBuffer, RenderObjectManager *pObjects, uint32_t imageIndex,
+                             uint32_t frameIndex)
 {
-    for (const RenderPassInfo &renderPass : _renderPasses)
+    if (auto pCommandBuffer = commandBuffer.lock<Vkbase::CommandBuffer>())
     {
-        const std::string framebufferName = renderPass.name + "_" + std::to_string(imageIndex);
-        Vkbase::RenderPass *pRenderPass =
-            dynamic_cast<Vkbase::RenderPass *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::RenderPass, renderPass.name));
-        pRenderPass->begin(pCommandBuffer, framebufferName, renderPass.clearValues, vk::SubpassContents::eSecondaryCommandBuffers);
-        bool firstPass = true;
-        for (const std::vector<std::string> &pipelineNames : renderPass.pipelineNames)
-        {
-            if (firstPass)
-                firstPass = false;
-            else
-                pCommandBuffer->commandBuffer().nextSubpass(vk::SubpassContents::eSecondaryCommandBuffers);
+        const std::string &commandPoolName = pCommandBuffer->commandPoolName();
 
-            for (const std::string &pipelineName : pipelineNames)
-                pCommandBuffer->executeCommands({recordSecondaryBuffer(pCommandBuffer->commandPoolName(), pObjects, framebufferName, renderPass.name,
-                                                                       pipelineName, imageIndex, frameIndex)});
+        for (const RenderPassInfo &renderPass : _renderPasses)
+        {
+            const std::string framebufferName = renderPass.name + "_" + std::to_string(imageIndex);
+
+            // Get render pass once before loop
+            if (auto pRenderPass =
+                    Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::RenderPass, renderPass.name).lock<Vkbase::RenderPass>())
+            {
+                // Pre-collect command buffers for execution
+                std::vector<Vkbase::VkResourceManagerHolder::WeakReference> secondaryBuffers;
+                secondaryBuffers.reserve(renderPass.pipelineNames.size() * 2); // Approximate size
+
+                pRenderPass->begin(commandBuffer, framebufferName, renderPass.clearValues, vk::SubpassContents::eSecondaryCommandBuffers);
+
+                for (size_t i = 0; i < renderPass.pipelineNames.size(); ++i)
+                {
+                    if (i > 0)
+                        pCommandBuffer->commandBuffer().nextSubpass(vk::SubpassContents::eSecondaryCommandBuffers);
+
+                    secondaryBuffers.clear();
+                    for (const std::string &pipelineName : renderPass.pipelineNames[i])
+                    {
+                        auto buffer = recordSecondaryBuffer(commandPoolName, pObjects, framebufferName, renderPass.name, pipelineName, imageIndex, frameIndex);
+                        secondaryBuffers.push_back(buffer);
+                    }
+
+                    if (!secondaryBuffers.empty())
+                        pCommandBuffer->executeCommands(secondaryBuffers);
+                }
+
+                pRenderPass->end(commandBuffer);
+            }
         }
-        pRenderPass->end(pCommandBuffer);
     }
 }
 
@@ -53,45 +73,66 @@ void RenderPassManager::registSecondaryBuffer(const std::string &commandPoolName
     if (!_secondaryCommandBuffers.count(pipelineName))
         _secondaryCommandBuffers.insert({pipelineName, {}});
 
-    std::vector<std::pair<bool, Vkbase::CommandBuffer *>> &secondaryCommandBuffers = _secondaryCommandBuffers[pipelineName];
+    std::vector<std::pair<bool, Vkbase::VkResourceManagerHolder::WeakReference>> &secondaryCommandBuffers = _secondaryCommandBuffers[pipelineName];
 
     if (secondaryCommandBuffers.size() <= frameIndex)
         secondaryCommandBuffers.resize(frameIndex + 1);
 
-    if (secondaryCommandBuffers[frameIndex].second)
+    if (secondaryCommandBuffers[frameIndex].second.lock())
         return;
 
-    secondaryCommandBuffers[frameIndex].second =
-        dynamic_cast<Vkbase::CommandPool *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::CommandPool, commandPoolName))
-            ->allocateSecondaryCommandBuffers(1)[0];
+    if (auto pCommandPool = Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::CommandPool, commandPoolName).lock<Vkbase::CommandPool>())
+        secondaryCommandBuffers[frameIndex].second = pCommandPool->allocateSecondaryCommandBuffers(1)[0];
 }
 
-Vkbase::CommandBuffer *RenderPassManager::recordSecondaryBuffer(const std::string &commandPoolName, RenderObjectManager *pObjects,
-                                                                const std::string &framebufferName, const std::string &renderPassName,
-                                                                const std::string &pipelineName, uint32_t imageIndex, uint32_t frameIndex)
+Vkbase::VkResourceManagerHolder::WeakReference RenderPassManager::recordSecondaryBuffer(const std::string &commandPoolName, RenderObjectManager *pObjects,
+                                                                                        const std::string &framebufferName, const std::string &renderPassName,
+                                                                                        const std::string &pipelineName, uint32_t imageIndex,
+                                                                                        uint32_t frameIndex)
 {
+    if (!pObjects)
+        throw std::invalid_argument("pObjects is null");
+
     registSecondaryBuffer(commandPoolName, pipelineName, frameIndex);
+    auto &entry = _secondaryCommandBuffers[pipelineName][frameIndex];
+    auto &state = entry.first;
 
-    auto &[state, pCommandBuffer] = _secondaryCommandBuffers[pipelineName][frameIndex];
+    if (state && entry.second.lock<Vkbase::CommandBuffer>())
+        return entry.second;
 
-    if (state)
-        return pCommandBuffer;
+    if (!entry.second.lock<Vkbase::CommandBuffer>())
+        throw std::runtime_error("Failed to allocate secondary command buffer for pipeline: " + pipelineName);
 
     state = true;
-    Vkbase::Pipeline *pPipeline =
-        dynamic_cast<Vkbase::Pipeline *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Pipeline, pipelineName));
-    pCommandBuffer->begin(renderPassName, pPipeline->subpass());
 
-    Vkbase::RenderPass::setViewportScissor(
-        pCommandBuffer,
-        dynamic_cast<Vkbase::Framebuffer *>(Vkbase::VkResourceManager::instance().resource(Vkbase::VkResourceType::Framebuffer, framebufferName))->extent());
+    auto &rm = Vkbase::VkResourceManager::instance();
+    auto pipeline = rm.resource(Vkbase::VkResourceType::Pipeline, pipelineName);
+    if (auto pPipeline = pipeline.lock<Vkbase::Pipeline>())
+    {
+        if (auto pFramebuffer = rm.resource(Vkbase::VkResourceType::Framebuffer, framebufferName).lock<Vkbase::Framebuffer>())
+        {
+            if (auto pCommandBuffer = entry.second.lock<Vkbase::CommandBuffer>())
+            {
+                pCommandBuffer->reset();
+                // Begin recording for the correct subpass and set viewport/scissor once
+                pCommandBuffer->begin(renderPassName, pPipeline->subpass());
+                Vkbase::RenderPass::setViewportScissor(entry.second, pFramebuffer->extent());
 
-    pCommandBuffer->bindPipeline(pPipeline);
-    pObjects->draw(pCommandBuffer, renderPassName, pipelineName, imageIndex, frameIndex);
+                pCommandBuffer->bindPipeline(pipeline);
+                pObjects->draw(entry.second, renderPassName, pipelineName, imageIndex, frameIndex);
 
-    pCommandBuffer->end();
+                pCommandBuffer->end();
 
-    return pCommandBuffer;
+                return entry.second;
+            }
+            else
+                throw std::runtime_error("CommandBuffer not found.");
+        }
+        else
+            throw std::runtime_error("Framebuffer not found: " + framebufferName);
+    }
+    else
+        throw std::runtime_error("Pipeline not found: " + pipelineName);
 }
 
 void RenderPassManager::shouldRecordFor(const std::string &pipelineName)
@@ -99,10 +140,8 @@ void RenderPassManager::shouldRecordFor(const std::string &pipelineName)
     if (!_secondaryCommandBuffers.count(pipelineName))
         return;
 
-    for (auto &[state, pCommandBuffer] : _secondaryCommandBuffers[pipelineName])
+    for (auto &[state, commandBuffer] : _secondaryCommandBuffers[pipelineName])
     {
-        if (state)
-            pCommandBuffer->reset();
         state = false;
     }
 }

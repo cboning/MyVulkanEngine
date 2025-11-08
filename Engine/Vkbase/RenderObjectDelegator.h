@@ -4,15 +4,13 @@
 class Camera;
 namespace Vkbase
 {
-class CommandBuffer;
-class DescriptorSets;
 class RenderObjectDelegator : public VkResourcesDelegator
 {
 public:
     RenderObjectDelegator(const std::string &deviceName, const Camera &camera, uint32_t flightFrameCount, vk::DeviceSize uboSize);
     RenderObjectDelegator(const std::string &deviceName, uint32_t flightFrameCount, vk::DeviceSize uboSize);
     virtual ~RenderObjectDelegator() = default;
-    void draw(CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+    void draw(const VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
               uint32_t frameIndex) const;
     void update(uint32_t frameIndex) const;
 
@@ -24,10 +22,10 @@ protected:
     void writeUBODescriptorSets(const std::string &name, uint32_t binding) const;
     void writeUBODescriptorSets(const std::string &name, uint32_t binding, uint32_t firstIndex, uint32_t secondIndex) const;
     void updateUBO(uint32_t frameIndex, const void *pData) const;
-    virtual void addDescriptorSetsConfig(DescriptorSets &descriptorSets) = 0;
-    virtual void writeDescriptorSets(DescriptorSets &descriptorSets) = 0;
+    virtual void addDescriptorSetsConfig(const VkResourceManagerHolder::WeakReference &descriptorSets) = 0;
+    virtual void writeDescriptorSets(const VkResourceManagerHolder::WeakReference &descriptorSets) = 0;
     virtual void onUpdateUBO(uint32_t frameIndex) const = 0;
-    virtual void onDraw(CommandBuffer *pCommandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
+    virtual void onDraw(const VkResourceManagerHolder::WeakReference &commandBuffer, const std::string &renderPassName, const std::string &pipelineName, uint32_t imageIndex,
                         uint32_t frameIndex) const = 0;
     const Camera &camera() const;
     const std::string &descriptorSetsName() const;
