@@ -18,6 +18,7 @@ private:
     bool _locked = false;
     bool _killing = false;
     VkResourcesDelegator *_pResourcesDelegator = nullptr;
+    VkResourceManagerHolder _holder;
 
     void useSuperresource(const VkResourceManagerHolder::WeakReference &pResource);
     void disuseSuperresource(const VkResourceManagerHolder::WeakReference &pResource);

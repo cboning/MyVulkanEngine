@@ -16,8 +16,9 @@ CommandBuffer::CommandBuffer(const std::string &name, const VkResourceManagerHol
     : VkGpuResourceBase(VkResourceType::CommandBuffer, name, pool.lock<CommandPool>()->_device), _pool(connectTo(pool)), _commandBuffer(handle),
       _oneTimeSubmit(oneTimeSubmit), _primary(primary)
 {
-    if (auto p = _device.lock<Device>())
-        _fence = p->device().createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled});
+    if (_primary)
+        if (auto p = _device.lock<Device>())
+            _fence = p->device().createFence(vk::FenceCreateInfo{vk::FenceCreateFlagBits::eSignaled});
 }
 
 void CommandBuffer::cleanCounter()
@@ -45,7 +46,9 @@ CommandBuffer::~CommandBuffer()
     vk::Device device;
     if (auto p = _device.lock<Device>())
         device = p->device();
-    auto fence = _fence;
+    vk::Fence fence;
+    if (_primary)
+        fence = _fence;
     auto commandBuffer = _commandBuffer;
     vk::CommandPool commandPool;
     if (auto p = _pool.lock<CommandPool>())
@@ -55,7 +58,8 @@ CommandBuffer::~CommandBuffer()
     {
         if (commandBuffer)
             device.freeCommandBuffers(commandPool, commandBuffer);
-        device.destroy(fence);
+        if (fence)
+            device.destroy(fence);
     };
 }
 
@@ -123,10 +127,15 @@ void CommandBuffer::submit(const std::vector<vk::Semaphore> &waitSemaphores, con
 
 void CommandBuffer::reset()
 {
+    waitForFence();
     if (_oneTimeSubmit)
         throw std::runtime_error("[ERROR] Cannot reset a one-time CommandBuffer.");
     _pipeline = {};
     _indiceBuffer = {};
+    for (auto &secondaryCommandBuffer : _secondaryCommandBuffers)
+        if (auto p = secondaryCommandBuffer.lock<CommandBuffer>())
+            p->_fence = nullptr;
+    _secondaryCommandBuffers.clear();
     _commandBuffer.reset({});
     _inRecording = false;
     cleanCounter();
@@ -225,7 +234,7 @@ void CommandBuffer::beginRenderPass(const VkResourceManagerHolder::WeakReference
 
 void CommandBuffer::executeCommands(const std::vector<VkResourceManagerHolder::WeakReference> &commandBuffers)
 {
-    if (commandBuffers.empty())
+    if (!_primary || commandBuffers.empty())
         return;
 
     std::vector<vk::CommandBuffer> vkCommandBuffers;
@@ -236,17 +245,17 @@ void CommandBuffer::executeCommands(const std::vector<VkResourceManagerHolder::W
         if (!commandBuffer.lock() || commandBuffer == weakReference())
             continue;
 
-        if (auto p = _device.lock())
-            if (auto p1 = commandBuffer.lock<CommandBuffer>())
-                if (auto p2 = p1->device().lock())
-                    if (p2->name() != p->name())
-                        throw std::runtime_error("CommandBuffer device mismatch");
+        if (auto p = commandBuffer.lock<CommandBuffer>())
+            if (_device != p->device())
+                throw std::runtime_error("CommandBuffer device mismatch");
 
         if (auto p = commandBuffer.lock<CommandBuffer>())
         {
             vkCommandBuffers.push_back(p->commandBuffer());
+            p->_fence = _fence;
             insertCounters(p->_pCounters);
         }
+        _secondaryCommandBuffers.insert(commandBuffer);
     }
 
     if (!vkCommandBuffers.empty())
@@ -255,6 +264,8 @@ void CommandBuffer::executeCommands(const std::vector<VkResourceManagerHolder::W
 
 void CommandBuffer::waitForFence()
 {
+    if (!_fence)
+        return;
     if (auto p = _device.lock<Device>())
         (void)p->device().waitForFences(_fence, vk::True, UINT64_MAX);
 }

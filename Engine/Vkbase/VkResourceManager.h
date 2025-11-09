@@ -1,4 +1,5 @@
 #pragma once
+#include "VkResourceManagerHolder.h"
 #include <GLFW/glfw3.h>
 
 #include <string>
@@ -6,7 +7,7 @@
 #include <vector>
 #include <vulkan/vulkan.hpp>
 
-#include "VkResourceManagerHolder.h"
+#include <shared_mutex>
 
 namespace Vkbase
 {
@@ -30,7 +31,7 @@ enum class VkResourceType
 
 class VkResourceBase;
 
-typedef std::unordered_map<VkResourceType, std::unordered_map<std::string, VkResourceManagerHolder>> VkResourceSet;
+typedef std::unordered_map<VkResourceType, std::unordered_map<std::string, VkResourceBase *>> VkResourceSet;
 
 inline std::string toString(VkResourceType type)
 {
@@ -76,6 +77,7 @@ private:
     vk::Instance _instance;
     VkResourceSet _pResources;
     inline static VkResourceManager *_pInstance = nullptr;
+    std::shared_mutex _controlMutex;
 
     void createInstance(std::vector<const char *> layers = {"VK_LAYER_KHRONOS_validation"},
                         std::vector<const char *> extensions = {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME,
@@ -88,6 +90,8 @@ private:
     template <typename T, typename... Args> VkResourceManagerHolder::WeakReference create(Args &&...args);
     VkResourceManager();
     ~VkResourceManager();
+
+    void destroy(VkResourceBase *pResourceHolder);
 
 public:
     const VkResourceSet &resources() const;
@@ -102,6 +106,6 @@ public:
 template <typename T, typename... Args> VkResourceManagerHolder::WeakReference VkResourceManager::create(Args &&...args)
 {
     T *pResource = new T(args...);
-    return resource(pResource->type(), pResource->name());
+    return pResource->weakReference();
 }
 } // namespace Vkbase

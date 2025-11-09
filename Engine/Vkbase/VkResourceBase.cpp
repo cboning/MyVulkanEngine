@@ -5,7 +5,7 @@
 namespace Vkbase
 {
 VkResourceBase::VkResourceBase(VkResourceType resourceType, const std::string &resourceName)
-    : _name(getSuitableName(resourceType, resourceName)), _resourceType(resourceType)
+    : _holder(this), _name(getSuitableName(resourceType, resourceName)), _resourceType(resourceType)
 {
     _resourceManager.addResource(this);
 #ifdef DEBUG
@@ -21,8 +21,9 @@ VkResourceBase::~VkResourceBase()
     if (_pResourcesDelegator)
         _pResourcesDelegator->removeResource(weakReference());
     _killing = true;
-    if (_resourceManager.resource(_resourceType, _name).lock())
-        destroy();
+    if (auto p = _resourceManager.resource(_resourceType, _name).lock())
+        if (p == this)
+            destroy();
     for (std::reverse_iterator<std::vector<VkResourceManagerHolder::WeakReference>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend();
          ++iter)
         if (auto p = iter->lock())
@@ -91,7 +92,7 @@ const VkResourceType &VkResourceBase::type() const { return _resourceType; }
 
 void VkResourceBase::destroy() const { _resourceManager.remove(_resourceType, _name); }
 
-VkResourceManagerHolder::WeakReference VkResourceBase::weakReference() const { return _resourceManager.resource(_resourceType, _name); }
+VkResourceManagerHolder::WeakReference VkResourceBase::weakReference() const { return VkResourceManagerHolder::WeakReference(_holder); }
 
 void VkResourceBase::setLock() { _locked = true; }
 

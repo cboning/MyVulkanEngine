@@ -209,6 +209,7 @@ void DescriptorSets::writeSetsWithJson(const json &config)
             if (countJson.is_string())
             {
                 if (std::string(countJson) == "auto")
+                {
                     if (auto p = resourceManager().resource(Vkbase::VkResourceType::Swapchain, writeConfig["detail"]["swapchainName"]).lock<Swapchain>())
                     {
                         count = p->imageNames().size();
@@ -217,6 +218,7 @@ void DescriptorSets::writeSetsWithJson(const json &config)
                     {
                         throw std::runtime_error("Here is not swapchain named " + std::string(writeConfig["detail"]["swapchainName"]));
                     }
+                }
             }
             else if (countJson.is_number_integer())
                 count = countJson;
@@ -278,8 +280,9 @@ void DescriptorSets::writeSetsWithJson(const json &config)
                     if (auto p = resourceManager().resource(Vkbase::VkResourceType::Sampler, imageInfoJson["samplerName"]).lock<Sampler>())
                         imageInfos[i].first.setSampler(p->sampler());
                     else
-                        imageInfos[i].first.setSampler(
-                            Resources::ResourceManager::instance().getResource<Resources::SamplerResource>(_device.lock()->name(), Sampler::getDefaultCreateInfo()).sampler());
+                        imageInfos[i].first.setSampler(Resources::ResourceManager::instance()
+                                                           .getResource<Resources::SamplerResource>(_device.lock()->name(), Sampler::getDefaultCreateInfo())
+                                                           .sampler());
                 }
             }
 

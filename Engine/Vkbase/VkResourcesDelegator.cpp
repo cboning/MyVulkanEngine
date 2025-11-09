@@ -5,15 +5,17 @@ namespace Vkbase
 VkResourcesDelegator::~VkResourcesDelegator()
 {
     _destroying = true;
-    while (!_resources.empty())
-    {
-        _resources.begin()->lock()->destroy();
-    }
+    std::unique_lock lock(_controlMutex);
+    for (auto resource : _resources)
+        if (auto p = resource.lock())
+            p->_pResourcesDelegator = nullptr;
+    lock.unlock();
     _resources.clear();
 }
 
 VkResourcesDelegator::VkResourcesDelegator(VkResourcesDelegator &&other) noexcept : _destroyCallback(std::move(other._destroyCallback))
 {
+    std::lock_guard lock(_controlMutex);
     _resources = std::move(other._resources);
 
     for (auto resource : _resources)
@@ -25,6 +27,7 @@ VkResourcesDelegator::VkResourcesDelegator(VkResourcesDelegator &&other) noexcep
 
 VkResourcesDelegator &VkResourcesDelegator::operator=(VkResourcesDelegator &&other) noexcept
 {
+    std::lock_guard lock(_controlMutex);
     if (this != &other)
     {
         if (_destroyCallback)
@@ -52,6 +55,7 @@ void VkResourcesDelegator::setDestroyCallback(std::function<void()> destroyCallb
 
 void VkResourcesDelegator::removeResource(const VkResourceManagerHolder::WeakReference &pResource)
 {
+    std::lock_guard lock(_controlMutex);
     // find the weak reference that points to pResource and erase it by iterator
     for (auto it = _resources.begin(); it != _resources.end(); ++it)
     {

@@ -24,9 +24,6 @@ Font::Font(const std::string &deviceName, const std::string &filename, uint32_t 
 #endif
     }
     FT_Set_Pixel_Sizes(_face, 0, _fontSize);
-
-    for (GLubyte i = 0; i < 128; ++i)
-        loadCharacter(i);
 }
 
 Font::~Font()

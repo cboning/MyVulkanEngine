@@ -132,7 +132,7 @@ void Device::collectAllDelayResource()
 {
     for (auto iter = resourceManager().resources().at(VkResourceType::Device).begin(); iter != resourceManager().resources().at(VkResourceType::Device).end();
          ++iter)
-        if (auto p = VkResourceManagerHolder::WeakReference(iter->second).lock())
+        if (auto p = iter->second->weakReference().lock())
             dynamic_cast<Device *>(p)->gpuResourceGarbageCollector().collect();
 }
 
@@ -151,14 +151,14 @@ const Device::QueueFamilyIndices &Device::queueFamilyIndices() const { return _q
 Vkbase::VkResourceManagerHolder::WeakReference Device::getSuitableDevice(const vk::SurfaceKHR &surface)
 {
     if (resourceManager().resources().count(VkResourceType::Device))
-        for (const std::pair<const std::string, VkResourceManagerHolder> &device : resourceManager().resources().at(VkResourceType::Device))
+        for (const std::pair<const std::string, VkResourceBase *> &device : resourceManager().resources().at(VkResourceType::Device))
         {
-            if (auto p = VkResourceManagerHolder::WeakReference(device.second).lock())
+            if (auto p = device.second->weakReference().lock())
             {
                 Device &targetDevice = *dynamic_cast<Device *>(p);
                 if (isPhysicalDeviceSuitable(targetDevice.physicalDevice(), surface) &&
                     targetDevice.queueFamilyIndices() == findQueueFamilies(targetDevice.physicalDevice(), surface))
-                    return VkResourceManagerHolder::WeakReference(device.second);
+                    return device.second->weakReference();
             }
         }
     return createResource<Device>("", surface);

@@ -25,7 +25,7 @@ VkResourceManager::VkResourceManager()
 VkResourceManager::~VkResourceManager()
 {
     while (_pResources.count(Vkbase::VkResourceType::Device))
-        _pResources[Vkbase::VkResourceType::Device].begin()->second._pResource->destroy();
+        _pResources[Vkbase::VkResourceType::Device].begin()->second->destroy();
 
     _instance.destroy();
 }
@@ -108,11 +108,13 @@ void VkResourceManager::createInstance(std::vector<const char *> layers, std::ve
 
 void VkResourceManager::addResource(VkResourceBase *pResource)
 {
-    std::unordered_map<std::string, VkResourceManagerHolder> &resources = _pResources[pResource->type()];
-    std::unordered_map<std::string, VkResourceManagerHolder>::iterator iter = resources.find(pResource->name());
+    std::unique_lock controlMutex(_controlMutex);
+    std::unordered_map<std::string, VkResourceBase *> &resources = _pResources[pResource->type()];
+    std::unordered_map<std::string, VkResourceBase *>::iterator iter = resources.find(pResource->name());
+    VkResourceBase *pOldResource = nullptr;
     if (iter != resources.end())
     {
-        if (iter->second._pResource == pResource)
+        if (iter->second == pResource)
             return;
 #ifdef DEBUG
         std::cout << "[Warning] Resource with Type: " << toString(pResource->type()) << ", Name: " << pResource->name()
@@ -120,30 +122,42 @@ void VkResourceManager::addResource(VkResourceBase *pResource)
                      "destroyed."
                   << std::endl;
 #endif
-        iter->second._pResource->destroy();
-        _pResources[pResource->type()].emplace(pResource->name(), VkResourceManagerHolder(pResource));
+        pOldResource = iter->second;
+        resources.erase(iter);
     }
-    else
-        resources.emplace(pResource->name(), VkResourceManagerHolder(pResource));
+    _pResources[pResource->type()].emplace(pResource->name(), pResource);
+
+    controlMutex.unlock();
+    destroy(pOldResource);
 }
 
 const VkResourceSet &VkResourceManager::resources() const { return _pResources; }
+
+void VkResourceManager::destroy(VkResourceBase *pResource)
+{
+    if (!pResource)
+        return;
+    pResource->preDestroy();
+    if (!pResource->killingSelf())
+        delete pResource;
+}
 
 VkResourceManagerHolder::WeakReference VkResourceManager::resource(VkResourceType type, const std::string &name) const
 {
     Vkbase::VkResourceSet::const_iterator typeIter = _pResources.find(type);
     if (typeIter == _pResources.end())
         return VkResourceManagerHolder::WeakReference();
-    const std::unordered_map<std::string, VkResourceManagerHolder> &resources = typeIter->second;
-    const std::unordered_map<std::string, VkResourceManagerHolder>::const_iterator iter = resources.find(name);
+    const std::unordered_map<std::string, VkResourceBase *> &resources = typeIter->second;
+    const std::unordered_map<std::string, VkResourceBase *>::const_iterator iter = resources.find(name);
     if (iter != resources.end())
-        return VkResourceManagerHolder::WeakReference(iter->second);
+        return iter->second->weakReference();
     else
         return VkResourceManagerHolder::WeakReference();
 }
 
 void VkResourceManager::remove(VkResourceType type, const std::string &name)
 {
+    std::unique_lock lock(_controlMutex);
     if (!_pResources.count(type))
     {
 #ifdef DEBUG
@@ -154,7 +168,7 @@ void VkResourceManager::remove(VkResourceType type, const std::string &name)
         return;
     }
 
-    std::unordered_map<std::string, VkResourceManagerHolder>::iterator iter = _pResources[type].find(name);
+    std::unordered_map<std::string, VkResourceBase *>::iterator iter = _pResources[type].find(name);
     if (iter == _pResources[type].end())
     {
 #ifdef DEBUG
@@ -162,14 +176,14 @@ void VkResourceManager::remove(VkResourceType type, const std::string &name)
 #endif
         return;
     }
-    Vkbase::VkResourceBase *pBase = iter->second._pResource;
-    pBase->preDestroy();
+    VkResourceBase *pResource = iter->second;
     _pResources[type].erase(iter);
-    if (!pBase->killingSelf())
-        delete pBase;
 
     if (_pResources[type].empty())
         _pResources.erase(type);
+    lock.unlock();
+
+    destroy(pResource);
 }
 
 VkResourceManager &VkResourceManager::instance()

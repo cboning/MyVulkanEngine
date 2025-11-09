@@ -113,7 +113,6 @@ Vkbase::VkResourceManagerHolder::WeakReference RenderPassManager::recordSecondar
         {
             if (auto pCommandBuffer = entry.second.lock<Vkbase::CommandBuffer>())
             {
-                pCommandBuffer->reset();
                 // Begin recording for the correct subpass and set viewport/scissor once
                 pCommandBuffer->begin(renderPassName, pPipeline->subpass());
                 Vkbase::RenderPass::setViewportScissor(entry.second, pFramebuffer->extent());
@@ -142,6 +141,9 @@ void RenderPassManager::shouldRecordFor(const std::string &pipelineName)
 
     for (auto &[state, commandBuffer] : _secondaryCommandBuffers[pipelineName])
     {
+        if (state)
+            if (auto pCommandBuffer = commandBuffer.lock<Vkbase::CommandBuffer>())
+                pCommandBuffer->reset();
         state = false;
     }
 }

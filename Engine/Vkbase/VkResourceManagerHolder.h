@@ -9,11 +9,11 @@ class VkResourceBase;
 
 class VkResourceManagerHolder
 {
-    friend class VkResourceManager;
+    friend class VkResourceBase;
 
 private:
     VkResourceBase *_pResource;
-    std::shared_ptr<uint32_t> _weakReferenceCount = std::make_shared<uint32_t>(0);
+    std::shared_ptr<std::atomic<uint32_t>> _weakReferenceCount = std::make_shared<std::atomic<uint32_t>>(0);
     std::shared_ptr<bool> _expired = std::make_shared<bool>(false);
 
     VkResourceManagerHolder(VkResourceBase *pResource) noexcept;
@@ -24,7 +24,7 @@ public:
     class WeakReference
     {
     private:
-        std::shared_ptr<uint32_t> _weakReferenceCount;
+        std::shared_ptr<std::atomic<uint32_t>> _weakReferenceCount;
         std::shared_ptr<bool> _expired;
         VkResourceBase *_pResource = nullptr;
 

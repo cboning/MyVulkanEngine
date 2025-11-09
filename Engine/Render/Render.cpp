@@ -307,10 +307,10 @@ void Render::draw()
 
     if (_resourceManager.resources().count(Vkbase::VkResourceType::RenderDelegator))
     {
-        const std::unordered_map<std::string, Vkbase::VkResourceManagerHolder> &resources =
+        const std::unordered_map<std::string, Vkbase::VkResourceBase *> &resources =
             _resourceManager.resources().at(Vkbase::VkResourceType::RenderDelegator);
         for (auto &renderDelegator : resources)
-            if (auto p = Vkbase::VkResourceManagerHolder::WeakReference(renderDelegator.second).lock())
+            if (auto p = renderDelegator.second->weakReference().lock())
                 dynamic_cast<Vkbase::RenderDelegator *>(p)->draw();
     }
 

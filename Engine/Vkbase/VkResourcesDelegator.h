@@ -23,6 +23,7 @@ private:
     std::unordered_set<VkResourceManagerHolder::WeakReference> _resources;
     std::function<void()> _destroyCallback = {};
     bool _destroying = false;
+    std::mutex _controlMutex;
 
     void removeResource(const VkResourceManagerHolder::WeakReference &pResource);
 
