@@ -25,6 +25,8 @@ VkResourceManagerHolder::WeakReference &VkGpuResourceBase::device() { return _de
 
 bool VkGpuResourceBase::isPendingDestroy() const { return _pendingDestroy; }
 
+bool VkGpuResourceBase::inUse() const { return *_submitCounter; }
+
 std::unordered_set<uint32_t *> VkGpuResourceBase::counters()
 {
     std::unordered_set<uint32_t *> collectedCounters;

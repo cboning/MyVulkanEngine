@@ -82,8 +82,6 @@ void VkResourceBase::disuseSuperresource(const VkResourceManagerHolder::WeakRefe
     if (iter == _pSuperresources.end())
         return;
     _pSuperresources.erase(iter);
-    if (_pSuperresources.empty() && !_locked)
-        destroy();
 }
 
 const std::string &VkResourceBase::name() const { return _name; }

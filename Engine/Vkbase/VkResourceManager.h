@@ -77,7 +77,7 @@ private:
     vk::Instance _instance;
     VkResourceSet _pResources;
     inline static VkResourceManager *_pInstance = nullptr;
-    std::shared_mutex _controlMutex;
+    mutable std::shared_mutex _controlMutex;
 
     void createInstance(std::vector<const char *> layers = {"VK_LAYER_KHRONOS_validation"},
                         std::vector<const char *> extensions = {VK_KHR_PORTABILITY_ENUMERATION_EXTENSION_NAME, VK_KHR_SURFACE_EXTENSION_NAME,

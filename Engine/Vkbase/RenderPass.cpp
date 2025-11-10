@@ -66,6 +66,7 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
     {
         const json &countJson = config["count"];
         if (countJson.is_string() && std::string(countJson) == "auto")
+        {
             if (auto p = resourceManager().resource(Vkbase::VkResourceType::Swapchain, swapchainName).lock<Swapchain>())
             {
                 count = p->imageNames().size();
@@ -78,6 +79,7 @@ std::vector<std::string> RenderPass::createFramebuffer(const std::string &resour
             {
                 throw std::runtime_error("Config Error: The count of framebuffer must be setting.");
             }
+        }
     }
 
     for (uint32_t i = 0; i < count; ++i)

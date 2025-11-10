@@ -31,5 +31,6 @@ public:
 
     VkResourceManagerHolder::WeakReference &device();
     bool isPendingDestroy() const;
+    bool inUse() const;
 };
 } // namespace Vkbase

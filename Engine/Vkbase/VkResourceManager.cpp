@@ -144,6 +144,7 @@ void VkResourceManager::destroy(VkResourceBase *pResource)
 
 VkResourceManagerHolder::WeakReference VkResourceManager::resource(VkResourceType type, const std::string &name) const
 {
+    std::shared_lock lock(_controlMutex);
     Vkbase::VkResourceSet::const_iterator typeIter = _pResources.find(type);
     if (typeIter == _pResources.end())
         return VkResourceManagerHolder::WeakReference();
