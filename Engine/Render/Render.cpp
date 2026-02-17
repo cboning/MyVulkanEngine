@@ -200,19 +200,32 @@ void Render::createRenderPass()
     Vkbase::VertexInfo cubeVertexInfo(GeometryVertexData::attributeDescriptions(), {GeometryVertexData::bindingDescription()});
     Vkbase::VertexInfo guiVertexInfo(VkGUI::Widget::Vertex::attributeDescriptions(), {VkGUI::Widget::Vertex::bindingDescription()});
 
-    const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {
-        {"blend", screenVertexInfo},       {"blur_h", screenVertexInfo},         {"blur_v", screenVertexInfo},
-        {"light", screenVertexInfo},       {"present", screenVertexInfo},        {"Widget", guiVertexInfo},
-        {"g_buffer", modelVertexInfo},     {"GeometryPipeline", cubeVertexInfo}, {"GeometryOutlinePipeline", cubeVertexInfo},
-        {"GeometryShadow", cubeVertexInfo}};
+    const std::unordered_map<std::string, Vkbase::VertexInfo> vertexInfos = {{"blend", screenVertexInfo},
+                                                                             {"blur_h", screenVertexInfo},
+                                                                             {"blur_v", screenVertexInfo},
+                                                                             {"light", screenVertexInfo},
+                                                                             {"present", screenVertexInfo},
+                                                                             {"hdr", screenVertexInfo},
+                                                                             {"Widget", guiVertexInfo},
+                                                                             {"g_buffer", modelVertexInfo},
+                                                                             {"GeometryPipeline", cubeVertexInfo},
+                                                                             {"GeometryOutlinePipeline", cubeVertexInfo},
+                                                                             {"GeometryShadow", cubeVertexInfo}};
 
     const std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>> viewportInfo = {{vk::Rect2D().setExtent(extent)},
                                                                                         {vk::Viewport().setWidth(extent.width).setHeight(extent.height)}};
 
     const std::unordered_map<std::string, std::pair<std::vector<vk::Rect2D>, std::vector<vk::Viewport>>> viewportInfos = {
-        {"blend", viewportInfo},         {"blur_h", viewportInfo},           {"blur_v", viewportInfo},
-        {"light", viewportInfo},         {"present", viewportInfo},          {"Widget", viewportInfo},
-        {"g_buffer", viewportInfo},      {"GeometryPipeline", viewportInfo}, {"GeometryOutlinePipeline", viewportInfo},
+        {"blend", viewportInfo},
+        {"blur_h", viewportInfo},
+        {"blur_v", viewportInfo},
+        {"light", viewportInfo},
+        {"present", viewportInfo},
+        {"Widget", viewportInfo},
+        {"hdr", viewportInfo},
+        {"g_buffer", viewportInfo},
+        {"GeometryPipeline", viewportInfo},
+        {"GeometryOutlinePipeline", viewportInfo},
         {"GeometryShadow", viewportInfo}};
 
     const std::unordered_map<std::string, std::vector<vk::DescriptorSetLayout>> descriptorSetLayouts = {
@@ -221,6 +234,7 @@ void Render::createRenderPass()
         {"blur_v", {}},
         {"light", {}},
         {"present", {}},
+        {"hdr", {}},
         {"Widget", {std::dynamic_pointer_cast<VkGUI::Widget>(_renderObjects[_rootFrameIndex])->descriptorSetsLayout()}},
         {"g_buffer", {(*Modelbase::Model::models().begin())->descriptorSetLayout(0, "g_buffer")}},
         {"GeometryPipeline", Entity::entity<Cube>("1")->descriptorSetLayouts()},
@@ -229,8 +243,7 @@ void Render::createRenderPass()
     if (auto pWindow = _window.lock())
         for (const auto &config : renderPassConfigs.items())
         {
-            if (auto pRenderPass = createResource<Vkbase::RenderPass>(config.key(), deviceName(), config.value()["renderPass"], pWindow->name(), depthFormat)
-                                       .lock<Vkbase::RenderPass>())
+            if (auto pRenderPass = createResource<Vkbase::RenderPass>(config.key(), deviceName(), config.value()["renderPass"]).lock<Vkbase::RenderPass>())
             {
                 renderPassNames.push_back(pRenderPass->name());
                 pRenderPass->createFramebuffer(config.key(), config.value()["framebuffers"], extent.width, extent.height, pWindow->name(), depthFormat);
@@ -253,6 +266,7 @@ void Render::createRenderPass()
     }
 
     for (auto &[pipelineName, renderPassName, descriptorSetName] : std::vector<std::array<std::string, 3>>{{"light", "G_Buffer", "G_BufferAttachments"},
+                                                                                                           {"hdr", "HDR", "OriginalColor"},
                                                                                                            {"blur_h", "Bloom", "HighLight"},
                                                                                                            {"blur_v", "Bloom", "BlurSampler1"},
                                                                                                            {"blend", "Blend", "Output"},
@@ -307,8 +321,7 @@ void Render::draw()
 
     if (_resourceManager.resources().count(Vkbase::VkResourceType::RenderDelegator))
     {
-        const std::unordered_map<std::string, Vkbase::VkResourceBase *> &resources =
-            _resourceManager.resources().at(Vkbase::VkResourceType::RenderDelegator);
+        const std::unordered_map<std::string, Vkbase::VkResourceBase *> &resources = _resourceManager.resources().at(Vkbase::VkResourceType::RenderDelegator);
         for (auto &renderDelegator : resources)
             if (auto p = renderDelegator.second->weakReference().lock())
                 dynamic_cast<Vkbase::RenderDelegator *>(p)->draw();

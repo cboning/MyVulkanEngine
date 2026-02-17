@@ -4,3 +4,4 @@ main.dSYM
 build
 build-win64
 main.exe
+.cache

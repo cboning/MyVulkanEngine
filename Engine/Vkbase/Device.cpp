@@ -1,5 +1,7 @@
 #include "Device.h"
 #include "CommandPool.h"
+#include "DescriptorSetsLayoutCreator.h"
+#include "MemoryAllocator.h"
 
 namespace Vkbase
 {
@@ -8,12 +10,16 @@ Device::Device(const std::string &resourceName, const vk::SurfaceKHR &surface) :
     _physicalDevice = pickPhysicalDevice(surface);
     _queueFamilyIndices = findQueueFamilies(_physicalDevice, surface);
     createLogicalDevice();
+    _memoryAllocator = std::make_unique<MemoryAllocator>(_device, _physicalDevice);
+    _descriptorSetsLayoutCreator = std::unique_ptr<DescriptorSetsLayoutCreator>(new DescriptorSetsLayoutCreator(_device));
 }
 
 Device::~Device()
 {
     _device.waitIdle();
     _garbageCollector.forceCollect();
+    _memoryAllocator.reset();
+
     _device.destroy();
 }
 
@@ -176,5 +182,12 @@ vk::Format Device::findSupportedFormat(std::vector<vk::Format> formats, vk::Imag
     }
     return vk::Format::eUndefined;
 }
+vk::Format Device::getDepthFormat() const
+{
+    return findSupportedFormat({vk::Format::eD32Sfloat, vk::Format::eD32SfloatS8Uint, vk::Format::eD24UnormS8Uint}, vk::ImageTiling::eOptimal,
+                               vk::FormatFeatureFlagBits::eDepthStencilAttachment);
+}
 VkGpuResourceGarbageCollector &Device::gpuResourceGarbageCollector() { return _garbageCollector; }
+
+MemoryAllocator &Device::memoryAllocator() { return *_memoryAllocator; }
 } // namespace Vkbase

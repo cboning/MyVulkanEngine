@@ -8,7 +8,6 @@ CommandPool::CommandPool(const std::string &resourceName, const std::string &dev
     : VkGpuResourceBase(VkResourceType::CommandPool, resourceName, resourceManager().resource(VkResourceType::Device, deviceName)),
       _queueIndex(determineQueueIndex(queueType)), _queue(determineQueue(queueType))
 {
-    determineQueue(queueType);
     createCommandPool();
 }
 
@@ -41,7 +40,6 @@ const vk::Queue &CommandPool::determineQueue(CommandPoolQueueType queueType) con
 uint32_t CommandPool::determineQueueIndex(CommandPoolQueueType queueType) const
 {
     if (auto p = _device.lock<Device>())
-    {
         switch (queueType)
         {
         case CommandPoolQueueType::Graphics:
@@ -51,7 +49,6 @@ uint32_t CommandPool::determineQueueIndex(CommandPoolQueueType queueType) const
         case CommandPoolQueueType::Present:
             return p->queueFamilyIndices().presentFamilyIndex;
         }
-    }
     throw std::runtime_error("[ERROR] Unknown queue type.");
 }
 

@@ -13,6 +13,8 @@ struct SurfaceSupportDetails
     std::vector<vk::PresentModeKHR> presentModes;
 };
 class CommandPool;
+class MemoryAllocator;
+class DescriptorSetsLayoutCreator;
 enum class CommandPoolQueueType;
 
 class Device : public VkResourceBase
@@ -46,7 +48,9 @@ public:
     const vk::Queue &computeQueue() const;
     const QueueFamilyIndices &queueFamilyIndices() const;
     vk::Format findSupportedFormat(std::vector<vk::Format> formats, vk::ImageTiling tiling, vk::FormatFeatureFlags feature) const;
+    vk::Format getDepthFormat() const;
     VkGpuResourceGarbageCollector &gpuResourceGarbageCollector();
+    MemoryAllocator &memoryAllocator();
 
 private:
     Device(const std::string &resourceName, const vk::SurfaceKHR &surface);
@@ -57,6 +61,8 @@ private:
     vk::Queue _presentQueue;
     vk::Queue _computeQueue;
     VkGpuResourceGarbageCollector _garbageCollector;
+    std::unique_ptr<MemoryAllocator> _memoryAllocator;
+    std::unique_ptr<DescriptorSetsLayoutCreator> _descriptorSetsLayoutCreator;
     inline static std::vector<const char *> _extensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME,
 #ifdef __APPLE__
                                                            "VK_KHR_portability_subset"

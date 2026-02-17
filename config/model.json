@@ -1,24 +1,5 @@
 [
     {
-        "filename": "src/model/sponza/sponza/sponza.gltf",
-        "pipelines": [
-            {
-                "name": "g_buffer",
-                "textureFeatures": ["DIFFUSE"]
-            }
-        ],
-        "meshes": [
-            {
-                "name": "default",
-                "pipeline": "g_buffer"
-            },
-            {
-                "name": "face",
-                "pipeline": "g_buffer"
-            }
-        ]
-    },
-    {
         "filename": "./src/model/nahida/untitled.fbx",
         "pipelines": [
             {

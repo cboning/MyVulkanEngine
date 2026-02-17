@@ -40,7 +40,7 @@ std::unordered_set<uint32_t *> VkGpuResourceBase::counters()
         {
             collectedCounters.insert(p->_submitCounter.get());
             for (auto s : p->_pSuperresources)
-                collect(s);
+                collect(s->weakReference());
         }
     };
 

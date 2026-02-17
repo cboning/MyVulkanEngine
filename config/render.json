@@ -85,41 +85,7 @@
                     "depthStencilAttachment": 1
                 }
             ],
-            "subpassDependencies": [
-                {
-                    "srcSubpass": -1,
-                    "dstSubpass": 0,
-                    "srcStageMask": [
-                        "BottomOfPipe"
-                    ],
-                    "srcAccessMask": [
-                        "None"
-                    ],
-                    "dstStageMask": [
-                        "ColorAttachmentOutput"
-                    ],
-                    "dstAccessMask": [
-                        "ColorAttachmentRead",
-                        "ColorAttachmentWrite"
-                    ]
-                },
-                {
-                    "srcSubpass": 0,
-                    "dstSubpass": -1,
-                    "srcStageMask": [
-                        "ColorAttachmentOutput"
-                    ],
-                    "srcAccessMask": [
-                        "ColorAttachmentWrite"
-                    ],
-                    "dstStageMask": [
-                        "FragmentShader"
-                    ],
-                    "dstAccessMask": [
-                        "ShaderRead"
-                    ]
-                }
-            ]
+            "subpassDependencies": []
         },
         "framebuffers": {
             "count": "auto",
@@ -550,26 +516,12 @@
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
                     "finalLayout": "ShaderReadOnlyOptimal"
-                },
-                {
-                    "format": "R16G16B16A16Sfloat",
-                    "samples": 1,
-                    "loadOp": "Clear",
-                    "storeOp": "Store",
-                    "stencilLoadOp": "DontCare",
-                    "stencilStoreOp": "DontCare",
-                    "initialLayout": "Undefined",
-                    "finalLayout": "ShaderReadOnlyOptimal"
                 }
             ],
             "attachmentReferences": [
                 [
                     {
                         "attachment": 0,
-                        "layout": "ColorAttachmentOptimal"
-                    },
-                    {
-                        "attachment": 1,
                         "layout": "ColorAttachmentOptimal"
                     }
                 ]
@@ -604,20 +556,6 @@
                 {
                     "type": "create",
                     "name": "OriginalColor",
-                    "imageConfig": {
-                        "type": "NoData",
-                        "format": "R16G16B16A16Sfloat",
-                        "imageType": "2D",
-                        "viewType": "2D",
-                        "usage": [
-                            "ColorAttachment",
-                            "Sampled"
-                        ]
-                    }
-                },
-                {
-                    "type": "create",
-                    "name": "HighLight",
                     "imageConfig": {
                         "type": "NoData",
                         "format": "R16G16B16A16Sfloat",
@@ -777,14 +715,6 @@
                                     "B",
                                     "A"
                                 ]
-                            },
-                            {
-                                "colorWriteMask": [
-                                    "R",
-                                    "G",
-                                    "B",
-                                    "A"
-                                ]
                             }
                         ]
                     }
@@ -800,6 +730,196 @@
                     },
                     {
                         "filename": "shader/bin/baseShaderFrag.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Fragment"
+                    }
+                ]
+            }
+        ]
+    },
+    "HDR": {
+        "renderPass": {
+            "attachments": [
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                },
+                {
+                    "format": "R16G16B16A16Sfloat",
+                    "samples": 1,
+                    "loadOp": "Clear",
+                    "storeOp": "Store",
+                    "stencilLoadOp": "DontCare",
+                    "stencilStoreOp": "DontCare",
+                    "initialLayout": "Undefined",
+                    "finalLayout": "ShaderReadOnlyOptimal"
+                }
+            ],
+            "attachmentReferences": [
+                [
+                    {
+                        "attachment": 0,
+                        "layout": "ColorAttachmentOptimal"
+                    },
+                    {
+                        "attachment": 1,
+                        "layout": "ColorAttachmentOptimal"
+                    }
+                ]
+            ],
+            "subpasses": [
+                {
+                    "colorAttachments": 0
+                }
+            ],
+            "subpassDependencies": [
+                {
+                    "srcSubpass": -1,
+                    "dstSubpass": 0,
+                    "srcStageMask": [
+                        "FragmentShader"
+                    ],
+                    "srcAccessMask": [
+                        "None"
+                    ],
+                    "dstStageMask": [
+                        "ColorAttachmentOutput"
+                    ],
+                    "dstAccessMask": [
+                        "ColorAttachmentWrite"
+                    ]
+                }
+            ]
+        },
+        "framebuffers": {
+            "count": "auto",
+            "images": [
+                {
+                    "type": "create",
+                    "name": "HDRColor",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled",
+                            "InputAttachment"
+                        ]
+                    }
+                },
+                {
+                    "type": "create",
+                    "name": "HighLight",
+                    "imageConfig": {
+                        "type": "NoData",
+                        "format": "R16G16B16A16Sfloat",
+                        "imageType": "2D",
+                        "viewType": "2D",
+                        "usage": [
+                            "ColorAttachment",
+                            "Sampled"
+                        ]
+                    }
+                }
+            ]
+        },
+        "descriptorSets": {
+            "sets": [
+                {
+                    "name": "OriginalColor",
+                    "layoutConfig": [
+                        {
+                            "descriptorType": "CombinedImageSampler",
+                            "shaderStageFlags": [
+                                "Fragment"
+                            ]
+                        }
+                    ],
+                    "count": "swapchainImageCount",
+                    "swapchainName": "mainWindow"
+                }
+            ],
+            "write": [
+                {
+                    "name": "OriginalColor",
+                    "type": "Framebuffer",
+                    "binding": 0,
+                    "count": "auto",
+                    "detail": {
+                        "imageInfo": {
+                            "imageName": "OriginalColor",
+                            "imageLayout": "ShaderReadOnlyOptimal",
+                            "samplerName": "Sampler"
+                        },
+                        "swapchainName": "mainWindow"
+                    }
+                }
+            ]
+        },
+        "pipelines": [
+            {
+                "name": "hdr",
+                "renderInfo": {
+                    "inputAssemblyState": {
+                        "topology": "TriangleList"
+                    },
+                    "rasterizationState": {
+                        "cullMode": "None",
+                        "lineWidth": 1.0
+                    },
+                    "dynamicStatus": [
+                        "Viewport",
+                        "Scissor"
+                    ],
+                    "depthStencilState": {
+                        "depthTestEnable": true,
+                        "depthWriteEnable": true,
+                        "depthCompareOp": "Less",
+                        "minDepthBounds": 0.0,
+                        "maxDepthBounds": 1.0
+                    },
+                    "subpass": 0,
+                    "colorBlendState": {
+                        "logicOp": "Copy",
+                        "blendAttachments": [
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            },
+                            {
+                                "colorWriteMask": [
+                                    "R",
+                                    "G",
+                                    "B",
+                                    "A"
+                                ]
+                            }
+                        ]
+                    }
+                },
+                "descriptorSetsNames": [
+                    "OriginalColor"
+                ],
+                "shaderInfos": [
+                    {
+                        "filename": "shader/bin/hdrVert.spv",
+                        "stageName": "main",
+                        "shaderStageFlags": "Vertex"
+                    },
+                    {
+                        "filename": "shader/bin/hdrFrag.spv",
                         "stageName": "main",
                         "shaderStageFlags": "Fragment"
                     }
@@ -1222,7 +1342,7 @@
                     "count": "auto",
                     "detail": {
                         "imageInfo": {
-                            "imageName": "OriginalColor",
+                            "imageName": "HDRColor",
                             "imageLayout": "ShaderReadOnlyOptimal",
                             "samplerName": "Sampler"
                         },
@@ -1353,7 +1473,8 @@
                     "stencilLoadOp": "DontCare",
                     "stencilStoreOp": "DontCare",
                     "initialLayout": "Undefined",
-                    "finalLayout": "PresentSrcKHR"
+                    "finalLayout": "PresentSrcKHR",
+                    "swapchainName": "mainWindow"
                 }
             ],
             "attachmentReferences": [

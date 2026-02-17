@@ -24,21 +24,18 @@ VkResourceBase::~VkResourceBase()
     if (auto p = _resourceManager.resource(_resourceType, _name).lock())
         if (p == this)
             destroy();
-    for (std::reverse_iterator<std::vector<VkResourceManagerHolder::WeakReference>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend();
-         ++iter)
-        if (auto p = iter->lock())
-            p->disuseSuperresource(weakReference());
+    for (std::reverse_iterator<std::vector<VkResourceBase *>::iterator> iter = _pSubresources.rbegin(); iter != _pSubresources.rend(); ++iter)
+        (*iter)->disuseSuperresource(weakReference());
 }
 
 void VkResourceBase::preDestroy()
 {
     while (_pSuperresources.size())
     {
-        VkResourceManagerHolder::WeakReference back = _pSuperresources.back();
+        VkResourceBase *back = _pSuperresources.back();
         _pSuperresources.pop_back();
 
-        if (auto p = back.lock())
-            p->destroySubresource(weakReference());
+        back->destroySubresource(weakReference());
     }
 }
 
@@ -48,18 +45,23 @@ VkResourceManager &VkResourceBase::resourceManager() { return _resourceManager; 
 
 void VkResourceBase::useSuperresource(const VkResourceManagerHolder::WeakReference &pResource)
 {
-    if (std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource) != _pSuperresources.end())
-        return;
-
-    _pSuperresources.push_back(pResource);
+    if (auto p = pResource.lock())
+    {
+        if (std::find(_pSuperresources.begin(), _pSuperresources.end(), p) != _pSuperresources.end())
+            return;
+        _pSuperresources.push_back(p);
+    }
 }
 
 void VkResourceBase::useSubresource(const VkResourceManagerHolder::WeakReference &pResource)
 {
-    if (std::find(_pSubresources.begin(), _pSubresources.end(), pResource) != _pSubresources.end())
-        return;
+    if (auto p = pResource.lock())
+    {
+        if (std::find(_pSubresources.begin(), _pSubresources.end(), p) != _pSubresources.end())
+            return;
 
-    _pSubresources.push_back(pResource);
+        _pSubresources.push_back(p);
+    }
 }
 
 void VkResourceBase::destroySubresource(const VkResourceManagerHolder::WeakReference &pResource)
@@ -70,18 +72,22 @@ void VkResourceBase::destroySubresource(const VkResourceManagerHolder::WeakRefer
 
 void VkResourceBase::disuseSubresource(const VkResourceManagerHolder::WeakReference &pResource)
 {
-    std::vector<VkResourceManagerHolder::WeakReference>::iterator iter = std::find(_pSubresources.begin(), _pSubresources.end(), pResource);
-    if (iter == _pSubresources.end())
-        return;
-    _pSubresources.erase(iter);
+    if (auto p = pResource.lock())
+    {
+        std::vector<VkResourceBase *>::iterator iter = std::find(_pSubresources.begin(), _pSubresources.end(), p);
+        _pSubresources.erase(iter);
+    }
 }
 
 void VkResourceBase::disuseSuperresource(const VkResourceManagerHolder::WeakReference &pResource)
 {
-    std::vector<VkResourceManagerHolder::WeakReference>::iterator iter = std::find(_pSuperresources.begin(), _pSuperresources.end(), pResource);
-    if (iter == _pSuperresources.end())
-        return;
-    _pSuperresources.erase(iter);
+    if (auto p = pResource.lock())
+    {
+        std::vector<VkResourceBase *>::iterator iter = std::find(_pSuperresources.begin(), _pSuperresources.end(), p);
+        if (iter == _pSuperresources.end())
+            return;
+        _pSuperresources.erase(iter);
+    }
 }
 
 const std::string &VkResourceBase::name() const { return _name; }

@@ -16,7 +16,7 @@ struct PointLight
     vec3 color;
 };
 
-PointLight light = {vec3(50, 30, 40), vec3(1.0, 0.996, 0.871) * 3};
+PointLight light = {vec3(50, 30, 40), vec3(1.0, 0.961, 0.902) * 3};
 
 float shadowCalculation(vec4 fragPosLightSpace)
 {
@@ -50,9 +50,6 @@ void main()
     originColor = vec4(color, 1.0f);
     // originColor = vec4(vec3(texture(shadowMap, gl_FragCoord.xy / vec2(1600, 1200)).r), 1.0f);
     if (fragNormal == vec3(0.0f))
-        originColor = vec4(1.0f);
+        originColor = vec4(.5176, .7843, .9490, 1.0f); // rgb(132, 200, 242)
 
-    float brightness = dot(color, vec3(0.2126, 0.7152, 0.0722));
-    if (brightness > 1.0f)
-        highLightColor = originColor;
 }

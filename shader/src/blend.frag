@@ -10,12 +10,12 @@ layout(binding = 1) uniform sampler2D bloomColor;
 const float gamma = 2.2f;
 const float exposure = 1.0f;
 
-void main() {
+void main()
+{
 
     vec4 color = vec4(texture(originColor, fragTexCoord).rgb + texture(bloomColor, fragTexCoord).rgb, 1.0f);
     vec3 mapped = vec3(1.0) - exp(-color.rgb * exposure);
-    // Gamma校正 
+    // Gamma校正
     mapped = pow(mapped, vec3(1.0 / gamma));
     outColor = vec4(mapped, color.a);
-
 }

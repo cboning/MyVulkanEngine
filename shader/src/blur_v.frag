@@ -15,7 +15,7 @@ float guassianBlur(int x)
 void main() {
     vec2 texOffset = 1.0f / textureSize(texture1, 0);
     vec3 result = texture(texture1, fragTexCoord).rgb * guassianBlur(0);
-    for (int i = 1; i < 50; ++i)
+    for (int i = 1; i < 15; ++i)
     {
         result += texture(texture1, fragTexCoord + vec2(0, i * texOffset.y)).rgb * guassianBlur(i);
         result += texture(texture1, fragTexCoord - vec2(0, i * texOffset.y)).rgb * guassianBlur(i);

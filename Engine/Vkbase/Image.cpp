@@ -4,6 +4,7 @@
 #include "CommandBuffer.h"
 #include "CommandPool.h"
 #include "Device.h"
+#include "MemoryAllocator.h"
 #include "Swapchain.h"
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -62,23 +63,25 @@ Image::Image(const std::string &resourceName, const std::string &deviceName, jso
 Image::~Image()
 {
     if (_destroyDelegate)
-        if (auto p = _device.lock<Device>())
-        {
-            vk::Device device = p->device();
-            vk::ImageView view = _view;
-            vk::Image image = _image;
-            vk::DeviceMemory memory = _memory;
+    {
+        auto device = _device;
+        vk::ImageView view = _view;
+        vk::Image image = _image;
+        auto memory = _memory;
 
-            _onDelayDestroy = [device, view, image, memory]()
+        _onDelayDestroy = [device, view, image, memory]()
+        {
+            if (auto p = device.lock<Device>())
             {
                 if (view)
-                    device.destroy(view);
+                    p->device().destroy(view);
                 if (image)
-                    device.destroy(image);
-                if (memory)
-                    device.freeMemory(memory);
-            };
-        }
+                    p->device().destroy(image);
+
+                p->memoryAllocator().free(memory);
+            }
+        };
+    }
 }
 
 void Image::createImageWithNoData(uint32_t width, uint32_t height, uint32_t depth, vk::ImageUsageFlags usage)
@@ -221,7 +224,7 @@ void Image::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout new
             commandBuffer = p->allocateOnceCommandBuffer();
             barrier.setSrcAccessMask(vk::AccessFlagBits::eNone).setDstAccessMask(vk::AccessFlagBits::eShaderWrite);
             if (auto p1 = commandBuffer.lock<CommandBuffer>())
-                p1->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
+                p1->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, {}, barrier);
 
             p->endOnceCommandBuffer(commandBuffer);
         }
@@ -240,7 +243,7 @@ void Image::transitionImageLayout(vk::ImageLayout oldLayout, vk::ImageLayout new
     {
         commandBuffer = p->allocateOnceCommandBuffer();
         if (auto p1 = commandBuffer.lock<CommandBuffer>())
-            p1->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, nullptr, barrier);
+            p1->commandBuffer().pipelineBarrier(srcStage, dstStage, {}, {}, {}, barrier);
 
         p->endOnceCommandBuffer(commandBuffer);
     }
@@ -269,9 +272,15 @@ void Image::createImage(uint32_t width, uint32_t height, uint32_t depth, vk::Ima
         vk::MemoryAllocateInfo allocateInfo;
         allocateInfo.setAllocationSize(requirements.size)
             .setMemoryTypeIndex(findMemoryType(requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal));
-        _memory = p->device().allocateMemory(allocateInfo);
 
-        p->device().bindImageMemory(_image, _memory, 0);
+        auto memory = p->memoryAllocator().allocate(requirements.size, 256, requirements.memoryTypeBits, vk::MemoryPropertyFlagBits::eDeviceLocal);
+        if (!memory)
+        {
+            p->device().destroy(_image);
+            throw std::runtime_error("Failed to allocate the memory.");
+        }
+        _memory = memory.value();
+        p->device().bindImageMemory(_image, _memory.memory(), _memory.offset());
     }
 }
 

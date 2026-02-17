@@ -26,12 +26,13 @@ RenderPass::RenderPass(const std::string &resourceName, const std::string &devic
         _renderPass = p->device().createRenderPass(createInfo);
 }
 
-RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config, const std::string &swapchainName = "",
-                       vk::Format depthFormat = vk::Format::eUndefined)
-    : RenderPass(resourceName, deviceName,
-                 JsonConfigReader::getRenderPassCreateInfo(JsonConfigReader::getAttachmentsWithJson(config, swapchainName, depthFormat),
-                                                           JsonConfigReader::getSubpassesWithJson(config, JsonConfigReader::getAttachmentRefsWithJson(config)),
-                                                           JsonConfigReader::getSubpassDependenciesWithJson(config)))
+RenderPass::RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config)
+    : RenderPass(
+          resourceName, deviceName,
+          JsonConfigReader::getRenderPassCreateInfo(
+              JsonConfigReader::getAttachmentsWithJson(config, resourceManager().resource(VkResourceType::Device, deviceName).lock<Device>()->getDepthFormat()),
+              JsonConfigReader::getSubpassesWithJson(config, JsonConfigReader::getAttachmentRefsWithJson(config)),
+              JsonConfigReader::getSubpassDependenciesWithJson(config)))
 {
 }
 

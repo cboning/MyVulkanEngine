@@ -33,7 +33,6 @@ RenderDelegator::~RenderDelegator()
         _imageAvailableSemaphores.clear();
     }
 
-
     if (auto p = _commandPool.lock<CommandPool>())
         p->freeCommandBuffers(_commandBuffers);
 }

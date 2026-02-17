@@ -36,7 +36,7 @@ class Cube : public Entity
 {
 private:
     inline static Vkbase::Mesh<GeometryVertexData> *_pCubeMesh = nullptr;
-    glm::vec3 _color = glm::vec3(0.0f, 0.6f, 0.8f);
+    glm::vec3 _color = glm::vec3(0.90980, 0.90196, 0.81176); // rgb(232 / 255, 230 / 255, 207 / 255)
     std::vector<Vkbase::Buffer *> _ubos;
     bool _isOutline;
     const Camera &_lightCamera;

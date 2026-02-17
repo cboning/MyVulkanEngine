@@ -29,8 +29,8 @@ protected:
     VkResourceBase(VkResourceType resourceType, const std::string &resourceName);
     const std::string _name;
     const VkResourceType _resourceType;
-    std::vector<VkResourceManagerHolder::WeakReference> _pSubresources;
-    std::vector<VkResourceManagerHolder::WeakReference> _pSuperresources;
+    std::vector<VkResourceBase *> _pSubresources;
+    std::vector<VkResourceBase *> _pSuperresources;
     void useSubresource(const VkResourceManagerHolder::WeakReference &pResource);
     void destroySubresource(const VkResourceManagerHolder::WeakReference &pResource);
     void disuseSubresource(const VkResourceManagerHolder::WeakReference &pResource);

@@ -32,7 +32,7 @@ public:
 
 private:
     RenderPass(const std::string &resourceName, const std::string &deviceName, const vk::RenderPassCreateInfo &createInfo);
-    RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config, const std::string &swapchainName, vk::Format depthFormat);
+    RenderPass(const std::string &resourceName, const std::string &deviceName, const json &config);
     ~RenderPass() override;
     vk::RenderPass _renderPass;
     uint32_t _attachmentCount;

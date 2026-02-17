@@ -12,6 +12,7 @@ class JsonConfigReader
   public:
     static aiTextureType getTextureTypeWithString(const std::string &textureType);
     static vk::Format getFormatWithJson(const std::string &format, const std::string &swapchainName = "", vk::Format depthFormat = vk::Format());
+    static std::string getJsonWithFormat(const vk::Format &format);
     static vk::ImageLayout getImageLayoutWithJson(const std::string &imageLayout);
     static vk::PipelineStageFlagBits getPipelineStageFlagBitsWithJson(const std::string &pipelineStage);
     static vk::SampleCountFlagBits getSampleCountFlagBitsWithJson(uint32_t sampleCount);
@@ -20,7 +21,7 @@ class JsonConfigReader
     static vk::AccessFlagBits getAccessFlagBitsWithJson(const std::string &access);
     static vk::PipelineStageFlags getPipelineStageFlagsWithJson(const std::vector<std::string> &pipelineStageFlags);
     static vk::AccessFlags getAccessFlagsWithJson(const std::vector<std::string> &accessFlags);
-    static std::vector<vk::AttachmentDescription> getAttachmentsWithJson(const json &config, const std::string &swapchainName, vk::Format depthFormat);
+    static std::vector<vk::AttachmentDescription> getAttachmentsWithJson(const json &config, vk::Format depthFormat);
     static std::vector<std::vector<vk::AttachmentReference>> getAttachmentRefsWithJson(const json &config);
     static std::vector<vk::SubpassDescription> getSubpassesWithJson(const json &config,
                                                                     const std::vector<std::vector<vk::AttachmentReference>> &attachmentRefs);

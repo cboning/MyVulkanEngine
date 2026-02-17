@@ -27,6 +27,15 @@
                     "light"
                 ]
             ],
+            "attachmentCount": 1
+        },
+        {
+            "renderPassName": "HDR",
+            "pipelineNames": [
+                [
+                    "hdr"
+                ]
+            ],
             "attachmentCount": 2
         },
         {

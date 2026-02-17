@@ -4,6 +4,7 @@
 #endif
 #include "VkGpuResourceBase.h"
 #include <json.hpp>
+#include "MemoryAllocator.h"
 
 using json = nlohmann::json;
 
@@ -33,7 +34,7 @@ private:
     Image(Swapchain &swapchain, uint32_t index);
     ~Image() override;
     vk::Image _image;
-    vk::DeviceMemory _memory;
+    MemoryAllocator::Allocation _memory;
     vk::ImageView _view;
     const vk::Format _format;
     const vk::ImageType _type;

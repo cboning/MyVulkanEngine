@@ -2,6 +2,7 @@
 #include "CommandBuffer.h"
 #include "CommandPool.h"
 #include "Device.h"
+#include "MemoryAllocator.h"
 
 namespace Vkbase
 {
@@ -11,24 +12,24 @@ Buffer::Buffer(const std::string &resourceName, const std::string &deviceName, v
     if (pData)
     {
         vk::Buffer stagingBuffer;
-        vk::DeviceMemory stagingMemory;
         if (auto p = _device.lock<Device>())
         {
-            createBuffer(vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
-                         stagingBuffer, stagingMemory);
-            createBuffer(vk::BufferUsageFlagBits::eTransferDst | usage, vk::MemoryPropertyFlagBits::eDeviceLocal, _buffer, _memory);
-            memcpy(p->device().mapMemory(stagingMemory, 0, _size), pData, _size);
-            p->device().unmapMemory(stagingMemory);
+            MemoryAllocator::Allocation allocation = createBuffer(
+                vk::BufferUsageFlagBits::eTransferSrc, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, stagingBuffer);
+            _memory = createBuffer(vk::BufferUsageFlagBits::eTransferDst | usage, vk::MemoryPropertyFlagBits::eDeviceLocal, _buffer);
+
+            memcpy(p->memoryAllocator().map(allocation), pData, _size);
+            p->memoryAllocator().unmap(allocation);
 
             copyBuffer(stagingBuffer, _buffer);
 
-            p->device().freeMemory(stagingMemory);
+            p->memoryAllocator().free(allocation);
             p->device().destroy(stagingBuffer);
         }
     }
     else
     {
-        createBuffer(usage, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, _buffer, _memory);
+        _memory = createBuffer(usage, vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent, _buffer);
     }
 }
 
@@ -36,19 +37,19 @@ Buffer::~Buffer()
 {
     if (auto p = _device.lock<Device>())
     {
-        auto device = p->device();
+        auto device = p;
         auto memory = _memory;
         auto buffer = _buffer;
 
         _onDelayDestroy = [device, memory, buffer]()
         {
-            device.freeMemory(memory);
-            device.destroy(buffer);
+            device->memoryAllocator().free(memory);
+            device->device().destroy(buffer);
         };
     }
 }
 
-void Buffer::createBuffer(vk::BufferUsageFlags usage, vk::MemoryPropertyFlags memoryProperties, vk::Buffer &buffer, vk::DeviceMemory &memory)
+MemoryAllocator::Allocation Buffer::createBuffer(vk::BufferUsageFlags usage, vk::MemoryPropertyFlags memoryProperties, vk::Buffer &buffer)
 {
     vk::BufferCreateInfo createInfo;
     createInfo.setSize(_size).setUsage(usage).setSharingMode(vk::SharingMode::eExclusive);
@@ -58,18 +59,20 @@ void Buffer::createBuffer(vk::BufferUsageFlags usage, vk::MemoryPropertyFlags me
         buffer = p->device().createBuffer(createInfo);
         vk::MemoryRequirements requirements = p->device().getBufferMemoryRequirements(buffer);
 
-        vk::MemoryAllocateInfo allocateInfo;
-        allocateInfo.setAllocationSize(requirements.size).setMemoryTypeIndex(findMemoryTypeIndex(requirements.memoryTypeBits, memoryProperties));
-
-        memory = p->device().allocateMemory(allocateInfo);
-
-        p->device().bindBufferMemory(buffer, memory, 0);
+        std::optional<MemoryAllocator::Allocation> allocation =
+            p->memoryAllocator().allocate(requirements.size, 256, requirements.memoryTypeBits, memoryProperties);
+        if (!allocation.has_value())
+            throw std::runtime_error("Failed to allocate the memory.");
+        _memory = allocation.value();
+        p->device().bindBufferMemory(buffer, _memory.memory(), _memory.offset());
+        return allocation.value();
     }
+
+    throw std::runtime_error("Failed to found Device or the device already destroyed.");
 }
 
 uint32_t Buffer::findMemoryTypeIndex(uint32_t typeFilter, vk::MemoryPropertyFlags properties)
 {
-
     if (auto p = _device.lock<Device>())
     {
         vk::PhysicalDeviceMemoryProperties memoryProperties = p->physicalDevice().getMemoryProperties();
@@ -102,8 +105,8 @@ void Buffer::updateBufferData(const void *pData) const
 {
     if (auto p = _device.lock<Device>())
     {
-        memcpy(p->device().mapMemory(_memory, 0, _size), pData, _size);
-        p->device().unmapMemory(_memory);
+        memcpy(p->memoryAllocator().map(_memory), pData, _size);
+        p->memoryAllocator().unmap(_memory);
     }
 }
 
